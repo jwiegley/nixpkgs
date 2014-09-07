@@ -100,6 +100,7 @@ stdenv.mkDerivation rec {
     '';
 
   postInstall = ''rm -rvf $out/share/gtk-doc'';
+  DETERMINISTIC_BUILD = 1;
 
   passthru = {
      gioModuleDir = "lib/gio/modules";

@@ -5,14 +5,27 @@ for i in $initialPath; do
 done
 
 mkdir $out
+mkdir $out/bin
 
 echo "$preHook" > $out/setup
 cat "$setup" >> $out/setup
+
+real_date=$(type -Pa date | sed 1d)
+
+if test -n "$real_date"; then
+    cat >$out/bin/date <<EOF
+#!$shell
+exec $real_date -d0 "\$@"
+EOF
+    chmod +x $out/bin/date
+    initialPath="$out $initialPath"
+fi
 
 sed -e "s^@initialPath@^$initialPath^g" \
     -e "s^@gcc@^$gcc^g" \
     -e "s^@shell@^$shell^g" \
     -e "s^@needsPax@^$needsPax^g" \
+    -e "s^@libfaketime@^$libfaketime^g" \
     < $out/setup > $out/setup.tmp
 mv $out/setup.tmp $out/setup
 

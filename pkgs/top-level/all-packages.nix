@@ -371,7 +371,7 @@ let
     inherit lib;
   };
 
-  makeInitrd = {contents, compressor ? "gzip -9"}:
+  makeInitrd = {contents, compressor ? "gzip -9n"}:
     import ../build-support/kernel/make-initrd.nix {
       inherit stdenv perl perlArchiveCpio cpio contents ubootChooser compressor;
     };
@@ -670,6 +670,8 @@ let
     inherit (pythonPackages) pygments;
     enableStandardFeatures = true;
   });
+
+  atomicops = callPackage ../development/libraries/atomic-ops { };
 
   autossh = callPackage ../tools/networking/autossh { };
 
@@ -2862,7 +2864,8 @@ let
     inherit noSysDirs;
 
     # PGO seems to speed up compilation by gcc by ~10%, see #445 discussion
-    profiledCompiler = with stdenv; (!isDarwin && (isi686 || isx86_64));
+    # however, it results in non-deterministic output
+    profiledCompiler = false;
 
     # When building `gcc.crossDrv' (a "Canadian cross", with host == target
     # and host != build), `cross' must be null but the cross-libc must still
@@ -5355,6 +5358,8 @@ let
   libexttextcat = callPackage ../development/libraries/libexttextcat {};
 
   libf2c = callPackage ../development/libraries/libf2c {};
+
+  libfaketime = callPackage ../development/libraries/libfaketime {};
 
   libfixposix = callPackage ../development/libraries/libfixposix {};
 
