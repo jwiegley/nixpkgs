@@ -187,14 +187,13 @@ in
         "rpc".source = pkgs.glibc.out + "/etc/rpc";
 
         # /etc/hosts: Hostname-to-IP mappings.
-        "hosts".text =
-          ''
-            127.0.0.1 localhost
-            ${optionalString cfg.enableIPv6 ''
-              ::1 localhost
-            ''}
-            ${cfg.extraHosts}
-          '';
+        "hosts".text = ''
+          127.0.0.1 localhost
+          ${optionalString cfg.enableIPv6 ''
+            ::1 localhost
+          ''}
+          ${cfg.extraHosts}
+        '';
 
         # /etc/host.conf: resolver configuration file
         "host.conf".text = cfg.hostConf;
