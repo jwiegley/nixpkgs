@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
     echo 'INSTALL(DIRECTORY include DESTINATION .)' >> CMakeLists.txt
   '';
 
-  cmakeFlags="-DLIBTCOD_SAMPLES=OFF";
+  cmakeFlags = [ "-DLIBTCOD_SAMPLES=OFF" ];
 
   buildInputs = [ cmake SDL mesa upx ];
 

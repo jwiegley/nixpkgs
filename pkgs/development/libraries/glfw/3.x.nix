@@ -20,9 +20,9 @@ stdenv.mkDerivation rec {
     libXinerama libXcursor
   ];
 
-  cmakeFlags = "-DBUILD_SHARED_LIBS=ON";
+  cmakeFlags = [ "-DBUILD_SHARED_LIBS=ON" ];
 
-  meta = with stdenv.lib; { 
+  meta = with stdenv.lib; {
     description = "Multi-platform library for creating OpenGL contexts and managing input, including keyboard, mouse, joystick and time";
     homepage = "http://www.glfw.org/";
     license = licenses.zlib;

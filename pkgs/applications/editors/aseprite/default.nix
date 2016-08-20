@@ -24,17 +24,17 @@ stdenv.mkDerivation rec {
     sed -i 's/png_\(sizeof\)/\1/g' src/file/png_format.cpp
   '';
 
-  cmakeFlags = ''
-    -DUSE_SHARED_GIFLIB=ON
-    -DUSE_SHARED_JPEGLIB=ON
-    -DUSE_SHARED_ZLIB=ON
-    -DUSE_SHARED_LIBPNG=ON
-    -DUSE_SHARED_LIBLOADPNG=ON
-    -DUSE_SHARED_TINYXML=ON
-    -DUSE_SHARED_GTEST=ON
-    -DUSE_SHARED_ALLEGRO4=ON
-    -DENABLE_UPDATER=OFF
-  '';
+  cmakeFlags = [
+    "-DUSE_SHARED_GIFLIB=ON"
+    "-DUSE_SHARED_JPEGLIB=ON"
+    "-DUSE_SHARED_ZLIB=ON"
+    "-DUSE_SHARED_LIBPNG=ON"
+    "-DUSE_SHARED_LIBLOADPNG=ON"
+    "-DUSE_SHARED_TINYXML=ON"
+    "-DUSE_SHARED_GTEST=ON"
+    "-DUSE_SHARED_ALLEGRO4=ON"
+    "-DENABLE_UPDATER=OFF"
+  ];
 
   NIX_LDFLAGS = "-lX11";
 

@@ -20,7 +20,7 @@ stdenv.mkDerivation (rec {
     ./disable-security.framework.patch
   ];
 
-  cmakeFlags = "-DTHREADSAFE=ON";
+  cmakeFlags = [ "-DTHREADSAFE=ON" ];
 
   nativeBuildInputs = [ cmake python pkgconfig ];
   buildInputs = [ zlib libssh2 openssl http-parser curl ];

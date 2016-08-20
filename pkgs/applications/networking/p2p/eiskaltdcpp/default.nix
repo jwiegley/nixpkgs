@@ -10,19 +10,19 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ cmake pkgconfig qt4 boost bzip2 libX11 pcre-cpp libidn lua5 miniupnpc aspell gettext ];
 
-  cmakeFlags = ''
-    -DUSE_ASPELL=ON
-    -DUSE_QT_QML=ON
-    -DFREE_SPACE_BAR_C=ON
-    -DUSE_MINIUPNP=ON
-    -DDBUS_NOTIFY=ON
-    -DUSE_JS=ON
-    -DPERL_REGEX=ON
-    -DUSE_CLI_XMLRPC=ON
-    -DWITH_SOUNDS=ON
-    -DLUA_SCRIPT=ON
-    -DWITH_LUASCRIPTS=ON
-  '';
+  cmakeFlags = [
+    "-DUSE_ASPELL=ON"
+    "-DUSE_QT_QML=ON"
+    "-DFREE_SPACE_BAR_C=ON"
+    "-DUSE_MINIUPNP=ON"
+    "-DDBUS_NOTIFY=ON"
+    "-DUSE_JS=ON"
+    "-DPERL_REGEX=ON"
+    "-DUSE_CLI_XMLRPC=ON"
+    "-DWITH_SOUNDS=ON"
+    "-DLUA_SCRIPT=ON"
+    "-DWITH_LUASCRIPTS=ON"
+  ];
 
   enableParallelBuilding = true;
 

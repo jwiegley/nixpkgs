@@ -11,9 +11,7 @@ stdenv.mkDerivation rec {
 
   outputs = [ "dev" "out" "doc"];
 
-  cmakeFlags = ''
-    -DWITH_MATLAB=false 
-  '';
+  cmakeFlags = [ "-DWITH_MATLAB=false" ];
 
   buildInputs = [ openexr zlib imagemagick mesa freeglut fftwFloat fftw gsl libexif perl opencv qt4 ];
 

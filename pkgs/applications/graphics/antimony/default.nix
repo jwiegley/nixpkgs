@@ -4,7 +4,7 @@ let
   gitRev    = "e8480c718e8c49ae3cc2d7af10ea93ea4c2fff9a";
   gitBranch = "master";
   gitTag    = "0.9.2";
-in 
+in
   stdenv.mkDerivation rec {
     name    = "antimony-${version}";
     version = gitTag;
@@ -29,7 +29,7 @@ in
 
     nativeBuildInputs = [ cmake flex lemon ];
 
-    cmakeFlags= [
+    cmakeFlags = [
       "-DGITREV=${gitRev}"
       "-DGITTAG=${gitTag}"
       "-DGITBRANCH=${gitBranch}"

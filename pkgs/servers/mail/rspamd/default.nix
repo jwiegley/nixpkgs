@@ -23,12 +23,12 @@ stdenv.mkDerivation rec {
     substituteInPlace conf/common.conf --replace "\$CONFDIR/rspamd.conf.local.override" "/etc/rspamd/rspamd.conf.local.override"
   '';
 
-  cmakeFlags = ''
-    -DDEBIAN_BUILD=ON
-    -DRUNDIR=/var/run/rspamd
-    -DDBDIR=/var/lib/rspamd
-    -DLOGDIR=/var/log/rspamd
-  '';
+  cmakeFlags = [
+    "-DDEBIAN_BUILD=ON"
+    "-DRUNDIR=/var/run/rspamd"
+    "-DDBDIR=/var/lib/rspamd"
+    "-DLOGDIR=/var/log/rspamd"
+  ];
 
   meta = with stdenv.lib; {
     homepage = "https://github.com/vstakhov/rspamd";

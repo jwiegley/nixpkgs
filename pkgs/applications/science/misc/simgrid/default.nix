@@ -11,28 +11,31 @@ stdenv.mkDerivation rec {
     sha256 = "0mkrzxpf42lmn96khfl1791vram67r2nqsgmppd2yil889nyz5kp";
   };
 
-  buildInputs = [ cmake perl ruby boost lua5_1 graphviz libsigcxx libunwind
-    elfutils
-    ];
+  buildInputs = [
+    cmake perl ruby boost lua5_1 graphviz libsigcxx libunwind elfutils
+  ];
 
-  preConfigure =
-    # Make it so that libsimgrid.so will be found when running programs from
-    # the build dir.
-    '' export LD_LIBRARY_PATH="$PWD/src/.libs"
-       export cmakeFlags="-Dprefix=$out"
+  cmakeFlags = [
+    "-Denable_tracing=on"
+    "-Denable_jedule=on"
+    "-Denable_latency_bound_tracking=on"
+    "-Denable_lua=on"
+    "-Denable_ns3=on"
+    "-Denable_gtnets=on"
+  ];
 
-       export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE
-         -isystem $(echo "${libsigcxx}/lib/"sigc++*/include)
-	 -isystem $(echo "${libsigcxx}/include"/sigc++* )
-	 "
-       export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH:$(echo "${libsigcxx}/lib/"sigc++*)"
+  preConfigure = ''
+     # Make it so that libsimgrid.so will be found when running programs from
+     # the build dir.
+     export LD_LIBRARY_PATH="$PWD/src/.libs"
+     export cmakeFlags+=("-Dprefix=$out")
 
-       # Enable more functionality.
-       export cmakeFlags="$cmakeFlags -Denable_tracing=on -Denable_jedule=on
-         -Denable_latency_bound_tracking=on -Denable_lua=on
-	 -Denable_ns3=on -Denable_gtnets=on
-	 "
-    '';
+     export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE
+       -isystem $(echo "${libsigcxx}/lib/"sigc++*/include)
+       -isystem $(echo "${libsigcxx}/include"/sigc++* )
+     "
+     export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH:$(echo "${libsigcxx}/lib/"sigc++*)"
+  '';
 
   makeFlags = "VERBOSE=1";
 

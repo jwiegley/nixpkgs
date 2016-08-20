@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   ];
 
   preConfigure = ''
-    cmakeFlags="-DDATA_DIR_PREFIXES=$out/share"
+    cmakeFlags+=("-DDATA_DIR_PREFIXES=$out/share")
   '';
 
   enableParallelBuilding = true;
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
       ${dejavu_fonts}/share/fonts/truetype/DejaVuSansMono.ttf \
       $out/share/games/arx/misc/dejavusansmono.ttf
   '';
-  
+
   meta = with stdenv.lib; {
     description = ''
       A cross-platform, open source port of Arx Fatalis, a 2002

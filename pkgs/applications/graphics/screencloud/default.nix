@@ -9,7 +9,7 @@ stdenv.mkDerivation rec {
   # for tracking usage.
   consumerKey = "23e747012c68601f27ab69c6de129ed70552d55b6";
   consumerSecret = "4701cb00c1bd357bbcae7c3d713dd216";
-  
+
   src = fetchFromGitHub {
     owner = "olav-st";
     repo = "screencloud";
@@ -48,7 +48,7 @@ stdenv.mkDerivation rec {
   preConfigure = ''
     # This needs to be set in preConfigure instead of cmakeFlags in order to
     # access the $prefix environment variable.
-    export cmakeFlags="-DCMAKE_INSTALL_PREFIX=$prefix/opt $cmakeFlags"
+    cmakeFlags+=("-DCMAKE_INSTALL_PREFIX=$prefix/opt")
   '';
 
   # There are a number of issues with screencloud's installation. We need to add

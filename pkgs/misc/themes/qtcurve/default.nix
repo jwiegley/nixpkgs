@@ -28,10 +28,10 @@ stdenv.mkDerivation {
     ./qtcurve-1.8.18-toolbar-alpha.patch
   ];
 
-  cmakeFlags = ''
-    -DENABLE_QT5=OFF
-    -DQTC_QT4_ENABLE_KWIN=ON
-  '';
+  cmakeFlags = [
+    "-DENABLE_QT5=OFF"
+    "-DQTC_QT4_ENABLE_KWIN=ON"
+  ];
 
   meta = with stdenv.lib; {
     homepage = https://github.com/QtCurve/qtcurve;

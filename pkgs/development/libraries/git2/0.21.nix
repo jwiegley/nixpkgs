@@ -10,7 +10,7 @@ stdenv.mkDerivation rec {
     sha256 = "0icf119lhha96rk8m6s38sczjr0idr7yczw6knby61m81a25a96y";
   };
 
-  cmakeFlags = "-DTHREADSAFE=ON";
+  cmakeFlags = [ "-DTHREADSAFE=ON" ];
 
   nativeBuildInputs = [ cmake python ];
   buildInputs = [ zlib libssh2 openssl http-parser ];

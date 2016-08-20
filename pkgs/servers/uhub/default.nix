@@ -28,10 +28,10 @@ stdenv.mkDerivation {
 
   patches = [ ./plugin-dir.patch ./systemd.patch ];
 
-  cmakeFlags = ''
-    -DSYSTEMD_SUPPORT=ON
-    ${if tlsSupport then "-DSSL_SUPPORT=ON" else "-DSSL_SUPPORT=OFF"}
-  '';
+  cmakeFlags = [
+    "-DSYSTEMD_SUPPORT=ON"
+    "-DSSL_SUPPORT=${if tlSupport then "ON" else "OFF"}"
+  ];
 
   meta = with stdenv.lib; {
     description = "High performance peer-to-peer hub for the ADC network";

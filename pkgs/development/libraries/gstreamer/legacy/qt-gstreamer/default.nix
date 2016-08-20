@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   propagatedBuildInputs = [ boost ];
   nativeBuildInputs = [ cmake automoc4 flex bison pkgconfig ];
 
-  cmakeFlags = "-DUSE_QT_PLUGIN_DIR=OFF -DUSE_GST_PLUGIN_DIR=OFF";
+  cmakeFlags = [ "-DUSE_QT_PLUGIN_DIR=OFF" "-DUSE_GST_PLUGIN_DIR=OFF" ];
 
   patches = [ ./boost1.48.patch ];
 }

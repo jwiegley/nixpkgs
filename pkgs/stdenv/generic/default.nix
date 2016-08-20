@@ -161,6 +161,10 @@ let
       buildInputs' = buildInputs ++
         (if separateDebugInfo then [ ../../build-support/setup-hooks/separate-debug-info.sh ] else []);
 
+      mkCmakeFlags = cmakeFlags: let
+        escapeTab = lib.escape [ "\t" ];
+      in builtins.concatStringsSep "\t" (builtins.map escapeTab cmakeFlags);
+
     in
 
       # Throw an error if trying to evaluate an non-valid derivation
@@ -170,11 +174,14 @@ let
                else true;
 
       lib.addPassthru (derivation (
-        (removeAttrs attrs
-          ["meta" "passthru" "crossAttrs" "pos"
-           "__impureHostDeps" "__propagatedImpureHostDeps"
-           "sandboxProfile" "propagatedSandboxProfile"])
-        // (let
+        (removeAttrs attrs [
+          "meta" "passthru" "crossAttrs" "pos"
+          "__impureHostDeps" "__propagatedImpureHostDeps"
+          "sandboxProfile" "propagatedSandboxProfile"
+          "cmakeFlags"
+        ]) // (if attrs ? cmakeFlags then {
+            cmakeFlags = mkCmakeFlags attrs.cmakeFlags;
+        } else {}) // (let
           computedSandboxProfile =
             lib.concatMap (input: input.__propagatedSandboxProfile or []) (extraBuildInputs ++ buildInputs ++ nativeBuildInputs);
           computedPropagatedSandboxProfile =

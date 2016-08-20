@@ -60,21 +60,19 @@ let
         ln -s ${g4data}/Geant4-${version}/data $out/share/Geant4-${version}/data
       '';
 
-      multiThreadingFlag = if multiThreadingCapable then "-DGEANT4_BUILD_MULTITHREADED=${if enableMultiThreading then "ON" else "OFF"}" else "";
 
-      cmakeFlags = ''
-        ${multiThreadingFlag}
-        -DGEANT4_USE_GDML=${if enableGDML then "ON" else "OFF"}
-        -DGEANT4_USE_G3TOG4=${if enableG3toG4 then "ON" else "OFF"}
-        -DGEANT4_USE_QT=${if enableQT then "ON" else "OFF"}
-        -DGEANT4_USE_XM=${if enableXM then "ON" else "OFF"}
-        -DGEANT4_USE_OPENGL_X11=${if enableOpenGLX11 then "ON" else "OFF"}
-        -DGEANT4_USE_INVENTOR=${if enableInventor then "ON" else "OFF"}
-        -DGEANT4_USE_RAYTRACER_X11=${if enableRaytracerX11 then "ON" else "OFF"}
-        -DGEANT4_USE_SYSTEM_CLHEP=${if clhep != null then "ON" else "OFF"}
-        -DGEANT4_USE_SYSTEM_EXPAT=${if expat != null then "ON" else "OFF"}
-        -DGEANT4_USE_SYSTEM_ZLIB=${if zlib != null then "ON" else "OFF"}
-      '';
+      cmakeFlags = [
+        "-DGEANT4_USE_GDML=${if enableGDML then "ON" else "OFF"}"
+        "-DGEANT4_USE_G3TOG4=${if enableG3toG4 then "ON" else "OFF"}"
+        "-DGEANT4_USE_QT=${if enableQT then "ON" else "OFF"}"
+        "-DGEANT4_USE_XM=${if enableXM then "ON" else "OFF"}"
+        "-DGEANT4_USE_OPENGL_X11=${if enableOpenGLX11 then "ON" else "OFF"}"
+        "-DGEANT4_USE_INVENTOR=${if enableInventor then "ON" else "OFF"}"
+        "-DGEANT4_USE_RAYTRACER_X11=${if enableRaytracerX11 then "ON" else "OFF"}"
+        "-DGEANT4_USE_SYSTEM_CLHEP=${if clhep != null then "ON" else "OFF"}"
+        "-DGEANT4_USE_SYSTEM_EXPAT=${if expat != null then "ON" else "OFF"}"
+        "-DGEANT4_USE_SYSTEM_ZLIB=${if zlib != null then "ON" else "OFF"}"
+      ] ++ (stdenv.lib.optional multiThreadingCapable "-DGEANT4_BUILD_MULTITHREADED=${if enableMultiThreading then "ON" else "OFF"}";
 
       g4data = installData {
         inherit version src;
@@ -105,16 +103,14 @@ let
       };
     };
 
-  installData = 
+  installData =
     { version, src }:
- 
+
     stdenv.mkDerivation rec {
       inherit version src;
       name = "g4data-${version}";
 
-      cmakeFlags = ''
-        -DGEANT4_INSTALL_DATA="ON"
-      '';
+      cmakeFlags = [ "-DGEANT4_INSTALL_DATA=ON" ];
 
       buildInputs = [ cmake expat ];
 
@@ -135,7 +131,7 @@ let
         maintainers = [ ];
         platforms = stdenv.lib.platforms.all;
       };
-    }; 
+    };
 
   fetchGeant4 = import ./fetch.nix {
     inherit stdenv fetchurl;
@@ -146,5 +142,4 @@ in {
     inherit (fetchGeant4.v10_0_2) version src;
     multiThreadingCapable = true;
   };
-} 
- 
+}

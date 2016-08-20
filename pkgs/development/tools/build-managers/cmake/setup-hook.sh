@@ -13,6 +13,11 @@ fixCmakeFiles() {
 }
 
 cmakeConfigurePhase() {
+
+    # Convert cmakeFlags into an array first
+    # so it can safely be modified by preConfigure
+    IFS="$(printf "\t")" read -a cmakeFlags <<< "${cmakeFlags-}"
+
     runHook preConfigure
 
     if [ -z "$dontFixCmake" ]; then
@@ -26,14 +31,17 @@ cmakeConfigurePhase() {
     fi
 
     if [ -z "$dontAddPrefix" ]; then
-        cmakeFlags="-DCMAKE_INSTALL_PREFIX=$prefix $cmakeFlags"
+        cmakeFlags+=("-DCMAKE_INSTALL_PREFIX=$prefix")
     fi
 
     if [ -n "$crossConfig" ]; then
         # By now it supports linux builds only. We should set the proper
         # CMAKE_SYSTEM_NAME otherwise.
         # http://www.cmake.org/Wiki/CMake_Cross_Compiling
-        cmakeFlags="-DCMAKE_CXX_COMPILER=$crossConfig-g++ -DCMAKE_C_COMPILER=$crossConfig-gcc $cmakeFlags"
+        cmakeFlags+=(
+            "-DCMAKE_CXX_COMPILER=$crossConfig-g++"
+            "-DCMAKE_C_COMPILER=$crossConfig-gcc"
+        )
     fi
 
     # This installs shared libraries with a fully-specified install
@@ -43,17 +51,21 @@ cmakeConfigurePhase() {
     # libraries are in a system path or in the same directory as the
     # executable. This flag makes the shared library accessible from its
     # nix/store directory.
-    cmakeFlags="-DCMAKE_INSTALL_NAME_DIR=$prefix/lib $cmakeFlags"
-    cmakeFlags="-DCMAKE_INSTALL_LIBDIR=${!outputLib}/lib $cmakeFlags"
-    cmakeFlags="-DCMAKE_INSTALL_INCLUDEDIR=${!outputDev}/include $cmakeFlags"
+    cmakeFlags+=(
+        "-DCMAKE_INSTALL_NAME_DIR=$prefix/lib"
+        "-DCMAKE_INSTALL_LIBDIR=${!outputLib}/lib"
+        "-DCMAKE_INSTALL_INCLUDEDIR=${!outputDev}/include"
+    )
 
     # Avoid cmake resetting the rpath of binaries, on make install
     # And build always Release, to ensure optimisation flags
-    cmakeFlags="-DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_BUILD_RPATH=ON $cmakeFlags"
+    cmakeFlags+=(
+        "-DCMAKE_BUILD_TYPE=Release"
+        "-DCMAKE_SKIP_BUILD_RPATH=ON"
+    )
 
-    echo "cmake flags: $cmakeFlags ${cmakeFlagsArray[@]}"
-
-    cmake ${cmakeDir:-.} $cmakeFlags "${cmakeFlagsArray[@]}"
+    echo "cmake flags: ${cmakeFlags[@]}"
+    cmake "${cmakeDir:-.}" "${cmakeFlags[@]}"
 
     runHook postConfigure
 }

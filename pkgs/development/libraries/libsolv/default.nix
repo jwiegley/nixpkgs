@@ -11,7 +11,12 @@ stdenv.mkDerivation rec {
     sha256 = "1gammarbnjbbkw2vlgcj9ynp1kgi5nns6xcl6ab8b5i4zgq91v2p";
   };
 
-  cmakeFlags = "-DENABLE_RPMMD=true -DENABLE_RPMDB=true -DENABLE_PUBKEY=true -DENABLE_RPMDB_BYRPMHEADER=true";
+  cmakeFlags = [
+    "-DENABLE_RPMMD=true"
+    "-DENABLE_RPMDB=true"
+    "-DENABLE_PUBKEY=true"
+    "-DENABLE_RPMDB_BYRPMHEADER=true"
+  ];
 
   buildInputs = [ cmake zlib expat rpm db ];
 

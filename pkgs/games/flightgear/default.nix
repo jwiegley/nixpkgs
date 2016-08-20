@@ -43,7 +43,7 @@ stdenv.mkDerivation rec {
   ];
 
   preConfigure = ''
-    export cmakeFlagsArray=(-DFG_DATA_DIR="$out/share/FlightGear/")
+    export cmakeFlags+=("-DFG_DATA_DIR=$out/share/FlightGear/")
   '';
 
   postInstall = ''

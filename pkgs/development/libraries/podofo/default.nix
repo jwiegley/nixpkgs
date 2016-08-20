@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
     rm ./cmake/modules/Find{FREETYPE,ZLIB,PkgConfig}.cmake
   '';
 
-  cmakeFlags = "-DPODOFO_BUILD_SHARED=ON -DPODOFO_BUILD_STATIC=OFF";
+  cmakeFlags = [ "-DPODOFO_BUILD_SHARED=ON" "-DPODOFO_BUILD_STATIC=OFF" ];
 
   meta = {
     homepage = http://podofo.sourceforge.net;

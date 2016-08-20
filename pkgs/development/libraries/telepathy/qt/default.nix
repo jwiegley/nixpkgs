@@ -36,7 +36,9 @@ in stdenv.mkDerivation rec {
 
   buildInputs = stdenv.lib.optional doCheck dbus_daemon;
 
-  cmakeFlags = "-DDESIRED_QT_VERSION=${builtins.substring 0 1 qtbase.version}";
+  cmakeFlags = [
+    "-DDESIRED_QT_VERSION=${builtins.substring 0 1 qtbase.version}"
+  ];
 
   # should be removable after the next update
   NIX_CFLAGS_COMPILE = [ "-Wno-error" ];

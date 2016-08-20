@@ -3,9 +3,9 @@ x@{builderDefsPackage
   , libpulseaudio, glib, gtk, pixman, nspr, nss, libXScrnSaver, scrnsaverproto
   , ...}:
 builderDefsPackage
-(a :  
-let 
-  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+(a :
+let
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++
     ["fetchgit" "perlPackages"];
 
   buildInputs = map (n: builtins.getAttr n x)
@@ -35,7 +35,7 @@ rec {
   inherit buildInputs;
 
   /* doConfigure should be removed if not needed */
-  phaseNames = ["goComponents" "setVars" "fixComponents" "doCmake" 
+  phaseNames = ["goComponents" "setVars" "fixComponents" "doCmake"
     "doMakeInstall" "goBack" "buildApp" "doDeploy"];
 
   fixComponents = a.fullDepEntry ''
@@ -46,8 +46,10 @@ rec {
     export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${nspr.dev}/include/nspr"
   '';
 
-  cmakeBuildDir="cmake-build";
-  cmakeFlags=["-D XPCOM_GECKO_SDK=${xulrunner}/lib/xulrunner-devel-${xulrunner.version}"];
+  cmakeBuildDir = "cmake-build";
+  cmakeFlags = [
+    "-DXPCOM_GECKO_SDK=${xulrunner}/lib/xulrunner-devel-${xulrunner.version}"
+  ];
 
   goComponents=a.fullDepEntry "cd src/components" ["doUnpack"];
   goBack=a.noDepEntry "cd ../../..";

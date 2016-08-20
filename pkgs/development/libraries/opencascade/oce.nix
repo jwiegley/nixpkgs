@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
   buildInputs = [ mesa tcl tk file libXmu libtool qt4 ftgl freetype cmake ];
 
   preConfigure = ''
-    cmakeFlags="$cmakeFlags -DOCE_INSTALL_PREFIX=$out"
+    cmakeFlags+=("-DOCE_INSTALL_PREFIX=$out")
   '';
 
   # https://bugs.freedesktop.org/show_bug.cgi?id=83631

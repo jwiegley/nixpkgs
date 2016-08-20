@@ -25,15 +25,15 @@ stdenv.mkDerivation rec {
     libxkbcommon libxml2 dbus cairo gtk2 gtk3 pango qt4
   ];
 
-  cmakeFlags = ''
-    -DENABLE_QT_IM_MODULE=ON
-    -DENABLE_GTK2_IM_MODULE=ON
-    -DENABLE_GTK3_IM_MODULE=ON
-    -DENABLE_GIR=OFF
-    -DENABLE_OPENCC=OFF
-    -DENABLE_PRESAGE=OFF
-    -DENABLE_XDGAUTOSTART=OFF
-  '';
+  cmakeFlags = [
+    "-DENABLE_QT_IM_MODULE=ON"
+    "-DENABLE_GTK2_IM_MODULE=ON"
+    "-DENABLE_GTK3_IM_MODULE=ON"
+    "-DENABLE_GIR=OFF"
+    "-DENABLE_OPENCC=OFF"
+    "-DENABLE_PRESAGE=OFF"
+    "-DENABLE_XDGAUTOSTART=OFF"
+  ];
 
   meta = with stdenv.lib; {
     homepage    = "https://github.com/fcitx/fcitx";

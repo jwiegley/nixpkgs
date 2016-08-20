@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
   };
 
   preConfigure = ''
-    export cmakeFlags="-DPREFIX=$out"
+    cmakeFlags+=("-DPREFIX=$out")
   '';
 
   meta = {

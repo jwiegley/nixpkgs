@@ -17,10 +17,10 @@ stdenv.mkDerivation rec {
     sha256 = "1mybxcnl7flliz74kdfnvh18v5dwd9zbdsw2kc7wpl4idcly1n0s";
   };
 
-  cmakeFlags = ''
-    -DSC_WII=OFF
-    -DSC_EL=${if useSCEL then "ON" else "OFF"}
-  '';
+  cmakeFlags = [
+    "-DSC_WII=OFF"
+    "-DSC_EL=${if useSCEL then "ON" else "OFF"}"
+  ];
 
   nativeBuildInputs = [ cmake pkgconfig ];
 

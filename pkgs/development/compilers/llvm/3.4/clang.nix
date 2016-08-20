@@ -11,7 +11,9 @@ stdenv.mkDerivation {
     mv clang-tools-extra-* $sourceRoot/tools/extra
     # !!! Hopefully won't be needed for 3.5
     unpackFile ${llvm.src}
-    export cmakeFlags="$cmakeFlags -DCLANG_PATH_TO_LLVM_SOURCE="`ls -d $PWD/llvm-*`
+    cmakeFlags+=(
+        "-DCLANG_PATH_TO_LLVM_SOURCE="$(ls -d $PWD/llvm-*)
+    )
     (cd llvm-* && patch -Np1 -i ${./llvm-separate-build.patch})
   '';
 

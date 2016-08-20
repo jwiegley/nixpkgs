@@ -61,7 +61,7 @@ stdenv.mkDerivation rec {
     xorg.xcbutilwm
   ];
 
-  #cmakeFlags = "-DGENERATE_MANPAGES=ON";
+  #cmakeFlags = [ "-DGENERATE_MANPAGES=ON" ];
 
   LD_LIBRARY_PATH = "${stdenv.lib.makeLibraryPath [ cairo pango gobjectIntrospection ]}";
   GI_TYPELIB_PATH = "${pango.out}/lib/girepository-1.0";
