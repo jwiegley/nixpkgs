@@ -47,16 +47,16 @@ rec {
   kdeSubdirPkg = module:
     {name, subdir ? name, sane ? name}:
     let name_ = name; version_ = getAttr module manifest.versions; in
-    a@{cmakeFlags ? [], name ? name_, version ? version_, meta ? {}, nativeBuildInputs ? [], ...}:
+    a@{cmakeFlags ? {}, name ? name_, version ? version_, meta ? {}, nativeBuildInputs ? [], ...}:
     stdenv.mkDerivation ({
       name = "${name}-${release}";
       src = kdesrc module version;
       nativeBuildInputs = nativeBuildInputs ++ [ automoc4 cmake perl pkgconfig ];
-      cmakeFlags =
-        [ "-DDISABLE_ALL_OPTIONAL_SUBDIRECTORIES=TRUE"
-          "-DBUILD_doc=TRUE"
-          "-DBUILD_${subdir}=TRUE"
-        ] ++ cmakeFlags;
+      cmakeFlags = {
+          DISABLE_ALL_OPTIONAL_SUBDIRECTORIES = true;
+          BUILD_doc = true;
+          "BUILD_${subdir}" = true;
+        } // cmakeFlags;
       meta = defMeta // meta;
       enableParallelBuilding = module.enableParallelBuilding or true;
     } // (removeAttrs a [ "meta" "name" "cmakeFlags" "nativeBuildInputs" ]));

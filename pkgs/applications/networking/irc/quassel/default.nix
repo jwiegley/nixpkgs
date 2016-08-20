@@ -21,7 +21,6 @@ assert withKDE -> kdelibs != null;
 assert !buildClient -> !withKDE; # KDE is used by the client only
 
 let
-  edf = flag: feature: [("-D" + feature + (if flag then "=ON" else "=OFF"))];
   source = import ./source.nix { inherit fetchurl; };
 
 in with stdenv; mkDerivation rec {
@@ -38,14 +37,15 @@ in with stdenv; mkDerivation rec {
 
   NIX_CFLAGS_COMPILE = "-fPIC";
 
-  cmakeFlags = [
-    "-DEMBED_DATA=OFF" ]
-    ++ edf static "STATIC"
-    ++ edf monolithic "WANT_MONO"
-    ++ edf daemon "WANT_CORE"
-    ++ edf client "WANT_QTCLIENT"
-    ++ edf withKDE "WITH_KDE"
-    ++ edf previews "WITH_WEBKIT";
+  cmakeFlags = {
+    EMBED_DATA = false;
+    STATIC = static;
+    WANT_MONO = monolithic;
+    WANT_CORE = daemon;
+    WANT_QTCLIENT = client;
+    WITH_KDE = withKDE;
+    WITH_WEBKIT = previews;
+  };
 
   preFixup =
     lib.optionalString buildClient ''

@@ -29,11 +29,11 @@ in
 
     nativeBuildInputs = [ cmake flex lemon ];
 
-    cmakeFlags = [
-      "-DGITREV=${gitRev}"
-      "-DGITTAG=${gitTag}"
-      "-DGITBRANCH=${gitBranch}"
-    ];
+    cmakeFlags = {
+      GITREV = "${gitRev}";
+      GITTAG = "${gitTag}";
+      GITBRANCH = "${gitBranch}";
+    };
 
     enableParallelBuilding = true;
 

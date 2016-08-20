@@ -11,7 +11,10 @@ stdenv.mkDerivation rec {
     sha256 = "09ywwvlk8hh1357pnal96kc40ma4jq7776hqk0609rgz13s6babp";
   };
 
-  cmakeFlags = [ "-DK3D_BUILD_DOCS=false" "-DK3D_BUILD_GUIDE=false" ];
+  cmakeFlags = {
+    K3D_BUILD_DOCS = false;
+    K3D_BUILD_GUIDE = false;
+  };
 
   preConfigure = ''
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH''${LD_LIBRARY_PATH:+:}$PWD/build/lib"

@@ -24,7 +24,7 @@
 , runCommand, shared_mime_info, writeScriptBin
 }:
 
-let 
+let
   version = "4.12.0";
   pName = "digikam-${version}";
 
@@ -36,11 +36,11 @@ let
       sha256 = "081ldsaf3frf5khznjd3sxkjmi4dyp6w6nqnc2a0agkk0kxkl10m";
     };
 
-    nativeBuildInputs = [ 
+    nativeBuildInputs = [
       automoc4 cmake gettext perl pkgconfig
     ] ++ [
       # Optional
-      doxygen 
+      doxygen
     ];
 
     buildInputs = [
@@ -50,11 +50,11 @@ let
       shared_desktop_ontologies soprano ]
     # Optional build time dependencies
     ++ [
-      baloo 
-      kfilemetadata 
-      lcms2 ] 
+      baloo
+      kfilemetadata
+      lcms2 ]
     ++ stdenv.lib.optional (kfaceSupport && null != libkface) [ libkface ]
-    ++ stdenv.lib.optional (kgeomapSupport && null != libkgeomap) [ libkgeomap ] ++ 
+    ++ stdenv.lib.optional (kgeomapSupport && null != libkgeomap) [ libkgeomap ] ++
     [ libxslt ]
     # Plugins optional build time dependencies
     ++ [
@@ -69,14 +69,17 @@ let
     NIX_CFLAGS_COMPILE = "-I${kdepimlibs}/include/KDE";
 
     # Help digiKam find libusb, otherwise gphoto2 support is disabled
-    cmakeFlags = [
-      "-DLIBUSB_LIBRARIES=${libusb1.out}/lib"
-      "-DLIBUSB_INCLUDE_DIR=${libusb1.dev}/include/libusb-1.0"
-      "-DENABLE_BALOOSUPPORT=ON"
-      "-DENABLE_KDEPIMLIBSSUPPORT=ON"
-      "-DENABLE_LCMS2=ON" ] 
-    ++ stdenv.lib.optional (kfaceSupport && null == libkface) [ "-DDIGIKAMSC_COMPILE_LIBKFACE=ON" ]
-    ++ stdenv.lib.optional (kgeomapSupport && null == libkgeomap) [ "-DDIGIKAMSC_COMPILE_LIBKGEOMAP=ON" ];
+    cmakeFlags = with stdenv.lib; {
+      LIBUSB_LIBRARIES = "${libusb1.out}/lib";
+      LIBUSB_INCLUDE_DIR = "${libusb1.dev}/include/libusb-1.0";
+      ENABLE_BALOOSUPPORT = true;
+      ENABLE_KDEPIMLIBSSUPPORT = true;
+      ENABLE_LCMS2 = true;
+    } // optionalAttrs (kfaceSupport && null == libkface) {
+      DIGIKAMSC_COMPILE_LIBKFACE = true;
+    } // optionalAttrs (kgeomapSupport && null == libkgeomap) {
+      DIGIKAMSC_COMPILE_LIBKGEOMAP = true;
+    };
 
     enableParallelBuilding = true;
 
@@ -98,11 +101,11 @@ let
   # Optional build time dependencies
   ++ [
 
-    baloo kfilemetadata ] 
+    baloo kfilemetadata ]
   ++ stdenv.lib.optional (kfaceSupport && null != libkface) [ libkface ]
-  ++ stdenv.lib.optional (kgeomapSupport && null != libkgeomap) [ libkgeomap ] 
-  ++ [ 
-    libkipi ] 
+  ++ stdenv.lib.optional (kgeomapSupport && null != libkgeomap) [ libkgeomap ]
+  ++ [
+    libkipi ]
   # Plugins optional build time dependencies
   ++ [
     libksane libkvkontakte
@@ -140,7 +143,7 @@ let
   '';
 
 
-  replaceExeListWithWrapped = 
+  replaceExeListWithWrapped =
     let f = exeName: ''
         rm -f "$out/bin/${exeName}"
         makeWrapper "${build}/bin/${exeName}" "$out/bin/${exeName}" \
@@ -148,7 +151,7 @@ let
           --set KDEDIRS "${KDEDIRS}" \
           --set KDESYCOCA "${sycoca}/${sycocaFileRelPath}"
       '';
-    in 
+    in
       with stdenv.lib; exeNameList: concatStrings (intersperse "\n" (map f exeNameList));
 
 in
@@ -193,13 +196,13 @@ runCommand "${pName}" {
     done
   done
   popd > /dev/null
-  
-  ${replaceExeListWithWrapped [ "cleanup_digikamdb" "digitaglinktree" "digikam" "dngconverter" 
+
+  ${replaceExeListWithWrapped [ "cleanup_digikamdb" "digitaglinktree" "digikam" "dngconverter"
                                 "expoblending" "photolayoutseditor" "scangui" "showfoto" ]}
 ''
 
 /*
-  
+
 TODO
 ----
 

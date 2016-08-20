@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
   buildInputs = [ pkgconfig gtk SDL fontconfig freetype imlib2 SDL_image mesa
     libXmu freeglut python gettext quesoglc gd postgresql cmake qt4 SDL_ttf fribidi ];
 
-  cmakeFlags = [ "-DSAMPLE_MAP=n" ];
+  cmakeFlags = { SAMPLE_MAP = false; };
 
   meta = {
     homepage = http://www.navit-project.org/;

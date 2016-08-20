@@ -34,8 +34,8 @@ plasmaPackage rec {
     sed '1i#include <cmath>' -i kcms/touchpad/src/backends/x11/synapticstouchpad.cpp
   '';
   NIX_CFLAGS_COMPILE = [ "-I${xorgserver.dev}/include/xorg" ];
-  cmakeFlags = [
-    "-DEvdev_INCLUDE_DIRS=${xf86inputevdev.dev}/include/xorg"
-    "-DSynaptics_INCLUDE_DIRS=${xf86inputsynaptics}/include/xorg"
-  ];
+  cmakeFlags = {
+    Evdev_INCLUDE_DIRS = "${xf86inputevdev.dev}/include/xorg";
+    Synaptics_INCLUDE_DIRS = "${xf86inputsynaptics}/include/xorg";
+  };
 }

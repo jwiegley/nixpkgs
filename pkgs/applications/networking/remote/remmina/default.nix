@@ -29,7 +29,11 @@ stdenv.mkDerivation {
                   glib gtk gettext libxkbfile libgnome_keyring libX11
                   freerdp libssh libgcrypt gnutls ];
 
-  cmakeFlags = [ "-DWITH_VTE=OFF" "-DWITH_TELEPATHY=OFF" "-DWITH_AVAHI=OFF" ];
+  cmakeFlags = {
+    WITH_VTE = false;
+    WITH_TELEPATHY = false;
+    WITH_AVAHI = false;
+  };
 
   patches = [ ./lgthread.patch ];
 

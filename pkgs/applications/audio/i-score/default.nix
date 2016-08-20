@@ -52,12 +52,12 @@ stdenv.mkDerivation rec {
     rtaudio
   ];
 
-  cmakeFlags = [
-    "-GNinja"
-    "-DISCORE_CONFIGURATION=static-release"
-    "-DISCORE_ENABLE_LTO=OFF"
-    "-DISCORE_BUILD_FOR_PACKAGE_MANAGER=True"
-  ];
+  cmakeFlags = {
+    generator = "Ninja";
+    ISCORE_CONFIGURATION = "static-release";
+    ISCORE_ENABLE_LTO = false;
+    ISCORE_BUILD_FOR_PACKAGE_MANAGER = true;
+  };
 
   patchPhase = ''
     sed -e '77d' -i CMake/modules/GetGitRevisionDescription.cmake

@@ -238,7 +238,7 @@ in
     buildInputs = [ cmake kodi libcec_platform kodi-platform ];
 
     # disables check ensuring install prefix is that of kodi
-    cmakeFlags = [ "-DOVERRIDE_PATHS=1" ];
+    cmakeFlags = { OVERRIDE_PATHS = true; };
 
     # kodi checks for plugin .so libs existance in the addon folder (share/...)
     # and the non-wrapped kodi lib/... folder before even trying to dlopen

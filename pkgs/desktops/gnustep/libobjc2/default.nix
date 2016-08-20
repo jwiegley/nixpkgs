@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ cmake ];
 
-  cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" ];
+  cmakeFlags = { CMAKE_INSTALL_LIBDIR = "lib"; };
 
   meta = with lib; {
     description = "Objective-C runtime for use with GNUstep";

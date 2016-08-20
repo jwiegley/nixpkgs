@@ -64,7 +64,7 @@ let
 
     buildInputs = (args.buildInputs or []) ++ common.buildInputs ++ [ lndir ];
 
-    cmakeFlags = [ "-DPLUGIN_UI=${args.pluginUi}" ];
+    cmakeFlags = { PLUGIN_UI = "${args.pluginUi}"; };
 
     passthru.isUi = args.isUi or false;
 

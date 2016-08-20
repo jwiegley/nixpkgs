@@ -162,8 +162,32 @@ let
         (if separateDebugInfo then [ ../../build-support/setup-hooks/separate-debug-info.sh ] else []);
 
       mkCmakeFlags = cmakeFlags: let
+        flattenFlag = name: value: let
+          serializedValue =
+            if builtins.isString value then value
+            else if builtins.isInt value then (builtins.toString value)
+            else if builtins.isBool value then (if value then "ON" else "OFF")
+            else throw "Bad value ${value} for cmakeFlags attr ${name}";
+
+          # Strings and paths are more complicated to discern,
+          # so just skip those
+          flagType = if builtins.isBool value then ":BOOL" else "";
+        in if (value != null)
+          then"-D${name}${flagType}=${serializedValue}" # Set cache value
+          else "-U${name}"; # Unset cache value
+        flagsList = if (builtins.isList cmakeFlags)
+          then cmakeFlags
+          else with cmakeFlags; (lib.mapAttrsToList flattenFlag (
+            builtins.removeAttrs cmakeFlags [
+              "generator"
+              "extraArgs"
+            ]
+          ))
+          ++ (lib.optional (cmakeFlags ? generator) "-G${generator}")
+          ++ (lib.optionals (cmakeFlags ? extraArgs) extraArgs)
+          ;
         escapeTab = lib.escape [ "\t" ];
-      in builtins.concatStringsSep "\t" (builtins.map escapeTab cmakeFlags);
+      in builtins.concatStringsSep "\t" (builtins.map escapeTab flagsList);
 
     in
 

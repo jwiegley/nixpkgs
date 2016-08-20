@@ -34,14 +34,14 @@ stdenv.mkDerivation rec {
   # to add the argument for us.
   dontAddPrefix = true;
 
-  cmakeFlags = [
-    "-DQXT_QXTCORE_INCLUDE_DIR=${qxt}/include/QxtCore"
-    "-DQXT_QXTCORE_LIB_RELEASE=${qxt}/lib/libQxtCore.so"
-    "-DQXT_QXTGUI_INCLUDE_DIR=${qxt}/include/QxtGui"
-    "-DQXT_QXTGUI_LIB_RELEASE=${qxt}/lib/libQxtGui.so"
-    "-DCONSUMER_KEY_SCREENCLOUD=${consumerKey}"
-    "-DCONSUMER_SECRET_SCREENCLOUD=${consumerSecret}"
-  ];
+  cmakeFlags = {
+    QXT_QXTCORE_INCLUDE_DIR = "${qxt}/include/QxtCore";
+    QXT_QXTCORE_LIB_RELEASE = "${qxt}/lib/libQxtCore.so";
+    QXT_QXTGUI_INCLUDE_DIR = "${qxt}/include/QxtGui";
+    QXT_QXTGUI_LIB_RELEASE = "${qxt}/lib/libQxtGui.so";
+    CONSUMER_KEY_SCREENCLOUD = "${consumerKey}";
+    CONSUMER_SECRET_SCREENCLOUD = "${consumerSecret}";
+  };
 
   sourceRoot = "screencloud-v${version}-src/screencloud";
 

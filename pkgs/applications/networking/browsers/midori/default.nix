@@ -41,12 +41,12 @@ stdenv.mkDerivation rec {
     zeitgeist
   ];
 
-  cmakeFlags = [ 
-    "-DCMAKE_BUILD_TYPE=Release"
-    "-DUSE_ZEITGEIST=${if zeitgeistSupport then "ON" else "OFF"}"
-    "-DHALF_BRO_INCOM_WEBKIT2=ON"
-    "-DUSE_GTK3=1"
-  ];
+  cmakeFlags = {
+    CMAKE_BUILD_TYPE = "Release";
+    USE_ZEITGEIST = zeitgeistSupport;
+    HALF_BRO_INCOM_WEBKIT2 = true;
+    USE_GTK3 = true;
+  };
 
   NIX_LDFLAGS="-lX11";
 

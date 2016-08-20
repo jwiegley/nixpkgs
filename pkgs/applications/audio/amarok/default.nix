@@ -32,7 +32,7 @@ stdenv.mkDerivation rec {
     sed -i -e 's/STRLESS/VERSION_LESS/g' cmake/modules/FindTaglib.cmake
   '';
 
-  cmakeFlags = [ "-DKDE4_BUILD_TESTS=OFF" ];
+  cmakeFlags = { KDE4_BUILD_TESTS = false; };
 
   enableParallelBuilding = true;
 

@@ -7,9 +7,9 @@
 kde {
   nativeBuildInputs = [ automoc4 cmake perl pkgconfig ];
 
-  cmakeFlags = [
-    "-DCMAKE_MINIMUM_REQUIRED_VERSION=3.3"
-  ];
+  cmakeFlags = {
+    CMAKE_MINIMUM_REQUIRED_VERSION = "3.3";
+  };
 
   buildInputs =
     [ boost gpgme libical libxslt qjson prison

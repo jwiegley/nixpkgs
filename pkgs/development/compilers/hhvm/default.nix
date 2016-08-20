@@ -46,7 +46,7 @@ stdenv.mkDerivation rec {
     patchShebangs .
   '';
 
-  cmakeFlags = [ "-DCMAKE_BUILD_TYPE=Release" ];
+  cmakeFlags = { CMAKE_BUILD_TYPE = "Release"; };
 
   meta = {
     description = "High-performance JIT compiler for PHP/Hack";

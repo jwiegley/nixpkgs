@@ -13,9 +13,9 @@ stdenv.mkDerivation rec {
   buildInputs =
     [ cmake qt4 pkgconfig qtkeychain sqlite];
 
-  cmakeFlags = [
-  "-UCMAKE_INSTALL_LIBDIR"
-  ];
+  cmakeFlags = {
+    CMAKE_INSTALL_LIBDIR = null;
+  };
 
   enableParallelBuilding = true;
 

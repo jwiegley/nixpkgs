@@ -16,9 +16,9 @@ stdenv.mkDerivation rec {
     unzip
   ];
 
-  cmakeFlags = [
-    "-DUSE_PYTHON=OFF"
-  ];
+  cmakeFlags = {
+    USE_PYTHON = false;
+  };
 
   preBuild = ''
     makeFlags="ILMBASE_HOME=${ilmbase} OPENEXR_HOME=${openexr} USE_PYTHON=0

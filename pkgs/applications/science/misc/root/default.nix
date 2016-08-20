@@ -23,12 +23,13 @@ stdenv.mkDerivation rec {
     patchShebangs build/unix/
   '';
 
-  cmakeFlags = [
-    "-Drpath=ON"
-    "-DCMAKE_INSTALL_LIBDIR=lib"
-    "-DCMAKE_INSTALL_INCLUDEDIR=include"
-  ]
-  ++ stdenv.lib.optional (stdenv.cc.libc != null) "-DC_INCLUDE_DIRS=${stdenv.cc.libc}/include";
+  cmakeFlags = {
+    rpath = true;
+    CMAKE_INSTALL_LIBDIR = "lib";
+    CMAKE_INSTALL_INCLUDEDIR = "include";
+  } // stdenv.lib.optionalAttrs (stdenv.cc.libc != null) {
+    C_INCLUDE_DIRS = "${stdenv.cc.libc}/include";
+  };
 
   enableParallelBuilding = true;
 

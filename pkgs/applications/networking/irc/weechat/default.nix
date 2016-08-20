@@ -28,14 +28,15 @@ stdenv.mkDerivation rec {
     sha256 = "0n4cbhh9a7qq6y70ac9b4r0kb7hydwsic99h45ppr2jly322fvij";
   };
 
-  cmakeFlags = with stdenv.lib; []
-    ++ optional stdenv.isDarwin "-DICONV_LIBRARY=${libiconv}/lib/libiconv.dylib"
-    ++ optional (!guileSupport) "-DENABLE_GUILE=OFF"
-    ++ optional (!luaSupport)   "-DENABLE_LUA=OFF"
-    ++ optional (!perlSupport)  "-DENABLE_PERL=OFF"
-    ++ optional (!rubySupport)  "-DENABLE_RUBY=OFF"
-    ++ optional (!tclSupport)   "-DENABLE_TCL=OFF"
-    ;
+ cmakeFlags = {
+    ENABLE_GUILE = guileSupport;
+    ENABLE_LUA = luaSupport;
+    ENABLE_PERL = perlSupport;
+    ENABLE_RUBY = rubySupport;
+    ENABLE_TCL = tclSupport;
+  } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ICONV_LIBRARY = "${libiconv}/lib/libiconv.dylib";
+  };
 
   buildInputs = with stdenv.lib; [
       ncurses python openssl aspell gnutls zlib curl pkgconfig

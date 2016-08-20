@@ -2,7 +2,8 @@
 kde {
   buildInputs = [ kdelibs boost python ];
 
-  cmakeFlags = [ "-DKIG_ENABLE_PYTHON_SCRIPTING=1" ];
+  cmakeFlags = { KIG_ENABLE_PYTHON_SCRIPTING = true; };
+
   meta = {
     description = "KDE Interactive Geometry";
   };

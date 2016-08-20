@@ -11,9 +11,9 @@ stdenv.mkDerivation rec {
     sha256 = "1hlayhcmdfayma4hchv2bfyg82ry0h74hg4095d959mg19qkb9n2";
   };
 
-  cmakeFlags = [
-    "-DENABLE_KBANKING='true'"
-  ];
+  cmakeFlags = {
+    ENABLE_KBANKING = true;
+  };
 
   buildInputs = [ kdepimlibs perl boost gpgme gmpxx libalkimia libofx libical
                   doxygen aqbanking gwenhywfar ];

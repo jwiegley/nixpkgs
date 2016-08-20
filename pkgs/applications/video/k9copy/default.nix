@@ -14,10 +14,10 @@ stdenv.mkDerivation rec {
     sha256 = "0dp06rwihks50c57bbv04d6bj2qc88isl91971r4lii2xp0qn7sg";
   };
 
-  cmakeFlags = [
-    "-DQT5_BUILD=ON"
-    "-DCMAKE_MINIMUM_REQUIRED_VERSION=3.0"
-  ];
+  cmakeFlags = {
+    QT5_BUILD = true;
+    CMAKE_MINIMUM_REQUIRED_VERSION = "3.0";
+  };
 
   # Hack to disable documentation
   preConfigure = ''

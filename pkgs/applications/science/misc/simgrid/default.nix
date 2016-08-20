@@ -15,14 +15,14 @@ stdenv.mkDerivation rec {
     cmake perl ruby boost lua5_1 graphviz libsigcxx libunwind elfutils
   ];
 
-  cmakeFlags = [
-    "-Denable_tracing=on"
-    "-Denable_jedule=on"
-    "-Denable_latency_bound_tracking=on"
-    "-Denable_lua=on"
-    "-Denable_ns3=on"
-    "-Denable_gtnets=on"
-  ];
+  cmakeFlags = {
+    enable_tracing = true;
+    enable_jedule = true;
+    enable_latency_bound_tracking = true;
+    enable_lua = true;
+    enable_ns3 = true;
+    enable_gtnets = true;
+  };
 
   preConfigure = ''
      # Make it so that libsimgrid.so will be found when running programs from

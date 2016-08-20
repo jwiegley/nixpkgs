@@ -28,5 +28,5 @@ plasmaPackage {
     substituteInPlace main_wayland.cpp \
         --subst-var-by xwayland ${lib.getBin xwayland}/bin/Xwayland
   '';
-  cmakeFlags = [ "-DCMAKE_SKIP_BUILD_RPATH=OFF" ];
+  cmakeFlags = { CMAKE_SKIP_BUILD_RPATH = false; };
 }

@@ -47,9 +47,9 @@ rec {
   '';
 
   cmakeBuildDir = "cmake-build";
-  cmakeFlags = [
-    "-DXPCOM_GECKO_SDK=${xulrunner}/lib/xulrunner-devel-${xulrunner.version}"
-  ];
+  cmakeFlags = {
+    XPCOM_GECKO_SDK = "${xulrunner}/lib/xulrunner-devel-${xulrunner.version}";
+  };
 
   goComponents=a.fullDepEntry "cd src/components" ["doUnpack"];
   goBack=a.noDepEntry "cd ../../..";

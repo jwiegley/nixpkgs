@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     sha256 = "832520787f57f63cf47364d080f30ad10d6d6e00f166790c19b125be3d6dd45c";
   };
   buildInputs = [ cmake boost bison flex perl zlib ];
-  cmakeFlags = [ "-DBUILD_SHARED_LIBS=ON" ];
+  cmakeFlags = { BUILD_SHARED_LIBS = true; };
   patchPhase = ''
       sed -e 's,^export(PACKAGE.*,,' -i CMakeLists.txt
       patch -p1 < ${./fixbuild.diff}

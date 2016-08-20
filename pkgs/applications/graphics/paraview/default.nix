@@ -18,16 +18,18 @@ stdenv.mkDerivation rec {
   preConfigure = ''
     export NIX_LDFLAGS="$NIX_LDFLAGS -rpath $out/lib/paraview-3.98 -rpath ../../../../../../lib -rpath ../../../../../lib -rpath ../../../../lib -rpath ../../../lib -rpath ../../lib -rpath ../lib"
   '';
-  cmakeFlags = [
-    "-DPARAVIEW_USE_SYSTEM_HDF5:BOOL=ON"
-    "-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON"
-    "-DPARAVIEW_ENABLE_PYTHON:BOOL=ON"
-#  use -DPARAVIEW_INSTALL_THIRD_PARTY_LIBRARIES:BOOL=OFF \ to fix make install error: http://www.cmake.org/pipermail/paraview/2011-February/020268.html
-    "-DPARAVIEW_INSTALL_THIRD_PARTY_LIBRARIES:BOOL=OFF"
-    "-DCMAKE_SKIP_BUILD_RPATH=ON"
-    "-DVTK_USE_RPATH:BOOL=ON"
-    "-DPARAVIEW_INSTALL_DEVELOPMENT=ON"
-  ];
+  cmakeFlags = {
+    PARAVIEW_USE_SYSTEM_HDF5 = true;
+    VTK_USE_SYSTEM_LIBXML2 = true;
+    PARAVIEW_ENABLE_PYTHON = true;
+    # use PARAVIEW_INSTALL_THIRD_PARTY_LIBRARIES = false
+    # to fix make install error:
+    # http://www.cmake.org/pipermail/paraview/2011-February/020268.html
+    PARAVIEW_INSTALL_THIRD_PARTY_LIBRARIES = false;
+    CMAKE_SKIP_BUILD_RPATH = true;
+    VTK_USE_RPATH = true;
+    PARAVIEW_INSTALL_DEVELOPMENT = true;
+  };
 
   # https://bugzilla.redhat.com/show_bug.cgi?id=1138466
   NIX_CFLAGS_COMPILE = "-DGLX_GLXEXT_LEGACY";

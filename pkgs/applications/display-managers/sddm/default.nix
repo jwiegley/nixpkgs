@@ -34,16 +34,16 @@ let
 
     propagatedBuildInputs = [ qtdeclarative ];
 
-    cmakeFlags = [
-      "-DCONFIG_FILE=/etc/sddm.conf"
+    cmakeFlags = {
+      CONFIG_FILE = "/etc/sddm.conf";
       # Set UID_MIN and UID_MAX so that the build script won't try
       # to read them from /etc/login.defs (fails in chroot).
       # The values come from NixOS; they may not be appropriate
       # for running SDDM outside NixOS, but that configuration is
       # not supported anyway.
-      "-DUID_MIN=1000"
-      "-DUID_MAX=29999"
-    ];
+      UID_MIN = 1000;
+      UID_MAX = 29999;
+    };
 
     preConfigure = ''
       cmakeFlags+=(

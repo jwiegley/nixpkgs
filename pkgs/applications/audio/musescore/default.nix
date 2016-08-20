@@ -17,16 +17,16 @@ stdenv.mkDerivation rec {
     "PREFIX=$(out)"
   ];
 
-  cmakeFlags = [
-    "-DAEOLUS=OFF"
-    "-DZERBERUS=ON"
-    "-DOSC=ON=ON"
-    "-DOMR=OFF" # TODO: add OMR support, CLEF_G not declared error
-    "-DOCR=OFF" # Not necessary without OMR
-    "-DSOUNDFONT3=ON"
-    "-DHAS_AUDIOFILE=ON"
-    "-DBUILD_JACK=ON"
-  ];
+  cmakeFlags = {
+    AEOLUS = false;
+    ZERBERUS = true;
+    OSC = true;
+    OMR = false; # TODO: add OMR support, CLEF_G not declared error
+    OCR = false; # Not necessary without OMR
+    SOUNDFONT3 = true;
+    HAS_AUDIOFILE = true;
+    BUILD_JACK = true;
+  };
 
   preBuild = ''
     make lupdate

@@ -26,7 +26,7 @@ kde {
 
   KDEDIRS = libktorrent;
 
-  cmakeFlags = [ "-DBUILD_skypebuttons=TRUE" ];
+  cmakeFlags = { BUILD_skypebuttons = true; };
 
   meta = {
     description = "A KDE multi-protocol IM client";

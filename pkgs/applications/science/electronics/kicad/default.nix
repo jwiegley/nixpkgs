@@ -24,12 +24,12 @@ stdenv.mkDerivation rec {
 
   sourceRoot = "kicad-${version}";
 
-  cmakeFlags = [
-    "-DCMAKE_BUILD_TYPE=Release"
-    "-DKICAD_SKIP_BOOST=ON"
-    "-DKICAD_BUILD_VERSION=${version}"
-    "-DKICAD_REPO_NAME=stable"
-  ];
+  cmakeFlags = {
+    CMAKE_BUILD_TYPE = "Release";
+    KICAD_SKIP_BOOST = true;
+    KICAD_BUILD_VERSION = "${version}";
+    KICAD_REPO_NAME = "stable";
+  };
 
   enableParallelBuilding = true; # often fails on Hydra: fatal error: pcb_plot_params_lexer.h: No such file or directory
 

@@ -21,13 +21,15 @@ stdenv.mkDerivation {
 
   buildInputs = [ cmake libedit libxml2 zlib ];
 
-  cmakeFlags = [
-    "-DCMAKE_BUILD_TYPE=Release"
-    "-DCMAKE_CXX_FLAGS=-std=c++11"
-    "-DCLANG_PATH_TO_LLVM_BUILD=${llvm}"
-  ] ++
-  (stdenv.lib.optional (stdenv.cc.libc != null) "-DC_INCLUDE_DIRS=${stdenv.cc.libc}/include") ++
-  (stdenv.lib.optional (stdenv.cc.cc != null) "-DGCC_INSTALL_PREFIX=${stdenv.cc.cc}");
+  cmakeFlags = with stdenv.lib; {
+    CMAKE_BUILD_TYPE = "Release";
+    CMAKE_CXX_FLAGS = "-std=c++11";
+    CLANG_PATH_TO_LLVM_BUILD = "${llvm}";
+  } // optionalAttrs (stdenv.cc.libc != null) {
+    C_INCLUDE_DIRS = "${stdenv.cc.libc}/include";
+  } // optionalAttrs (stdenv.cc.cc != null) {
+    GCC_INSTALL_PREFIX = "${stdenv.cc.cc}";
+  };
 
   # Clang expects to find LLVMgold in its own prefix
   # Clang expects to find sanitizer libraries in its own prefix

@@ -12,7 +12,7 @@ kde {
   # I should add an option() instead.
   patches = [ ./qtruby-install-prefix.patch ];
 
-  cmakeFlags = [ "-DRUBY_ROOT_DIR=${ruby}" ];
+  cmakeFlags = { RUBY_ROOT_DIR = "${ruby}"; };
 
   meta = {
     description = "Ruby bindings for Qt library";

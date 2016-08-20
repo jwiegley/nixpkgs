@@ -302,9 +302,9 @@ let
         )
       '';
 
-      cmakeFlags = [
-        "-DLUA_LIBRARY=${lua}/lib/lua/${lua.luaversion}"
-      ];
+      cmakeFlags = {
+        LUA_LIBRARY = "${lua}/lib/lua/${lua.luaversion}";
+      };
 
       buildInputs = [cmake libuuid lua];
       meta = {

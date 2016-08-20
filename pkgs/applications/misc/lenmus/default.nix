@@ -16,9 +16,9 @@ stdenv.mkDerivation rec {
     sha256 = "1n639xr1qxx6rhqs0c6sjxp3bv8cwkmw1vfk1cji7514gj2a9v3p";
   };
 
-  cmakeFlags = [
-    "-DCMAKE_INSALL_PREFIX=$out"
-  ];
+  cmakeFlags = {
+    CMAKE_INSTALL_PREFIX = "$out";
+  };
 
   enableParallelBuilding = true;
 

@@ -59,7 +59,7 @@ stdenv.mkDerivation {
       unzip $mathJaxSrc -d dependencies/common/mathjax
     '';
 
-  cmakeFlags = [ "-DRSTUDIO_TARGET=Desktop" ];
+  cmakeFlags = { RSTUDIO_TARGET = "Desktop"; };
 
   postInstall = ''
       wrapProgram $out/bin/rstudio --suffix PATH : ${gnumake}/bin
