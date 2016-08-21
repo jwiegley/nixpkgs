@@ -7,11 +7,17 @@ stdenv.mkDerivation rec {
     sha256 = "0q2xn915w9skv9sj74lxnyv9g3b0yi1j04majyzxk6sv4nra97z3";
   };
 
+  cmakeFlags = [
+    "-D3RDPARTY_TCL_DIR=${tcl}"
+    "-D3RDPARTY_FREETYPE_DIR=${freetype.dev}"
+  ];
+
+
   buildInputs = [ cmake mesa tcl tk file libXmu qt4 freetype ];
 
   preUnpack = ''
-    sourceRoot=`pwd`/ros/adm/cmake
-    cmakeFlags="$cmakeFlags -DINSTALL_DIR=$out -D3RDPARTY_TCL_DIR=${tcl} -D3RDPARTY_FREETYPE_DIR=${freetype.dev}"
+    sourceRoot="$(pwd)/ros/adm/cmake"
+    cmakeFlags+=("-DINSTALL_DIR=$out")
   '';
 
   # https://bugs.freedesktop.org/show_bug.cgi?id=83631

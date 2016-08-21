@@ -4,7 +4,7 @@ kde {
 
   buildInputs = [ kdelibs subversionClient apr aprutil perl ];
 
-  cmakeFlags = [ "-DBUILD_perldoc=ON" ];
+  cmakeFlags = { BUILD_perldoc = true; };
 
   meta = {
     description = "Subversion and perldoc kioslaves";

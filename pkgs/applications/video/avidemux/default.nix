@@ -64,7 +64,7 @@ let
 
     buildInputs = (args.buildInputs or []) ++ common.buildInputs ++ [ lndir ];
 
-    cmakeFlags = [ "-DPLUGIN_UI=${args.pluginUi}" ];
+    cmakeFlags = { PLUGIN_UI = "${args.pluginUi}"; };
 
     passthru.isUi = args.isUi or false;
 
@@ -76,7 +76,7 @@ let
       mkdir $out
       lndir ${core} $out
 
-      export cmakeFlags="$cmakeFlags -DAVIDEMUX_SOURCE_DIR=$(pwd)"
+      cmakeFlags+=("-DAVIDEMUX_SOURCE_DIR=$(pwd)")
 
       for i in ${toString (args.buildDirs or [])} avidemux_plugins; do
         ( cd "$i"

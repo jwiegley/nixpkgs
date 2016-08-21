@@ -10,7 +10,10 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ cmake ];
 
-  cmakeFlags = "-DMAN_INSTALL_DIR=share/man/man1 -DDOC_INSTALL_DIR=share/doc/qhull";
+  cmakeFlags = [
+    "-DMAN_INSTALL_DIR=share/man/man1"
+    "-DDOC_INSTALL_DIR=share/doc/qhull"
+  ];
 
   patchPhase = stdenv.lib.optionalString stdenv.isDarwin ''
     sed -i 's/namespace std { struct bidirectional_iterator_tag; struct random_access_iterator_tag; }/#include <iterator>/' ./src/libqhullcpp/QhullIterator.h

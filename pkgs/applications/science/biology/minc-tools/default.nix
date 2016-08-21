@@ -12,7 +12,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ cmake flex bison ] ++ (if doCheck then [ perl ] else [ ]);
   buildInputs = [ libminc ];
 
-  cmakeFlags = [ "-DLIBMINC_DIR=${libminc}/lib/" ];
+  cmakeFlags = { LIBMINC_DIR = "${libminc}/lib/"; };
 
   checkPhase = "ctest";
   doCheck = true;

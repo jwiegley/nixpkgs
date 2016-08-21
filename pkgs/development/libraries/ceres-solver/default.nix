@@ -36,10 +36,9 @@ stdenv.mkDerivation {
 
   checkTarget = "test";
 
-  cmakeFlags = "
-    -DEIGEN_INCLUDE_DIR=${eigen}/include/eigen3
-    ${if !useGlog then "-DMINIGLOG=ON" else ""}
-  ";
+  cmakeFlags = [
+    "-DEIGEN_INCLUDE_DIR=${eigen}/include/eigen3"
+  ] ++ optional (!useGlog) "-DMINIGLOG=ON";
 
   meta = with stdenv.lib; {
     description = "C++ library for modeling and solving large, complicated optimization problems";

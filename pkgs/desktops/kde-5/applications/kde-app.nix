@@ -11,10 +11,11 @@ kdeDerivation (args // {
   name = "${name}-${version}";
   inherit src;
 
-  cmakeFlags =
-    (args.cmakeFlags or [])
-    ++ [ "-DBUILD_TESTING=OFF" ]
-    ++ lib.optional debug "-DCMAKE_BUILD_TYPE=Debug";
+  cmakeFlags = (args.cmakeFlags or {})
+    // { BUILD_TESTING = false; }
+    // lib.optionalAttrs debug {
+      CMAKE_BUILD_TYPE = "Debug";
+    };
 
   meta = {
     platforms = lib.platforms.linux;

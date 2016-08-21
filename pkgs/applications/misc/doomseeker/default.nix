@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     sha256 = "172ybxg720r64hp6aah0hqvxklqv1cf8v7kwx0ng5ap0h20jydbw";
   };
 
-  cmakeFlags = [ "-DCMAKE_BUILD_TYPE=Release" ];
+  cmakeFlags = { CMAKE_BUILD_TYPE = "Release"; };
 
   buildInputs = [ qt4 zlib bzip2 ];
 

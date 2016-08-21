@@ -28,7 +28,9 @@ stdenv.mkDerivation rec {
     sha256 = "4a526cd8ae76fc06bb2b6a158e86db5dc0c94545137a8233cd465ef867acdc8b";
   };
 
-  cmakeFlags = stdenv.lib.optional withGrass "-DGRASS_PREFIX7=${grass}/${grass.name}";
+  cmakeFlags = stdenv.lib.optionalAttrs withGrass {
+    GRASS_PREFIX7 = "${grass}/${grass.name}";
+  };
 
   postInstall = ''
     wrapProgram $out/bin/qgis \

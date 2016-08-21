@@ -95,9 +95,9 @@ let
 
     lualibs = [ luaPackages.mpack luaPackages.lpeg luaPackages.luabitop ];
 
-    cmakeFlags = [
-      "-DLUA_PRG=${luaPackages.lua}/bin/lua"
-    ];
+    cmakeFlags = {
+      LUA_PRG = "${luaPackages.lua}/bin/lua";
+    };
 
     preConfigure = ''
       substituteInPlace runtime/autoload/man.vim \

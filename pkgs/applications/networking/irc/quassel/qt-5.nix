@@ -31,7 +31,6 @@ assert client || daemon -> !monolithic;
 assert !buildClient -> !withKDE; # KDE is used by the client only
 
 let
-  edf = flag: feature: [("-D" + feature + (if flag then "=ON" else "=OFF"))];
   source = import ./source.nix { inherit fetchurl; };
 
 in with stdenv; mkDerivation rec {
@@ -54,15 +53,15 @@ in with stdenv; mkDerivation rec {
       kxmlgui
     ];
 
-  cmakeFlags = [
-    "-DEMBED_DATA=OFF"
-    "-DUSE_QT5=ON"
-  ]
-    ++ edf static "STATIC"
-    ++ edf monolithic "WANT_MONO"
-    ++ edf daemon "WANT_CORE"
-    ++ edf client "WANT_QTCLIENT"
-    ++ edf withKDE "WITH_KDE";
+  cmakeFlags = {
+    EMBED_DATA = false;
+    USE_QT5 = true;
+    STATIC = static;
+    WANT_MONO = monolithic;
+    WANT_CORE = daemon;
+    WANT_QTCLIENT = client;
+    WITH_KDE = withKDE;
+  };
 
   preFixup =
     lib.optionalString buildClient ''

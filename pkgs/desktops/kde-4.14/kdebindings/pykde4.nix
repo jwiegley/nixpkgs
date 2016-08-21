@@ -26,7 +26,7 @@ in kde {
       # needs to install a plugin.
       mkdir -pv $out/${pydir}
       ${lndir}/bin/lndir ${pyqt4}/${pydir} $out/${pydir}
-      cmakeFlagsArray=( "-DSIP_DEFAULT_SIP_DIR=$prefix/share/sip" )
+      cmakeFlags+=("-DSIP_DEFAULT_SIP_DIR=$prefix/share/sip")
     '';
 
   meta = {

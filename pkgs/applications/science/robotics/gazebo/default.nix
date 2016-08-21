@@ -31,10 +31,11 @@ stdenv.mkDerivation rec {
   };
 
   enableParallelBuilding = true; # gazebo needs this so bad
-  cmakeFlags = []
-    ++ optional withQuickBuild [ "-DENABLE_TESTS_COMPILATION=False" ]
-    ++ optional withLowMemorySupport [ "-DUSE_LOW_MEMORY_TESTS=True" ]
-    ++ optional withHeadless [ "-DENABLE_SCREEN_TESTS=False" ];
+  cmakeFlags = {
+    ENABLE_TESTS_COMPILATION = !withQuickBuild;
+    USE_LOW_MEMORY_TESTS = withLowMemorySupport;
+    ENABLE_SCREEN_TESTS = !withHeadless;
+  };
 
   buildInputs = [
     #cmake pkgconfig boost protobuf

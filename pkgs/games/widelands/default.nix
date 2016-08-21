@@ -28,11 +28,7 @@ stdenv.mkDerivation {
   };
 
   preConfigure = ''
-    cmakeFlags="
-      -DWL_INSTALL_PREFIX=$out
-      -DWL_INSTALL_BINDIR=bin
-      -DWL_INSTALL_DATADIR=share/widelands
-    "
+    cmakeFlags+=("-DWL_INSTALL_PREFIX=$out")
   '';
 
   nativeBuildInputs = [ cmake python gettext ];
@@ -40,6 +36,11 @@ stdenv.mkDerivation {
   buildInputs = [
     boost libpng zlib glew lua
     SDL SDL_image SDL_mixer SDL_net SDL_ttf SDL_gfx
+  ];
+
+  cmakeFlags = [
+    "-DWL_INSTALL_BINDIR=bin"
+    "-DWL_INSTALL_DATADIR=share/widelands"
   ];
 
   enableParallelBuilding = true;

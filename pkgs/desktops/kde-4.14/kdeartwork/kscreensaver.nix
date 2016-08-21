@@ -7,7 +7,7 @@ kde {
 
   prePatch = "cp -v ${./FindXscreensaver.cmake} cmake/modules/FindXscreensaver.cmake";
 
-  cmakeFlags = [ "-DBUILD_asciiquarium:BOOL=ON" ];
+  cmakeFlags = { BUILD_asciiquarium = true; };
 
   meta = {
     description = "KDE screensavers";

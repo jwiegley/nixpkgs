@@ -13,5 +13,5 @@ plasmaPackage {
     frameworkintegration kcmutils kconfigwidgets kcoreaddons kdecoration
     kguiaddons ki18n kwayland kwindowsystem plasma-framework qtx11extras
   ];
-  cmakeFlags = [ "-DUSE_Qt4=OFF" ];
+  cmakeFlags = { USE_Qt4 = false; };
 }

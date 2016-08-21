@@ -30,9 +30,9 @@ stdenv.mkDerivation rec {
       osm-gps-map
     ];
 
-  cmakeFlags = [
-    "-DBUILD_USERMANUAL=False"
-  ];
+  cmakeFlags = {
+    BUILD_USERMANUAL = false;
+  };
 
   meta = with stdenv.lib; {
     description = "Virtual lighttable and darkroom for photographers";

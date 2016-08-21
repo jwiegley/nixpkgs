@@ -22,7 +22,10 @@ stdenv.mkDerivation  rec {
 
   preConfigure = "cd src";
 
-  cmakeFlags = [ "-DFLTK_MATH_LIBRARY=${stdenv.glibc.out}/lib/libm.so -DCMAKE_INSTALL_DATAROOTDIR=$out" ];
+  cmakeFlags = {
+    FLTK_MATH_LIBRARY = "${stdenv.glibc.out}/lib/libm.so";
+    CMAKE_INSTALL_DATAROOTDIR = "$out";
+  };
 
   meta = with stdenv.lib; {
     description = "High quality software synthesizer based on ZynAddSubFX";

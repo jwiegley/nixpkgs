@@ -161,6 +161,34 @@ let
       buildInputs' = buildInputs ++
         (if separateDebugInfo then [ ../../build-support/setup-hooks/separate-debug-info.sh ] else []);
 
+      mkCmakeFlags = cmakeFlags: let
+        flattenFlag = name: value: let
+          serializedValue =
+            if builtins.isString value then value
+            else if builtins.isInt value then (builtins.toString value)
+            else if builtins.isBool value then (if value then "ON" else "OFF")
+            else throw "Bad value ${value} for cmakeFlags attr ${name}";
+
+          # Strings and paths are more complicated to discern,
+          # so just skip those
+          flagType = if builtins.isBool value then ":BOOL" else "";
+        in if (value != null)
+          then"-D${name}${flagType}=${serializedValue}" # Set cache value
+          else "-U${name}"; # Unset cache value
+        flagsList = if (builtins.isList cmakeFlags)
+          then cmakeFlags
+          else with cmakeFlags; (lib.mapAttrsToList flattenFlag (
+            builtins.removeAttrs cmakeFlags [
+              "generator"
+              "extraArgs"
+            ]
+          ))
+          ++ (lib.optional (cmakeFlags ? generator) "-G${generator}")
+          ++ (lib.optionals (cmakeFlags ? extraArgs) extraArgs)
+          ;
+        escapeTab = lib.escape [ "\t" ];
+      in builtins.concatStringsSep "\t" (builtins.map escapeTab flagsList);
+
     in
 
       # Throw an error if trying to evaluate an non-valid derivation
@@ -170,11 +198,14 @@ let
                else true;
 
       lib.addPassthru (derivation (
-        (removeAttrs attrs
-          ["meta" "passthru" "crossAttrs" "pos"
-           "__impureHostDeps" "__propagatedImpureHostDeps"
-           "sandboxProfile" "propagatedSandboxProfile"])
-        // (let
+        (removeAttrs attrs [
+          "meta" "passthru" "crossAttrs" "pos"
+          "__impureHostDeps" "__propagatedImpureHostDeps"
+          "sandboxProfile" "propagatedSandboxProfile"
+          "cmakeFlags"
+        ]) // (if attrs ? cmakeFlags then {
+            cmakeFlags = mkCmakeFlags attrs.cmakeFlags;
+        } else {}) // (let
           computedSandboxProfile =
             lib.concatMap (input: input.__propagatedSandboxProfile or []) (extraBuildInputs ++ buildInputs ++ nativeBuildInputs);
           computedPropagatedSandboxProfile =
@@ -223,6 +254,7 @@ let
           outputs = outputs';
         } else { })))) (
       {
+        overrideAttrs = f: mkDerivation (attrs // (f attrs));
         # The meta attribute is passed in the resulting attribute set,
         # but it's not part of the actual derivation, i.e., it's not
         # passed to the builder and is not a dependency.  But since we

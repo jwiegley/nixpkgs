@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
   propagatedBuildInputs = [ boost ];
   nativeBuildInputs = [ cmake automoc4 flex bison pkgconfig ];
 
-  cmakeFlags = "-DUSE_QT_PLUGIN_DIR=OFF -DUSE_GST_PLUGIN_DIR=OFF";
+  cmakeFlags = [ "-DUSE_QT_PLUGIN_DIR=OFF" "-DUSE_GST_PLUGIN_DIR=OFF" ];
 
   meta = {
     platforms = stdenv.lib.platforms.linux;

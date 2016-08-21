@@ -19,7 +19,10 @@ stdenv.mkDerivation rec {
 
   preConfigure = ''
     export VERBOSE=1
-    cmakeFlagsArray=($cmakeFlagsArray -DGETTEXT_INCLUDE_DIR=${gettext}/include -DCMAKE_INCLUDE_PATH=${qt4}/include/QtGui )
+    cmakeFlags+=(
+        "-DGETTEXT_INCLUDE_DIR=${gettext}/include"
+        "-DCMAKE_INCLUDE_PATH=${qt4}/include/QtGui"
+    )
   '';
 
   postInstall = ''

@@ -22,9 +22,9 @@ let
 
       nativeBuildInputs = [ automoc4 cmake perl pkgconfig ];
 
-      cmakeFlags = [
-        "-Wno-dev"
-      ];
+      cmakeFlags = {
+        extraArgs = [ "-Wno-dev" ];
+      };
 
       meta = {
         description = "KDE translation for ${lang}";

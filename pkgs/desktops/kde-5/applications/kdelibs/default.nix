@@ -29,12 +29,12 @@ kdeApp {
   # cmake does not detect path to `ilmbase`
   NIX_CFLAGS_COMPILE = "-I${ilmbase}/include/OpenEXR";
 
-  cmakeFlags = [
-    "-DDOCBOOKXML_CURRENTDTD_DIR=${docbook_xml_dtd_42}/xml/dtd/docbook"
-    "-DDOCBOOKXSL_DIR=${docbook_xsl}/xml/xsl/docbook"
-    "-DWITH_SOLID_UDISKS2=ON"
-    "-DKDE_DEFAULT_HOME=.kde"
-  ];
+  cmakeFlags = {
+    DOCBOOKXML_CURRENTDTD_DIR = "${docbook_xml_dtd_42}/xml/dtd/docbook";
+    DOCBOOKXSL_DIR = "${docbook_xsl}/xml/xsl/docbook";
+    WITH_SOLID_UDISKS2 = true;
+    KDE_DEFAULT_HOME = ".kde";
+  };
 
   setupHook = ./setup-hook.sh;
 

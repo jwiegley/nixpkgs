@@ -8,7 +8,10 @@ stdenv.mkDerivation rec {
     url = "https://code.launchpad.net/granite/${majorVersion}/${majorVersion}/+download/${name}.tar.gz";
     sha256 = "1laa109dz7kbd8zxddqw2p1b67yzva7cc5h3smqkj8a9jzbhv5fz";
   };
-  cmakeFlags = "-DINTROSPECTION_GIRDIR=share/gir-1.0/ -DINTROSPECTION_TYPELIBDIR=lib/girepository-1.0";
+  cmakeFlags = [
+    "-DINTROSPECTION_GIRDIR=share/gir-1.0/"
+    "-DINTROSPECTION_TYPELIBDIR=lib/girepository-1.0"
+  ];
   buildInputs = [perl cmake vala pkgconfig gobjectIntrospection glib gtk3 gnome3.libgee gettext];
   meta = {
     description = "An extension to GTK+ used by elementary OS";

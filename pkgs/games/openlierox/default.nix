@@ -15,7 +15,7 @@ stdenv.mkDerivation {
   cmakeFlags = [ "-DBREAKPAD=0" ];
 
   preConfigure = ''
-    cmakeFlags="$cmakeFlags -DSYSTEM_DATA_DIR=$out/share"
+    cmakeFlags+=("-DSYSTEM_DATA_DIR=$out/share")
   '';
 
   patchPhase = ''

@@ -64,7 +64,7 @@ common = rec { # attributes common to both builds
     ;
 
   preConfigure = ''
-    cmakeFlags="$cmakeFlags -DINSTALL_INCLUDEDIR=''${!outputDev}/include/mysql"
+    cmakeFlags+=("-DINSTALL_INCLUDEDIR=''${!outputDev}/include/mysql")
   '';
 
   postInstall = ''
@@ -96,11 +96,13 @@ client = stdenv.mkDerivation (common // {
   ];
 
   preConfigure = common.preConfigure + ''
-    cmakeFlags="$cmakeFlags \
-      -DINSTALL_BINDIR=$bin/bin -DINSTALL_SCRIPTDIR=$bin/bin \
-      -DINSTALL_SUPPORTFILESDIR=$bin/share/mysql \
-      -DINSTALL_DOCDIR=$bin/share/doc/mysql -DINSTALL_DOCREADMEDIR=$bin/share/doc/mysql \
-      "
+    cmakeFlags+=(
+      "-DINSTALL_BINDIR=$bin/bin"
+      "-DINSTALL_SCRIPTDIR=$bin/bin"
+      "-DINSTALL_SUPPORTFILESDIR=$bin/share/mysql"
+      "-DINSTALL_DOCDIR=$bin/share/doc/mysql"
+      "-DINSTALL_DOCREADMEDIR=$bin/share/doc/mysql"
+    )
   '';
 
   # prevent cycle; it needs to reference $dev
