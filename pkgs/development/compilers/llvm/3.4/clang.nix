@@ -22,7 +22,6 @@ stdenv.mkDerivation {
   buildInputs = [ cmake libedit libxml2 zlib ];
 
   cmakeFlags = with stdenv.lib; {
-    CMAKE_BUILD_TYPE = "Release";
     CMAKE_CXX_FLAGS = "-std=c++11";
     CLANG_PATH_TO_LLVM_BUILD = "${llvm}";
   } // optionalAttrs (stdenv.cc.libc != null) {

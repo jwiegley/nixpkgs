@@ -178,7 +178,10 @@ let
         flagsList = if (builtins.isList cmakeFlags)
           then cmakeFlags
           else with cmakeFlags; (lib.mapAttrsToList flattenFlag (
-            builtins.removeAttrs cmakeFlags [
+            builtins.removeAttrs ({
+              # Default CMake options
+              CMAKE_BUILD_TYPE = "Release";
+            } // cmakeFlags) [
               "generator"
               "extraArgs"
             ]

@@ -42,7 +42,6 @@ stdenv.mkDerivation rec {
   ];
 
   cmakeFlags = {
-    CMAKE_BUILD_TYPE = "Release";
     USE_ZEITGEIST = zeitgeistSupport;
     HALF_BRO_INCOM_WEBKIT2 = true;
     USE_GTK3 = true;

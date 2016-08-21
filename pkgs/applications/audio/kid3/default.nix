@@ -22,7 +22,6 @@ stdenv.mkDerivation rec {
     qt zlib readline makeWrapper ];
 
   cmakeFlags = {
-    CMAKE_BUILD_TYPE = "Release";
     WITH_APPS = "Qt;CLI";
   };
 

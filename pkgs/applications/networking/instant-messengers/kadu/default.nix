@@ -22,7 +22,6 @@ stdenv.mkDerivation {
   cmakeFlags = {
     ENABLE_AUTODOWNLOAD = false;
     BUILD_DESCRIPTION = "NixOS";
-    CMAKE_BUILD_TYPE = "Release";
   };
 
   prePatch = ''

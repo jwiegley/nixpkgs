@@ -25,7 +25,6 @@ stdenv.mkDerivation rec {
   sourceRoot = "kicad-${version}";
 
   cmakeFlags = {
-    CMAKE_BUILD_TYPE = "Release";
     KICAD_SKIP_BOOST = true;
     KICAD_BUILD_VERSION = "${version}";
     KICAD_REPO_NAME = "stable";

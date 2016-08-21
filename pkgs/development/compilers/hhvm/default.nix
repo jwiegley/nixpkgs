@@ -46,8 +46,6 @@ stdenv.mkDerivation rec {
     patchShebangs .
   '';
 
-  cmakeFlags = { CMAKE_BUILD_TYPE = "Release"; };
-
   meta = {
     description = "High-performance JIT compiler for PHP/Hack";
     homepage    = "http://hhvm.com";
