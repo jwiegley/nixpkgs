@@ -3,7 +3,9 @@
 , supportedSystems ? [ "x86_64-linux" "i686-linux" ]
 }:
 
-with import ../lib;
+with {
+  inherit (import ../lib/testing { inherit supportedSystems; }) callTest;
+} // (import ../lib);
 
 let
 
@@ -17,24 +19,7 @@ let
     inherit system;
   } // args);
 
-  callTest = fn: args: forAllSystems (system: hydraJob (importTest fn args system));
-
-  callSubTests = fn: args: let
-    discover = attrs: let
-      subTests = filterAttrs (const (hasAttr "test")) attrs;
-    in mapAttrs (const (t: hydraJob t.test)) subTests;
-
-    discoverForSystem = system: mapAttrs (_: test: {
-      ${system} = test;
-    }) (discover (importTest fn args system));
-
-  # If the test is only for a particular system, use only the specified
-  # system instead of generating attributes for all available systems.
-  in if args ? system then discover (import fn args)
-     else foldAttrs mergeAttrs {} (map discoverForSystem supportedSystems);
-
   pkgs = import nixpkgs { system = "x86_64-linux"; };
-
 
   versionModule =
     { system.nixosVersionSuffix = versionSuffix;
@@ -89,6 +74,28 @@ let
       });
   }).config));
 
+  # list of blacklisted module tests that shouldn't end in `tests.module`
+  blacklistedModuleTests = [
+    "postgis"
+    "emacs-daemon"
+    "gitlab"
+    "haka"
+    "lightdm"
+    "logstash"
+    "mesos"
+    "panamax"
+    "rabbitmq"
+    "riak"
+    "slurm"
+  ];
+
+  # Gather tests declared in modules meta.tests
+  # args is a set of { "testName" = { extra args }; } to override test arguments, typically systems
+  moduleTests = args:
+    let tests = (import lib/eval-config.nix { modules = []; }).config.meta.tests;
+        filteredTests = filterAttrs (k: _: !(elem k blacklistedModuleTests)) tests;
+        args' = k: attrByPath [k] {} args;
+    in mapAttrs (k: v: callTest (head v).value (args' k)) filteredTests;
 
 in rec {
 
@@ -214,86 +221,52 @@ in rec {
   # Run the tests for each platform.  You can run a test by doing
   # e.g. ‘nix-build -A tests.login.x86_64-linux’, or equivalently,
   # ‘nix-build tests/login.nix -A result’.
-  tests.avahi = callTest tests/avahi.nix {};
   tests.bittorrent = callTest tests/bittorrent.nix {};
   tests.blivet = callTest tests/blivet.nix {};
-  tests.boot = callSubTests tests/boot.nix {};
+  tests.boot = callTest tests/boot.nix {};
   tests.boot-stage1 = callTest tests/boot-stage1.nix {};
-  tests.cadvisor = hydraJob (import tests/cadvisor.nix { system = "x86_64-linux"; });
-  tests.chromium = (callSubTests tests/chromium.nix { system = "x86_64-linux"; }).stable;
-  tests.cjdns = callTest tests/cjdns.nix {};
-  tests.containers-ipv4 = callTest tests/containers-ipv4.nix {};
-  tests.containers-ipv6 = callTest tests/containers-ipv6.nix {};
-  tests.containers-bridge = callTest tests/containers-bridge.nix {};
-  tests.containers-imperative = callTest tests/containers-imperative.nix {};
-  tests.containers-extra_veth = callTest tests/containers-extra_veth.nix {};
-  tests.docker = hydraJob (import tests/docker.nix { system = "x86_64-linux"; });
-  tests.dnscrypt-proxy = callTest tests/dnscrypt-proxy.nix { system = "x86_64-linux"; };
+  tests.chromium = (callTest tests/chromium.nix { systems = [ "x86_64-linux" ]; }).stable;
+  tests.dnscrypt-proxy = callTest tests/dnscrypt-proxy.nix { systems = [ "x86_64-linux" ]; };
   tests.ecryptfs = callTest tests/ecryptfs.nix {};
-  tests.etcd = hydraJob (import tests/etcd.nix { system = "x86_64-linux"; });
-  tests.ec2-nixops = hydraJob (import tests/ec2.nix { system = "x86_64-linux"; }).boot-ec2-nixops;
-  tests.ec2-config = hydraJob (import tests/ec2.nix { system = "x86_64-linux"; }).boot-ec2-config;
-  tests.ferm = callTest tests/ferm.nix {};
+  tests.ec2-nixops = (callTest tests/ec2.nix { systems = [ "x86_64-linux" ]; }).boot-ec2-nixops;
+  tests.ec2-config = (callTest tests/ec2.nix { systems = [ "x86_64-linux" ]; }).boot-ec2-config;
   tests.firefox = callTest tests/firefox.nix {};
   tests.firewall = callTest tests/firewall.nix {};
-  tests.fleet = hydraJob (import tests/fleet.nix { system = "x86_64-linux"; });
   #tests.gitlab = callTest tests/gitlab.nix {};
-  tests.gocd-agent = callTest tests/gocd-agent.nix {};
-  tests.gocd-server = callTest tests/gocd-server.nix {};
-  tests.gnome3 = callTest tests/gnome3.nix {};
-  tests.gnome3-gdm = callTest tests/gnome3-gdm.nix {};
-  tests.grsecurity = callTest tests/grsecurity.nix {};
   tests.hibernate = callTest tests/hibernate.nix {};
-  tests.i3wm = callTest tests/i3wm.nix {};
-  tests.installer = callSubTests tests/installer.nix {};
-  tests.influxdb = callTest tests/influxdb.nix {};
+  tests.installer = callTest tests/installer.nix {};
   tests.ipv6 = callTest tests/ipv6.nix {};
-  tests.jenkins = callTest tests/jenkins.nix {};
-  tests.kde4 = callTest tests/kde4.nix {};
-  tests.kde5 = callTest tests/kde5.nix {};
-  tests.keymap = callSubTests tests/keymap.nix {};
+  tests.keymap = callTest tests/keymap.nix {};
   tests.initrdNetwork = callTest tests/initrd-network.nix {};
-  tests.kubernetes = hydraJob (import tests/kubernetes.nix { system = "x86_64-linux"; });
   tests.latestKernel.login = callTest tests/login.nix { latestKernel = true; };
   #tests.lightdm = callTest tests/lightdm.nix {};
   tests.login = callTest tests/login.nix {};
   #tests.logstash = callTest tests/logstash.nix {};
-  tests.mathics = callTest tests/mathics.nix {};
   tests.misc = callTest tests/misc.nix {};
-  tests.mongodb = callTest tests/mongodb.nix {};
   tests.mumble = callTest tests/mumble.nix {};
-  tests.munin = callTest tests/munin.nix {};
-  tests.mysql = callTest tests/mysql.nix {};
-  tests.mysqlReplication = callTest tests/mysql-replication.nix {};
   tests.nat.firewall = callTest tests/nat.nix { withFirewall = true; };
   tests.nat.standalone = callTest tests/nat.nix { withFirewall = false; };
-  tests.networking.networkd = callSubTests tests/networking.nix { networkd = true; };
-  tests.networking.scripted = callSubTests tests/networking.nix { networkd = false; };
+  tests.networking.networkd = callTest tests/networking.nix { networkd = true; };
+  tests.networking.scripted = callTest tests/networking.nix { networkd = false; };
   # TODO: put in networking.nix after the test becomes more complete
   tests.networkingProxy = callTest tests/networking-proxy.nix {};
   tests.nfs3 = callTest tests/nfs.nix { version = 3; };
   tests.nfs4 = callTest tests/nfs.nix { version = 4; };
   tests.nsd = callTest tests/nsd.nix {};
-  tests.openssh = callTest tests/openssh.nix {};
-  #tests.panamax = hydraJob (import tests/panamax.nix { system = "x86_64-linux"; });
-  tests.peerflix = callTest tests/peerflix.nix {};
-  tests.postgresql = callTest tests/postgresql.nix {};
   tests.printing = callTest tests/printing.nix {};
   tests.proxy = callTest tests/proxy.nix {};
-  tests.pumpio = callTest tests/pump.io.nix {};
-  tests.quagga = callTest tests/quagga.nix {};
   tests.quake3 = callTest tests/quake3.nix {};
   tests.runInMachine = callTest tests/run-in-machine.nix {};
-  tests.samba = callTest tests/samba.nix {};
-  tests.sddm = callTest tests/sddm.nix {};
   tests.simple = callTest tests/simple.nix {};
-  tests.smokeping = callTest tests/smokeping.nix {};
-  tests.taskserver = callTest tests/taskserver.nix {};
-  tests.tomcat = callTest tests/tomcat.nix {};
-  tests.udisks2 = callTest tests/udisks2.nix {};
-  tests.virtualbox = callSubTests tests/virtualbox.nix { system = "x86_64-linux"; };
-  tests.xfce = callTest tests/xfce.nix {};
-
+  tests.module = moduleTests {
+    cadvisor = { systems = [ "x86_64-linux" ]; };
+    kubernetes = { systems = [ "x86_64-linux" ]; };
+    docker = { systems = [ "x86_64-linux" ]; };
+    etcd = { systems = [ "x86_64-linux" ]; };
+    fleet = { systems = [ "x86_64-linux" ]; };
+    panamax = { systems = [ "x86_64-linux" ]; };
+    virtualbox = { systems = [ "x86_64-linux" ]; };
+  };
 
   /* Build a bunch of typical closures so that Hydra can keep track of
      the evolution of closure sizes. */

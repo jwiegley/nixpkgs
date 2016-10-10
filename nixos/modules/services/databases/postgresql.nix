@@ -255,6 +255,12 @@ in
 
   };
 
-  meta.doc = ./postgresql.xml;
+  meta = {
+    doc = ./postgresql.xml;
+    tests = {
+      postgresql = ./tests/postgresql.nix;
+      postgis = ./tests/postgis.nix;
+    };
+  };
 
 }
