@@ -94,11 +94,11 @@ with stdenv.lib;
   # Enable various subsystems.
   ACCESSIBILITY y # Accessibility support
   AUXDISPLAY y # Auxiliary Display support
-  DONGLE y # Serial dongle support
+  DONGLE? y # Serial dongle support
   HIPPI y
   MTD_COMPLEX_MAPPINGS y # needed for many devices
   SCSI_LOWLEVEL y # enable lots of SCSI devices
-  SCSI_LOWLEVEL_PCMCIA y
+  SCSI_LOWLEVEL_PCMCIA? y
   SCSI_SAS_ATA y  # added to enable detection of hard drive
   SPI y # needed for many devices
   SPI_MASTER y
@@ -138,7 +138,7 @@ with stdenv.lib;
   L2TP_V3 y
   L2TP_IP m
   L2TP_ETH m
-  BRIDGE_VLAN_FILTERING y
+  BRIDGE_VLAN_FILTERING? y
 
   # Wireless networking.
   CFG80211_WEXT? y # Without it, ipw2200 drivers don't build
@@ -185,11 +185,11 @@ with stdenv.lib;
   ''}
 
   # Sound.
-  SND_DYNAMIC_MINORS y
-  SND_AC97_POWER_SAVE y # AC97 Power-Saving Mode
-  SND_HDA_INPUT_BEEP y # Support digital beep via input layer
-  SND_USB_CAIAQ_INPUT y
-  PSS_MIXER y # Enable PSS mixer (Beethoven ADSP-16 and other compatible)
+  SND_DYNAMIC_MINORS? y
+  SND_AC97_POWER_SAVE? y # AC97 Power-Saving Mode
+  SND_HDA_INPUT_BEEP? y # Support digital beep via input layer
+  SND_USB_CAIAQ_INPUT? y
+  PSS_MIXER? y # Enable PSS mixer (Beethoven ADSP-16 and other compatible)
 
   # USB serial devices.
   USB_SERIAL_GENERIC y # USB Generic Serial Driver
@@ -210,11 +210,11 @@ with stdenv.lib;
   # ACLs for all filesystems that support them.
   FANOTIFY y
   TMPFS y
-  EXT2_FS_XATTR y
-  EXT2_FS_POSIX_ACL y
-  EXT2_FS_SECURITY y
+  EXT2_FS_XATTR? y
+  EXT2_FS_POSIX_ACL? y
+  EXT2_FS_SECURITY? y
   ${optionalString (versionOlder version "4.0") ''
-    EXT2_FS_XIP y # Ext2 execute in place support
+    EXT2_FS_XIP? y # Ext2 execute in place support
   ''}
   EXT3_FS_POSIX_ACL y
   EXT3_FS_SECURITY y
@@ -232,42 +232,42 @@ with stdenv.lib;
   BTRFS_FS_POSIX_ACL y
   UBIFS_FS_ADVANCED_COMPR? y
   ${optionalString (versionAtLeast version "4.0" && versionOlder version "4.6") ''
-    NFSD_PNFS y
+    NFSD_PNFS? y
   ''}
-  NFSD_V2_ACL y
-  NFSD_V3 y
-  NFSD_V3_ACL y
-  NFSD_V4 y
+  NFSD_V2_ACL? y
+  NFSD_V3? y
+  NFSD_V3_ACL? y
+  NFSD_V4? y
   ${optionalString (versionAtLeast version "3.11") ''
-    NFSD_V4_SECURITY_LABEL y
+    NFSD_V4_SECURITY_LABEL? y
   ''}
-  NFS_FSCACHE y
-  NFS_SWAP y
-  NFS_V3_ACL y
+  NFS_FSCACHE? y
+  NFS_SWAP? y
+  NFS_V3_ACL? y
   ${optionalString (versionAtLeast version "3.11") ''
-    NFS_V4_1 y  # NFSv4.1 client support
-    NFS_V4_2 y
-    NFS_V4_SECURITY_LABEL y
+    NFS_V4_1? y  # NFSv4.1 client support
+    NFS_V4_2? y
+    NFS_V4_SECURITY_LABEL? y
   ''}
-  CIFS_XATTR y
-  CIFS_POSIX y
-  CIFS_FSCACHE y
+  CIFS_XATTR? y
+  CIFS_POSIX? y
+  CIFS_FSCACHE? y
   ${optionalString (versionAtLeast version "3.12") ''
-    CEPH_FSCACHE y
+    CEPH_FSCACHE? y
   ''}
   ${optionalString (versionAtLeast version "3.14") ''
-    CEPH_FS_POSIX_ACL y
+    CEPH_FS_POSIX_ACL? y
   ''}
   ${optionalString (versionAtLeast version "3.13") ''
-    SQUASHFS_FILE_DIRECT y
-    SQUASHFS_DECOMP_MULTI_PERCPU y
+    SQUASHFS_FILE_DIRECT? y
+    SQUASHFS_DECOMP_MULTI_PERCPU? y
   ''}
-  SQUASHFS_XATTR y
-  SQUASHFS_ZLIB y
-  SQUASHFS_LZO y
-  SQUASHFS_XZ y
+  SQUASHFS_XATTR? y
+  SQUASHFS_ZLIB? y
+  SQUASHFS_LZO? y
+  SQUASHFS_XZ? y
   ${optionalString (versionAtLeast version "3.19") ''
-    SQUASHFS_LZ4 y
+    SQUASHFS_LZ4? y
   ''}
 
   # Native Language Support modules, needed by some filesystems
@@ -342,7 +342,7 @@ with stdenv.lib;
   ${optionalString (versionAtLeast version "4.3") ''
     IDLE_PAGE_TRACKING y
   ''}
-  IRDA_ULTRA y # Ultra (connectionless) protocol
+  IRDA_ULTRA? y # Ultra (connectionless) protocol
   JOYSTICK_IFORCE_232? y # I-Force Serial joysticks and wheels
   JOYSTICK_IFORCE_USB? y # I-Force USB joysticks and wheels
   JOYSTICK_XPAD_FF? y # X-Box gamepad rumble support
@@ -365,16 +365,16 @@ with stdenv.lib;
     PINCTRL_BAYTRAIL y # GPIO on Intel Bay Trail, for some Chromebook internal eMMC disks
   ''}
   MMC_BLOCK_MINORS 32 # 8 is default. Modern gpt tables on eMMC may go far beyond 8.
-  PPP_MULTILINK y # PPP multilink support
-  PPP_FILTER y
+  PPP_MULTILINK? y # PPP multilink support
+  PPP_FILTER? y
   REGULATOR y # Voltage and Current Regulator Support
   RC_DEVICES? y # Enable IR devices
-  RT2800USB_RT55XX y
+  RT2800USB_RT55XX? y
   SCHED_AUTOGROUP y
   SCSI_LOGGING y # SCSI logging facility
   SERIAL_8250 y # 8250/16550 and compatible serial support
-  SLIP_COMPRESSED y # CSLIP compressed headers
-  SLIP_SMART y
+  SLIP_COMPRESSED? y # CSLIP compressed headers
+  SLIP_SMART? y
   HWMON y
   THERMAL_HWMON y # Hardware monitoring support
   ${optionalString (versionAtLeast version "3.15") ''
@@ -435,7 +435,7 @@ with stdenv.lib;
   DEVTMPFS y
 
   # Easier debugging of NFS issues.
-  SUNRPC_DEBUG y
+  SUNRPC_DEBUG? y
 
   # Virtualisation.
   PARAVIRT? y
