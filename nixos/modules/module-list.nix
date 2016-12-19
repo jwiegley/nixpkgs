@@ -8,6 +8,7 @@
   ./config/fonts/ghostscript.nix
   ./config/gnu.nix
   ./config/i18n.nix
+  ./config/ipa.nix
   ./config/krb5.nix
   ./config/ldap.nix
   ./config/networking.nix
