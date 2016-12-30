@@ -17,7 +17,10 @@ let
 
     cmakeFlags = [
       "-DCMAKE_CXX_FLAGS=-std=c++11"
+      "-DWITH_POLLY=ON"
+      "-DLINK_POLLY_INTO_TOOLS=ON"            "-DLLVM_LINK_LLVM_DYLIB=ON"
     ] ++
+#    (stdenv.lib.optional llvm.enableSharedLibraries "-DLLVM_LINK_LLVM_DYLIB:Bool=true") ++
     # Maybe with compiler-rt this won't be needed?
     (stdenv.lib.optional stdenv.isLinux "-DGCC_INSTALL_PREFIX=${gcc}") ++
     (stdenv.lib.optional (stdenv.cc.libc != null) "-DC_INCLUDE_DIRS=${stdenv.cc.libc}/include");
