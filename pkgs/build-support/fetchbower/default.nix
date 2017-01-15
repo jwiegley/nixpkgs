@@ -1,4 +1,4 @@
-{ stdenv, lib, bower2nix, cacert }:
+{ stdenv, lib, nodePackages, cacert }:
 let
   bowerVersion = version:
     let
@@ -20,8 +20,9 @@ let
     '';
     outputHashMode = "recursive";
     outputHashAlgo = "sha256";
+    inherit (nodePackages) bower2nix;
     inherit outputHash;
-    buildInputs = [ bower2nix ];
+    buildInputs = [ nodePackages.bower2nix ];
   };
 
 in fetchbower
