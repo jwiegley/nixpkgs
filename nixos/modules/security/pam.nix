@@ -36,6 +36,16 @@ let
         '';
       };
 
+      isExposed = mkOption {
+        default = true;
+        type = types.bool;
+        description = ''
+          Whether this authentication mechanism may be exposed to the network,
+          e.g. as in SSH. If false then some authentication requirements, e.g.
+          OTP, may be skipped.
+        '';
+      };
+
       u2fAuth = mkOption {
         default = config.security.pam.enableU2F;
         type = types.bool;
@@ -62,6 +72,20 @@ let
         description = ''
           If set, the OTPW system will be used (if
           <filename>~/.otpw</filename> exists).
+        '';
+      };
+
+      googleAuth = mkOption {
+        default = config.security.pam.enableGoogleAuth;
+        type = types.bool;
+        description = ''
+          If set, Google Authenticator OTP auth will be used
+          (if <filename>~/.google_authenticator</filename> exists).
+
+          GAuth authentication is not sufficient on its own, and will
+          not allow login without also having a separate authentication
+          mechanism. It is intended to be used in combination with
+          passwords.
         '';
       };
 
@@ -277,6 +301,8 @@ let
               "auth sufficient ${pkgs.pam_usb}/lib/security/pam_usb.so"}
           ${let oath = config.security.pam.oath; in optionalString cfg.oathAuth
               "auth requisite ${pkgs.oathToolkit}/lib/security/pam_oath.so window=${toString oath.window} usersfile=${toString oath.usersFile} digits=${toString oath.digits}"}
+          ${optionalString (cfg.googleAuth && cfg.isExposed)
+              "auth required ${pkgs.googleAuthenticator}/lib/security/pam_google_authenticator.so"}
         '' +
           # Modules in this block require having the password set in PAM_AUTHTOK.
           # pam_unix is marked as 'sufficient' on NixOS which means nothing will run
@@ -467,6 +493,18 @@ in
       '';
     };
 
+    security.pam.enableGoogleAuth = mkOption {
+      default = false;
+      description = ''
+        Enable the Google Authenticator OTP PAM module.
+
+        GAuth authentication is not sufficient on its own, and will
+        not allow login without also having a separate authentication
+        mechanism. It is intended to be used in combination with
+        passwords.
+      '';
+    };
+
     security.pam.enableU2F = mkOption {
       default = false;
       description = ''
@@ -502,6 +540,7 @@ in
       ++ optional config.services.sssd.enable pkgs.sssd
       ++ optionals config.krb5.enable [pam_krb5 pam_ccreds]
       ++ optionals config.security.pam.enableOTPW [ pkgs.otpw ]
+      ++ optionals config.security.pam.enableGoogleAuth [ pkgs.googleAuthenticator ]
       ++ optionals config.security.pam.oath.enable [ pkgs.oathToolkit ]
       ++ optionals config.security.pam.enableU2F [ pkgs.pam_u2f ];
 
@@ -534,12 +573,12 @@ in
         # Most of these should be moved to specific modules.
         cups = {};
         ftp = {};
-        i3lock = {};
-        i3lock-color = {};
-        screen = {};
-        vlock = {};
-        xlock = {};
-        xscreensaver = {};
+        i3lock = { isExposed = false; };
+        i3lock-color = { isExposed = false; };
+        screen = { isExposed = false; };
+        vlock = { isExposed = false; };
+        xlock = { isExposed = false; };
+        xscreensaver = { isExposed = false; };
 
         runuser = { rootOK = true; unixAuth = false; setEnvironment = false; };
 
