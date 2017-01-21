@@ -13469,6 +13469,8 @@ in
     libart = pkgs.gnome2.libart_lgpl;
   };
 
+  hyperd = callPackage ../applications/virtualization/hyperd { };
+
   idea = recurseIntoAttrs (callPackages ../applications/editors/idea { androidsdk = androidsdk_extras; });
 
   libquvi = callPackage ../applications/video/quvi/library.nix { };
@@ -13906,6 +13908,9 @@ in
 
   kubernetes = callPackage ../applications/networking/cluster/kubernetes {
     go = go_1_6;
+  };
+
+  kubernetes-frakti = callPackage ../applications/networking/cluster/kubernetes/frakti {
   };
 
   lame = callPackage ../development/libraries/lame { };
