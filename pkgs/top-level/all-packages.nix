@@ -6728,13 +6728,15 @@ with pkgs;
     ruby = ruby_2_2;
   };
 
-  gdb = callPackage ../development/tools/misc/gdb {
+  gdbWithoutWrapper = callPackage ../development/tools/misc/gdb {
     guile = null;
     hurd = gnu.hurdCross;
     inherit (gnu) mig;
   };
 
-  gdbGuile = lowPrio (gdb.override { inherit guile; });
+  gdb = callPackage ../development/tools/misc/gdb/wrapper.nix { safePaths = [ gcc ]; };
+
+  gdbGuile = lowPrio (gdb.override { gdbWithoutWrapper = gdbWithoutWrapper.override { inherit guile; }; });
 
   gdbCross = lowPrio (callPackage ../development/tools/misc/gdb {
     target = if targetPlatform != buildPlatform then targetPlatform else null;
