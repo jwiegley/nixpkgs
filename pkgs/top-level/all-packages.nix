@@ -1908,7 +1908,7 @@ with pkgs;
   gmvault = callPackage ../tools/networking/gmvault { };
 
   gnaural = callPackage ../applications/audio/gnaural {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   gnome15 = callPackage ../applications/misc/gnome15 {
@@ -2178,7 +2178,7 @@ with pkgs;
   });
 
   hdf5-fortran = appendToName "fortran" (hdf5.override {
-    inherit gfortran;
+    inherit (buildPackages) gfortran;
   });
 
   hecate = callPackage ../applications/editors/hecate { };
@@ -2365,7 +2365,7 @@ with pkgs;
   jnettop = callPackage ../tools/networking/jnettop { };
 
   john = callPackage ../tools/security/john {
-    gcc = gcc49; # doesn't build with gcc5
+    gcc = buildPackages.gcc49; # doesn't build with gcc5
   };
 
   journalbeat = callPackage ../tools/system/journalbeat { };
@@ -4497,7 +4497,7 @@ with pkgs;
           };
         };
       in
-        pkgsCross.gccCrossStageStatic;
+        pkgsCross.buildPackages.gccCrossStageStatic;
   };
 
   xclip = callPackage ../tools/misc/xclip { };
@@ -4677,11 +4677,11 @@ with pkgs;
   avra = callPackage ../development/compilers/avra { };
 
   avian = callPackage ../development/compilers/avian {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   bigloo = callPackage ../development/compilers/bigloo {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   boo = callPackage ../development/compilers/boo {
@@ -4711,8 +4711,6 @@ with pkgs;
   clang_39 = llvmPackages_39.clang;
   clang_38 = llvmPackages_38.clang;
   clang_37 = llvmPackages_37.clang;
-  clang_35 = wrapCC llvmPackages_35.clang;
-  clang_34 = wrapCC llvmPackages_34.clang;
 
   clang-tools = callPackage ../development/tools/clang-tools { };
 
@@ -4775,8 +4773,7 @@ with pkgs;
 
   gambit = callPackage ../development/compilers/gambit { };
 
-  gcc = gcc5;
-  gcc-unwrapped = gcc.cc;
+  gcc-unwrapped = gcc5-unwrapped;
 
   wrapCCMulti = cc:
     if system == "x86_64-linux" then lowPrio (
@@ -4784,66 +4781,36 @@ with pkgs;
         extraBuildCommands = ''
           echo "dontMoveLib64=1" >> $out/nix-support/setup-hook
         '';
-      in wrapCCWith (callPackage ../build-support/cc-wrapper) glibc_multi extraBuildCommands (cc.cc.override {
-        stdenv = overrideCC stdenv (wrapCCWith (callPackage ../build-support/cc-wrapper) glibc_multi "" cc.cc);
+      in buildPackages.wrapCCWith (callPackage ../build-support/cc-wrapper) glibc_multi extraBuildCommands (cc.override {
+        stdenv = overrideCC stdenv (buildPackages.wrapCCWith (callPackage ../build-support/cc-wrapper) glibc_multi "" cc);
         profiledCompiler = false;
         enableMultilib = true;
       }))
     else throw "Multilib ${cc.name} not supported on ‘${system}’";
 
-  gcc_multi = wrapCCMulti gcc;
+  gcc_multi = wrapCCMulti gcc-unwrapped;
 
-  gcc_debug = lowPrio (wrapCC (gcc.cc.override {
+  gcc_debug-unwrapped = lowPrio (gcc-unwrapped.override {
     stripped = false;
-  }));
+  });
 
   gccApple = throw "gccApple is no longer supported";
 
-  gccCrossStageStatic = assert targetPlatform != buildPlatform; let
-    libcCross1 =
-      if stdenv.cross.libc == "msvcrt" then windows.mingw_w64_headers
-      else if stdenv.cross.libc == "libSystem" then darwin.xcode
-      else null;
-    in wrapGCCCross {
-      gcc = forcedNativePackages.gcc.cc.override {
-        cross = targetPlatform;
-        crossStageStatic = true;
-        langCC = false;
-        libcCross = libcCross1;
-        enableShared = false;
-        # Why is this needed?
-        inherit (forcedNativePackages) binutilsCross;
-      };
-      libc = libcCross1;
-      binutils = binutilsCross;
-      cross = targetPlatform;
+  gccCrossStageStatic-unwrapped = assert targetPlatform != buildPlatform; gcc-unwrapped.override {
+    crossStageStatic = true;
+    langCC = false;
+    libcCross = libcTarget;
+    enableShared = false;
   };
 
-  # Only needed for mingw builds
-  gccCrossMingw2 = assert targetPlatform != buildPlatform; wrapGCCCross {
-    gcc = gccCrossStageStatic.gcc;
-    libc = windows.mingw_headers2;
-    binutils = binutilsCross;
-    cross = targetPlatform;
+  gccCrossStageFinal-unwrapped = assert targetPlatform != buildPlatform; gcc-unwrapped.override {
+    crossStageStatic = false;
+    # XXX: We have troubles cross-compiling libstdc++ on MinGW (see
+    # <http://hydra.nixos.org/build/4268232>), so don't even try.
+    langCC = targetPlatform.config != "i686-pc-mingw32";
   };
 
-  gccCrossStageFinal = assert targetPlatform != buildPlatform; wrapGCCCross {
-    gcc = forcedNativePackages.gcc.cc.override {
-      cross = targetPlatform;
-      crossStageStatic = false;
-
-      # XXX: We have troubles cross-compiling libstdc++ on MinGW (see
-      # <http://hydra.nixos.org/build/4268232>), so don't even try.
-      langCC = targetPlatform.config != "i686-pc-mingw32";
-      # Why is this needed?
-      inherit (forcedNativePackages) binutilsCross;
-    };
-    libc = libcCross;
-    binutils = binutilsCross;
-    cross = targetPlatform;
-  };
-
-  gcc45 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/4.5 {
+  gcc45-unwrapped = lowPrio (callPackage ../development/compilers/gcc/4.5 {
     inherit noSysDirs;
     texinfo = texinfo4;
 
@@ -4854,31 +4821,29 @@ with pkgs;
     # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=43944
     profiledCompiler = !stdenv.isArm;
 
-    # When building `gcc.crossDrv' (a "Canadian cross", with host == target
-    # and host != build), `cross' must be null but the cross-libc must still
-    # be passed.
-    cross = null;
-    libcCross = if targetPlatform != buildPlatform then libcCross else null;
-  }));
+    # `cross` is the target platform if it differs from the host platform
+    cross = if targetPlatform != hostPlatform then targetPlatform else null;
+    libcCross = if targetPlatform != buildPlatform then libc else null;
+    binutilsCross = binutils;
+  });
 
-  gcc48 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/4.8 {
+  gcc48-unwrapped = lowPrio (callPackage ../development/compilers/gcc/4.8 {
     inherit noSysDirs;
 
     # PGO seems to speed up compilation by gcc by ~10%, see #445 discussion
     profiledCompiler = with stdenv; (!isSunOS && !isDarwin && (isi686 || isx86_64));
 
-    # When building `gcc.crossDrv' (a "Canadian cross", with host == target
-    # and host != build), `cross' must be null but the cross-libc must still
-    # be passed.
-    cross = null;
-    libcCross = if targetPlatform != buildPlatform then libcCross else null;
+    # `cross` is the target platform if it differs from the host platform
+    cross = if targetPlatform != hostPlatform then targetPlatform else null;
+    libcCross = if targetPlatform != buildPlatform then libc else null;
+    binutilsCross = binutils;
 
     isl = if !stdenv.isDarwin then isl_0_14 else null;
     cloog = if !stdenv.isDarwin then cloog else null;
     texinfo = texinfo5; # doesn't validate since 6.1 -> 6.3 bump
-  }));
+  });
 
-  gcc49 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/4.9 {
+  gcc49-unwrapped = lowPrio (callPackage ../development/compilers/gcc/4.9 {
     inherit noSysDirs;
 
     # PGO seems to speed up compilation by gcc by ~10%, see #445 discussion
@@ -4893,77 +4858,75 @@ with pkgs;
     isl = if !stdenv.isDarwin then isl_0_11 else null;
 
     cloog = if !stdenv.isDarwin then cloog_0_18_0 else null;
-  }));
+  });
 
-  gcc5 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/5 {
+  gcc5-unwrapped = lowPrio (callPackage ../development/compilers/gcc/5 {
     inherit noSysDirs;
 
     # PGO seems to speed up compilation by gcc by ~10%, see #445 discussion
     profiledCompiler = with stdenv; (!isDarwin && (isi686 || isx86_64));
 
-    # When building `gcc.crossDrv' (a "Canadian cross", with host == target
-    # and host != build), `cross' must be null but the cross-libc must still
-    # be passed.
-    cross = null;
-    libcCross = if targetPlatform != buildPlatform then libcCross else null;
+    # `cross` is the target platform if it differs from the host platform
+    cross = if targetPlatform != hostPlatform then targetPlatform else null;
+    libcCross = if targetPlatform != buildPlatform then libc else null;
+    binutilsCross = binutils;
 
     isl = if !stdenv.isDarwin then isl_0_14 else null;
-  }));
+  });
 
-  gcc6 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/6 {
+  gcc6-unwrapped = lowPrio (callPackage ../development/compilers/gcc/6 {
     inherit noSysDirs;
 
     # PGO seems to speed up compilation by gcc by ~10%, see #445 discussion
     profiledCompiler = with stdenv; (!isDarwin && (isi686 || isx86_64));
 
-    # When building `gcc.crossDrv' (a "Canadian cross", with host == target
-    # and host != build), `cross' must be null but the cross-libc must still
-    # be passed.
-    cross = null;
-    libcCross = if targetPlatform != buildPlatform then libcCross else null;
+    # `cross` is the target platform if it differs from the host platform
+    cross = if targetPlatform != hostPlatform then targetPlatform else null;
+    libcCross = if targetPlatform != buildPlatform then libc else null;
+    binutilsCross = binutils;
 
     isl = if !stdenv.isDarwin then isl_0_14 else null;
-  }));
+  });
 
-  gfortran = if !stdenv.isDarwin then gfortran5
+  gfortran = if !stdenv.isDarwin then buildPackages.gfortran5
              else callPackage ../development/compilers/gcc/gfortran-darwin.nix {
     inherit (darwin) Libsystem;
   };
 
-  gfortran48 = wrapCC (gcc48.cc.override {
+  gfortran48-unwrapped = gcc48-unwrapped.override {
     name = "gfortran";
     langFortran = true;
     langCC = false;
     langC = false;
     profiledCompiler = false;
-  });
+  };
 
-  gfortran49 = wrapCC (gcc49.cc.override {
+  gfortran49-unwrapped = gcc49-unwrapped.override {
     name = "gfortran";
     langFortran = true;
     langCC = false;
     langC = false;
     profiledCompiler = false;
-  });
+  };
 
-  gfortran5 = wrapCC (gcc5.cc.override {
+  gfortran5-unwrapped = gcc5-unwrapped.override {
     name = "gfortran";
     langFortran = true;
     langCC = false;
     langC = false;
     profiledCompiler = false;
-  });
+  };
 
-  gfortran6 = wrapCC (gcc6.cc.override {
+  gfortran6-unwrapped = gcc6-unwrapped.override {
     name = "gfortran";
     langFortran = true;
     langCC = false;
     langC = false;
     profiledCompiler = false;
-  });
+  };
 
-  gcj = gcj49;
-  gcj49 = wrapCC (gcc49.cc.override {
+  gcj-unwrapped = gcj49-unwrapped;
+  gcj49-unwrapped = gcc49-unwrapped.override {
     name = "gcj";
     langJava = true;
     langFortran = false;
@@ -4972,38 +4935,38 @@ with pkgs;
     profiledCompiler = false;
     inherit zip unzip zlib boehmgc gettext pkgconfig perl;
     inherit (gnome2) libart_lgpl;
-  });
+  };
 
-  gnat = gnat45; # failed to make 4.6 or 4.8 build
+  gnat-unwrapped = gnat45-unwrapped; # failed to make 4.6 or 4.8 build
 
-  gnat45 = wrapCC (gcc45.cc.override {
+  gnat45-unwrapped = gcc45-unwrapped.override {
     name = "gnat";
     langCC = false;
     langC = true;
     langAda = true;
     profiledCompiler = false;
-    inherit gnatboot;
+    inherit (buildPackages) gnatboot;
     # We can't use the ppl stuff, because we would have
     # libstdc++ problems.
     cloogppl = null;
     ppl = null;
-  });
+  };
 
-  gnatboot = wrapGCC-old (callPackage ../development/compilers/gnatboot {});
+  gnatboot-unwrapped = callPackage ../development/compilers/gnatboot {};
 
   gnu-smalltalk = callPackage ../development/compilers/gnu-smalltalk {
     emacsSupport = config.emacsSupport or false;
   };
 
-  gccgo = gccgo49;
+  gccgo-unwrapped = gccgo49-unwrapped;
 
-  gccgo49 = wrapCC (gcc49.cc.override {
+  gccgo49-unwrapped = gcc49-unwrapped.override {
     name = "gccgo49";
     langCC = true; #required for go.
     langC = true;
     langGo = true;
     profiledCompiler = false;
-  });
+  };
 
   ghdl_mcode = callPackage_i686 ../development/compilers/ghdl {
     flavour = "mcode";
@@ -5368,7 +5331,7 @@ with pkgs;
   opam = callPackage ../development/tools/ocaml/opam { };
 
   picat = callPackage ../development/compilers/picat {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   ponyc = callPackage ../development/compilers/ponyc {
@@ -5500,39 +5463,6 @@ with pkgs;
   vs90wrapper = callPackage ../development/compilers/vs90wrapper { };
 
   wla-dx = callPackage ../development/compilers/wla-dx { };
-
-  wrapCCWith = ccWrapper: libc: extraBuildCommands: baseCC: ccWrapper {
-    nativeTools = stdenv.cc.nativeTools or false;
-    nativeLibc = stdenv.cc.nativeLibc or false;
-    nativePrefix = stdenv.cc.nativePrefix or "";
-    cc = baseCC;
-    dyld = if stdenv.isDarwin then darwin.dyld else null;
-    isGNU = baseCC.isGNU or false;
-    isClang = baseCC.isClang or false;
-    inherit libc extraBuildCommands;
-  };
-
-  ccWrapperFun = callPackage ../build-support/cc-wrapper;
-
-  wrapCC = wrapCCWith ccWrapperFun stdenv.cc.libc "";
-  # legacy version, used for gnat bootstrapping
-  wrapGCC-old = baseGCC: callPackage ../build-support/gcc-wrapper-old {
-    nativeTools = stdenv.cc.nativeTools or false;
-    nativeLibc = stdenv.cc.nativeLibc or false;
-    nativePrefix = stdenv.cc.nativePrefix or "";
-    gcc = baseGCC;
-    libc = glibc;
-  };
-
-  wrapGCCCross =
-    {gcc, libc, binutils, cross, shell ? "", name ? "gcc-cross-wrapper"}:
-
-    forcedNativePackages.callPackage ../build-support/gcc-cross-wrapper {
-      nativeTools = false;
-      nativeLibc = false;
-      noLibc = (libc == null);
-      inherit gcc binutils libc shell name cross;
-    };
 
   # prolog
   yap = callPackage ../development/compilers/yap { };
@@ -6089,7 +6019,7 @@ with pkgs;
   avrdude = callPackage ../development/tools/misc/avrdude { };
 
   avarice = callPackage ../development/tools/misc/avarice {
-    gcc = gcc49;
+    gcc = buildPackages.gcc49;
   };
 
   babeltrace = callPackage ../development/tools/misc/babeltrace { };
@@ -6102,21 +6032,24 @@ with pkgs;
 
   bin_replace_string = callPackage ../development/tools/misc/bin_replace_string { };
 
-  binutils = if stdenv.isDarwin then darwin.binutils else binutils-raw;
+  binutils =
+    if stdenv.isDarwin
+    then
+      if stdenv ? cross
+      then darwin.cctools_cross
+      else darwin.binutils
+    else binutils-raw;
 
-  binutils-raw = callPackage ../development/tools/misc/binutils { inherit noSysDirs; };
+  binutils-raw = callPackage ../development/tools/misc/binutils {
+    cross = stdenv.cross or null;
+    inherit noSysDirs;
+  };
 
   binutils_nogold = lowPrio (callPackage ../development/tools/misc/binutils {
+    cross = stdenv.cross or null;
     inherit noSysDirs;
     gold = false;
   });
-
-  binutilsCross = assert targetPlatform != buildPlatform; lowPrio (
-    if targetPlatform.libc == "libSystem" then darwin.cctools_cross
-    else forcedNativePackages.binutils.override {
-      noSysDirs = true;
-      cross = targetPlatform;
-    });
 
   bison2 = callPackage ../development/tools/parsing/bison/2.x.nix { };
   bison3 = callPackage ../development/tools/parsing/bison/3.x.nix { };
@@ -6178,7 +6111,7 @@ with pkgs;
   # You can use a different directory, but whichever directory you choose
   # should be owned by user root, group nixbld with permissions 0770.
   ccacheWrapper = makeOverridable ({ extraConfig ? "" }:
-     wrapCC (ccache.links extraConfig)) {};
+     buildPackages.wrapCC (ccache.links extraConfig)) {};
   ccacheStdenv = lowPrio (overrideCC stdenv ccacheWrapper);
 
   cccc = callPackage ../development/tools/analysis/cccc { };
@@ -6295,13 +6228,13 @@ with pkgs;
   #     };
   #
   distccWrapper = makeOverridable ({ extraConfig ? "" }:
-     wrapCC (distcc.links extraConfig)) {};
+     buildPackages.wrapCC (distcc.links extraConfig)) {};
   distccStdenv = lowPrio (overrideCC stdenv distccWrapper);
 
   distccMasquerade = if stdenv.isDarwin
     then null
     else callPackage ../development/tools/misc/distcc/masq.nix {
-      gccRaw = gcc.cc;
+      gccRaw = gcc-unwrapped;
       binutils = binutils;
     };
 
@@ -6760,13 +6693,10 @@ with pkgs;
     guile = null;
     hurd = gnu.hurdCross;
     inherit (gnu) mig;
+    target = if targetPlatform != buildPlatform then targetPlatform else null;
   };
 
   gdbGuile = lowPrio (gdb.override { inherit guile; });
-
-  gdbCross = lowPrio (callPackage ../development/tools/misc/gdb {
-    target = if targetPlatform != buildPlatform then targetPlatform else null;
-  });
 
   gdb-multitarget = lowPrio (gdb.override { multitarget = true; });
 
@@ -6819,7 +6749,7 @@ with pkgs;
 
   aalib = callPackage ../development/libraries/aalib { };
 
-  accelio = callPackage ../development/libraries/accelio { stdenv = overrideCC stdenv gcc5; };
+  accelio = callPackage ../development/libraries/accelio { stdenv = overrideCC stdenv buildPackages.gcc5; };
 
   accountsservice = callPackage ../development/libraries/accountsservice { };
 
@@ -6974,8 +6904,8 @@ with pkgs;
   classads = callPackage ../development/libraries/classads { };
 
   classpath = callPackage ../development/libraries/java/classpath {
-    javac = gcj;
-    jvm = gcj;
+    javac = buildPackages.gcj;
+    jvm = buildPackages.gcj;
     gconf = gnome2.GConf;
   };
 
@@ -7355,7 +7285,11 @@ with pkgs;
 
   glibc = callPackage ../development/libraries/glibc {
     installLocales = config.glibc.locales or false;
-    gccCross = null;
+    gccCross =
+      if crossSystem != null
+      then buildPackages.gccCrossStageStatic
+      else null;
+    inherit (buildPackages) linuxHeaders;
   };
 
   glibc_memusage = callPackage ../development/libraries/glibc {
@@ -7363,19 +7297,25 @@ with pkgs;
     withGd = true;
   };
 
-  glibcCross = forcedNativePackages.glibc.override {
-    gccCross = gccCrossStageStatic;
-    linuxHeaders = linuxHeadersCross;
-  };
+  libc =
+    if crossSystem != null
+    then
+      { # switch
+        "glibc" = glibc;
+        "uclibc" = uclibc;
+        "msvcrt" = windows.mingw_w64;
+        "libSystem" = darwin.xcode;
+      }.${crossSystem.libc} or (throw "Unknown libc")
+    else
+      if stdenv.isDarwin
+      then darwin.Libsystem
+      else glibc;
 
-  # We can choose:
-  libcCrossChooser = name: if name == "glibc" then glibcCross
-    else if name == "uclibc" then uclibcCross
-    else if name == "msvcrt" then windows.mingw_w64
-    else if name == "libSystem" then darwin.xcode
-    else throw "Unknown libc";
-
-  libcCross = assert targetPlatform != buildPlatform; libcCrossChooser targetPlatform.libc;
+  # Dummy libc used to build libc
+  libcTarget = assert targetPlatform != buildPlatform; { # Switch
+    "msvcrt" = windows.mingw_w64_headers;
+    "libSystem" = darwin.xcode;
+  }.${stdenv.cross.libc} or null;
 
   # Only supported on Linux
   glibcLocales = if stdenv.isLinux then callPackage ../development/libraries/glibc/locales.nix { } else null;
@@ -8275,20 +8215,24 @@ with pkgs;
   # glibc provides libiconv so systems with glibc don't need to build libiconv
   # separately, but we also provide libiconvReal, which will always be a
   # standalone libiconv, just in case you want it
-  libiconv = if stdenv ? cross then
-    (if stdenv.cross.libc == "glibc" then libcCross
-      else if stdenv.cross.libc == "libSystem" then darwin.libiconv
-      else libiconvReal)
-    else if stdenv.isGlibc then glibcIconv stdenv.cc.libc
-    else if stdenv.isDarwin then darwin.libiconv
-    else libiconvReal;
+  libiconv =
+    if hostPlatform != buildPlatform
+    then
+      { # switch
+        "glibc" = glibcIconv;
+        "libSystem" = darwin.libiconv;
+      }.${hostSystem.libc} or libiconvReal
+    else
+      if stdenv.isGlibc then glibcIconv
+      else if stdenv.isDarwin then darwin.libiconv
+      else libiconvReal;
 
-  glibcIconv = libc: let
-    inherit (builtins.parseDrvName libc.name) name version;
-    libcDev = lib.getDev libc;
+  glibcIconv = let
+    inherit (builtins.parseDrvName glibc.name) name version;
+    glibcDev = lib.getDev glibc;
   in runCommand "${name}-iconv-${version}" {} ''
     mkdir -p $out/include
-    ln -sv ${libcDev}/include/iconv.h $out/include
+    ln -sv ${glibcDev}/include/iconv.h $out/include
   '';
 
   libiconvReal = callPackage ../development/libraries/libiconv {
@@ -8477,7 +8421,7 @@ with pkgs;
 
   libproxy = callPackage ../development/libraries/libproxy {
     stdenv = if stdenv.isDarwin
-      then overrideCC stdenv gcc
+      then overrideCC stdenv buildPackages.gcc
       else stdenv;
   };
 
@@ -9384,8 +9328,8 @@ with pkgs;
   resolv_wrapper = callPackage ../development/libraries/resolv_wrapper { };
 
   rhino = callPackage ../development/libraries/java/rhino {
-    javac = gcj;
-    jvm = gcj;
+    javac = buildPackages.gcj;
+    jvm = buildPackages.gcj;
   };
 
   rlog = callPackage ../development/libraries/rlog { };
@@ -10896,7 +10840,7 @@ with pkgs;
   cifs-utils = callPackage ../os-specific/linux/cifs-utils { };
 
   cockroachdb = callPackage ../servers/sql/cockroachdb {
-    gcc = gcc6; # needs gcc 6.0 and above
+    gcc = buildPackages.gcc6; # needs gcc 6.0 and above
   };
 
   conky = callPackage ../os-specific/linux/conky ({
@@ -11081,6 +11025,7 @@ with pkgs;
   # GNU/Hurd core packages.
   gnu = recurseIntoAttrs (callPackage ../os-specific/gnu {
     inherit platform;
+    glibcCross = glibc;
   });
 
   hwdata = callPackage ../os-specific/linux/hwdata { };
@@ -11163,25 +11108,35 @@ with pkgs;
 
   linuxHeaders = linuxHeaders_4_4;
 
-  linuxHeaders24Cross = forcedNativePackages.callPackage ../os-specific/linux/kernel-headers/2.4.nix {
-    cross = assert targetPlatform != buildPlatform; targetPlatform;
+  linuxHeaders_2_4 = callPackage ../os-specific/linux/kernel-headers/2.4.nix {
+    cross = targetPlatform;
   };
 
-  linuxHeaders26Cross = forcedNativePackages.callPackage ../os-specific/linux/kernel-headers/4.4.nix {
-    cross = assert targetPlatform != buildPlatform; targetPlatform;
+  linuxHeaders_2_6 = callPackage ../os-specific/linux/kernel-headers/4.4.nix {
+    cross = targetPlatform;
   };
 
-  linuxHeaders_3_18 = callPackage ../os-specific/linux/kernel-headers/3.18.nix { };
+  linuxHeaders_3_18 = callPackage ../os-specific/linux/kernel-headers/3.18.nix {
+    cross = targetPlatform;
+  };
 
-  linuxHeaders_4_4 = callPackage ../os-specific/linux/kernel-headers/4.4.nix { };
+  linuxHeaders_4_4 = callPackage ../os-specific/linux/kernel-headers/4.4.nix {
+    cross = targetPlatform;
+  };
 
   # We can choose:
-  linuxHeadersCrossChooser = ver : if ver == "2.4" then linuxHeaders24Cross
-    else if ver == "2.6" then linuxHeaders26Cross
-    else throw "Unknown linux kernel version";
-
-  linuxHeadersCross = assert targetPlatform != buildPlatform;
-    linuxHeadersCrossChooser targetPlatform.platform.kernelMajor;
+  linuxHeaders =
+    if stdenv ? cross
+    then
+      { # switch
+        "2.4" = linuxHeaders_2_4;
+        "2.6" = linuxHeaders_2_6;
+        "3.18" = linuxHeaders_3_18;
+        "4.4" = linuxHeaders_4_4;
+      }.${targetPlatform.platform.kernelMajor}
+        or (throw "Unknown linux kernel version")
+    else
+      linuxHeaders_4_4;
 
   kernelPatches = callPackage ../os-specific/linux/kernel/patches.nix { };
 
@@ -11842,13 +11797,14 @@ with pkgs;
 
   ubootGuruplug = callPackage ../misc/uboot/guruplug.nix { };
 
-  uclibc = callPackage ../os-specific/linux/uclibc { };
-
-  uclibcCross = lowPrio (callPackage ../os-specific/linux/uclibc {
-    linuxHeaders = linuxHeadersCross;
-    gccCross = gccCrossStageStatic;
-    cross = assert targetPlatform != buildPlatform; targetPlatform;
-  });
+  uclibc = callPackage ../os-specific/linux/uclibc {
+    cross = if targetPlatform != buildPlatform then targetPlatform else null;
+    gccCross =
+      if crossSystem != null
+      then gccCrossStageStatic
+      else null;
+    inherit (buildPackages) linuxHeaders;
+  };
 
   udev = systemd;
   libudev = udev;
@@ -11928,8 +11884,8 @@ with pkgs;
     };
 
     mingw_w64 = callPackage ../os-specific/windows/mingw-w64 {
-      gccCross = gccCrossStageStatic;
-      binutilsCross = binutilsCross;
+      gccCross = buildPackages.gccCrossStageStatic;
+      binutilsCross = binutils;
     };
 
     mingw_w64_headers = callPackage ../os-specific/windows/mingw-w64 {
@@ -12418,7 +12374,7 @@ with pkgs;
   afterstep = callPackage ../applications/window-managers/afterstep {
     fltk = fltk13;
     gtk = gtk2;
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   ahoviewer = callPackage ../applications/graphics/ahoviewer { };
@@ -13913,7 +13869,7 @@ with pkgs;
   };
 
   kiwix = callPackage ../applications/misc/kiwix {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   konversation = qt5.callPackage ../applications/networking/irc/konversation/1.6.nix { };
@@ -15709,8 +15665,8 @@ with pkgs;
 
   xdotool = callPackage ../tools/X11/xdotool { };
 
-  xen_4_5 = callPackage ../applications/virtualization/xen/4.5.nix { stdenv = overrideCC stdenv gcc49; };
-  xen_xenServer = callPackage ../applications/virtualization/xen/4.5.nix { xenserverPatched = true; stdenv = overrideCC stdenv gcc49; };
+  xen_4_5 = callPackage ../applications/virtualization/xen/4.5.nix { stdenv = overrideCC stdenv buildPackages.gcc49; };
+  xen_xenServer = callPackage ../applications/virtualization/xen/4.5.nix { xenserverPatched = true; stdenv = overrideCC stdenv buildPackages.gcc49; };
   xen = xen_4_5;
 
   win-spice = callPackage ../applications/virtualization/driver/win-spice { };
@@ -16836,7 +16792,7 @@ with pkgs;
   alliance = callPackage ../applications/science/electronics/alliance { };
 
   archimedes = callPackage ../applications/science/electronics/archimedes {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   bcftools = callPackage ../applications/science/biology/bcftools { };
@@ -17595,7 +17551,7 @@ with pkgs;
   mongoc = callPackage ../development/libraries/mongoc { };
 
   mupen64plus = callPackage ../misc/emulators/mupen64plus {
-    stdenv = overrideCC stdenv gcc49;
+    stdenv = overrideCC stdenv buildPackages.gcc49;
   };
 
   inherit (callPackages ../tools/package-management/nix {

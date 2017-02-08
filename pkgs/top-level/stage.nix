@@ -49,6 +49,13 @@
   # be defined internally as the produced package set as itself.
   buildPackages
 
+, # The package set used in the next stage. If null, `__targetPackages` will be
+  # defined internally as the produced package set as itself.
+  #
+  # THIS IS A HACK for compilers that don't think critically about cross-
+  # compilation. Please do *not* use unless you really know what you are doing.
+  __targetPackages
+
 , # The standard environment to use for building packages.
   stdenv
 
@@ -87,6 +94,8 @@ let
   stdenvBootstappingAndPlatforms = self: super: {
     buildPackages = (if buildPackages == null then self else buildPackages)
       // { recurseForDerivations = false; };
+    __targetPackages = (if __targetPackages == null then self else __targetPackages)
+      // { recurseForDerivations = false; };
     inherit stdenv
       buildPlatform hostPlatform targetPlatform;
   };
@@ -112,6 +121,18 @@ let
       { inherit lib nixpkgsFun noSysDirs config; }
       res self;
     in res;
+
+  # Build wrappers are added in anticipation of there being a successor stage
+  # using this stage as its `buildPackages` (or this stage being built against
+  # itself. As such, it is the only semi-acceptable use of `__targetPackages`.
+  #
+  # Note that if `__targetPackages` is `{}`, then we know there is no successor
+  # stage, so we don't need to apply this. This is a small half-measure to help
+  # catch improperly *using* wrappers from `pkgs` instead of `buildPackages`.
+  buildWrappers = self: super:
+    if targetPackages == {}
+    then {};
+    else import ./splice.nix self
 
   aliases = self: super: import ./aliases.nix super;
 
@@ -140,6 +161,7 @@ let
     trivialBuilders
     splice
     allPackages
+    buildWrappers
     aliases
     stdenvOverrides
     configOverrides
