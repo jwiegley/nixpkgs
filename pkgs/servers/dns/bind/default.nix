@@ -1,7 +1,11 @@
 { stdenv, lib, fetchurl, openssl, libtool, perl, libxml2
-, libseccomp ? null }:
+, libseccomp ? null
+, kerberos ? null }:
 
-let version = "9.10.4-P6"; in
+let 
+  version = "9.10.4-P6";
+  withGSSAPI = kerberos != null;
+in
 
 stdenv.mkDerivation rec {
   name = "bind-${version}";
@@ -16,8 +20,9 @@ stdenv.mkDerivation rec {
   patches = [ ./dont-keep-configure-flags.patch ./remove-mkdir-var.patch ] ++
     stdenv.lib.optional stdenv.isDarwin ./darwin-openssl-linking-fix.patch;
 
-  buildInputs = [ openssl libtool perl libxml2 ] ++
-    stdenv.lib.optional stdenv.isLinux libseccomp;
+  buildInputs = [ openssl libtool perl libxml2 ]
+    ++ stdenv.lib.optional stdenv.isLinux libseccomp
+    ++ stdenv.lib.optional withGSSAPI kerberos;
 
   STD_CDEFINES = [ "-DDIG_SIGCHASE=1" ]; # support +sigchase
 
@@ -29,13 +34,14 @@ stdenv.mkDerivation rec {
     "--without-atf"
     "--without-dlopen"
     "--without-docbook-xsl"
-    "--without-gssapi"
     "--without-idn"
     "--without-idnlib"
     "--without-pkcs11"
     "--without-purify"
     "--without-python"
-  ] ++ lib.optional (stdenv.isi686 || stdenv.isx86_64) "--enable-seccomp";
+  ]
+  ++ lib.optional (stdenv.isi686 || stdenv.isx86_64) "--enable-seccomp"
+  ++ (if withGSSAPI then ["--with-gssapi=${kerberos}"] else ["--without-gssapi"]);
 
   postInstall = ''
     moveToOutput bin/bind9-config $dev
