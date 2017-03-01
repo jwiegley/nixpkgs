@@ -327,10 +327,18 @@ let
         ''
           [Service]
           ${let env = cfg.globalEnvironment // def.environment;
-            in concatMapStrings (n:
-              let s = optionalString (env."${n}" != null)
-                "Environment=${builtins.toJSON "${n}=${env.${n}}"}\n";
-              in if stringLength s >= 2048 then throw "The value of the environment variable ‘${n}’ in systemd service ‘${name}.service’ is too long." else s) (attrNames env)}
+                # @ not allowed in writeText name
+                safeName = builtins.replaceStrings [ "@" ]  [ "_" ] name;
+                # NB that we use toJSON for correct escaping
+                # The systemd escaping rules might not be exactly the same
+                # but this is close enough.
+                envFileData = lib.concatStrings (lib.mapAttrsToList (key: value: "${key}=${builtins.toJSON value}\n") env);
+                envFile = pkgs.writeText "${safeName}-environment" envFileData;
+                envInline = lib.mapAttrsToList (key: value: "Environment=${builtins.toJSON "${key}=${value}"}\n") env;
+                tooLong = lib.any (s: stringLength s >= 2048) envInline;
+            in if tooLong
+               then "EnvironmentFile=${envFile}"
+               else lib.concatStrings envInline}
           ${if def.reloadIfChanged then ''
             X-ReloadIfChanged=true
           '' else if !def.restartIfChanged then ''
