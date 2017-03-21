@@ -4573,7 +4573,7 @@ with pkgs;
 
   wv2 = callPackage ../tools/misc/wv2 { };
 
-  inherit (ocamlPackages) wyrd;
+  wyrd = ocamlPackages.callPackage ../tools/misc/wyrd { };
 
   x86info = callPackage ../os-specific/linux/x86info { };
 
@@ -4864,7 +4864,6 @@ with pkgs;
   ) // {
     coq = coq_8_6;
   });
-
 
   # Users installing via `nix-env` will likely be using the REPL,
   # which has a hard dependency on Z3, so make sure it is available.
@@ -5199,9 +5198,9 @@ with pkgs;
 
   all-cabal-hashes = callPackage ../data/misc/hackage/default.nix { };
 
-  purescript = haskell.lib.justStaticExecutables haskellPackages.purescript;
+  haxe = ocamlPackages.callPackage ../development/compilers/haxe { };
 
-  inherit (ocamlPackages) haxe;
+  purescript = haskell.lib.justStaticExecutables haskellPackages.purescript;
 
   hxcpp = callPackage ../development/compilers/haxe/hxcpp.nix { };
 
@@ -5628,7 +5627,7 @@ with pkgs;
 
   tinycc = callPackage ../development/compilers/tinycc { };
 
-  inherit (ocaml-ng.ocamlPackages_4_02) trv;
+  trv = ocamlPackages_4_02.callPackage ../development/tools/misc/trv { };
 
   bupc = callPackage ../development/compilers/bupc { };
 
@@ -6939,9 +6938,13 @@ with pkgs;
 
   valkyrie = callPackage ../development/tools/analysis/valkyrie { };
 
-  verasco = ocaml-ng.ocamlPackages_4_02.verasco.override {
+  verasco = ocamlPackages.callPackage  ../development/tools/analysis/verasco ({
     coq = coq_8_4;
-  };
+  } //  (
+      if system == "x86_64-linux"
+      then { tools = pkgs.pkgsi686Linux.stdenv.cc; }
+      else {}
+    ));
 
   visualvm = callPackage ../development/tools/java/visualvm { };
 
@@ -7583,7 +7586,12 @@ with pkgs;
 
   glpk = callPackage ../development/libraries/glpk { };
 
-  inherit (ocamlPackages) glsurf;
+  glsurf = ocamlPackages_4_01_0.callPackage
+   ../applications/science/math/glsurf {
+      libpng = libpng12;
+      giflib = giflib_4_1;
+      camlimages = ocamlPackages_4_01_0.camlimages_4_0;
+    };
 
   glui = callPackage ../development/libraries/glui {};
 
@@ -13602,7 +13610,7 @@ with pkgs;
 
   goldendict = libsForQt55.callPackage ../applications/misc/goldendict { };
 
-  inherit (ocamlPackages) google-drive-ocamlfuse;
+  google-drive-ocamlfuse = ocamlPackages.callPackage  ../applications/networking/google-drive-ocamlfuse { };
 
   google-musicmanager = callPackage ../applications/audio/google-musicmanager { };
 
@@ -14577,7 +14585,9 @@ with pkgs;
     lua = lua5;
   };
 
-  inherit (ocaml-ng.ocamlPackages_4_01_0) monotoneViz;
+  monotoneViz = ocamlPackages_4_01_0.callPackage ../applications/version-management/monotone-viz {
+      inherit (gnome2) libgnomecanvas glib;
+    };
 
   moonlight-embedded = callPackage ../applications/misc/moonlight-embedded { };
 
@@ -15752,7 +15762,10 @@ with pkgs;
 
   unigine-valley = callPackage ../applications/graphics/unigine-valley { };
 
-  inherit (ocamlPackages) unison;
+  unison = ocamlPackages.callPackage ../applications/networking/sync/unison {
+      enableX11 = config.unison.enableX11 or true;
+    };
+
 
   unpaper = callPackage ../tools/graphics/unpaper { };
 
@@ -17420,7 +17433,9 @@ with pkgs;
 
   hol = callPackage ../applications/science/logic/hol { };
 
-  inherit (ocamlPackages) hol_light;
+  hol_light = ocamlPackages.callPackage ../applications/science/logic/hol_light {
+      camlp5 = ocamlPackages.camlp5_strict;
+    };
 
   hologram = callPackage ../tools/security/hologram { };
 
@@ -17449,10 +17464,6 @@ with pkgs;
 
   ltl2ba = callPackage ../applications/science/logic/ltl2ba {};
 
-  inherit (ocaml-ng.ocamlPackages_3_11_2) matita;
-
-  matita_130312 = lowPrio ocamlPackages.matita_130312;
-
   metis-prover = callPackage ../applications/science/logic/metis-prover { };
 
   mcrl2 = callPackage ../applications/science/logic/mcrl2 { };
@@ -17461,7 +17472,9 @@ with pkgs;
 
   opensmt = callPackage ../applications/science/logic/opensmt { };
 
-  inherit (ocamlPackages) ott;
+  ott = (with ocamlPackages; callPackage ../applications/science/logic/ott {
+      camlp5 = camlp5_transitional;
+    });
 
   otter = callPackage ../applications/science/logic/otter {};
 
