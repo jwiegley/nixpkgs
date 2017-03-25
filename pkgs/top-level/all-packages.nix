@@ -11698,7 +11698,7 @@ with pkgs;
 
     rtlwifi_new = callPackage ../os-specific/linux/rtlwifi_new { };
 
-    openafsClient = callPackage ../servers/openafs-client { };
+    openafs = callPackage ../servers/openafs { };
 
     facetimehd = callPackage ../os-specific/linux/facetimehd { };
 

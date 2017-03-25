@@ -1,13 +1,13 @@
 { config, pkgs, lib, ... }:
 
 let
-  inherit (lib) mkOption mkIf;
+  inherit (lib) mkOption mkIf optionalString;
 
   cfg = config.services.openafsClient;
 
   cellServDB = pkgs.fetchurl {
-    url = http://dl.central.org/dl/cellservdb/CellServDB.2009-06-29;
-    sha256 = "be566f850e88130333ab8bc3462872ad90c9482e025c60a92f728b5bac1b4fa9";
+    url = http://dl.central.org/dl/cellservdb/CellServDB.2016-01-01;
+    sha256 = "03pp3fyf45ybjsmmmrp5ibdcjmrcc2l0zax0nvlij1n9fg6a2dzg";
   };
 
   afsConfig = pkgs.runCommand "afsconfig" {} ''
@@ -17,7 +17,7 @@ let
     echo "/afs:${cfg.cacheDirectory}:${cfg.cacheSize}" > $out/cacheinfo
   '';
 
-  openafsPkgs = config.boot.kernelPackages.openafsClient;
+  openafsPkgs = config.boot.kernelPackages.openafs;
 in
 {
   ###### interface
@@ -51,6 +51,11 @@ in
         description = "Whether to enable (weak) protocol encryption.";
       };
 
+      dns = mkOption {
+        default = false;
+	description = "Resolve the AFS cell and its database servers via DNS.";
+      };
+
       sparse = mkOption {
         default = false;
         description = "Minimal cell list in /afs.";
@@ -66,22 +71,19 @@ in
 
     environment.systemPackages = [ openafsPkgs ];
 
-    environment.etc = [
-      { source = afsConfig;
-        target = "openafs";
-      }
-    ];
-
     systemd.services.afsd = {
       description = "AFS client";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
+      serviceConfig.RemainAfterExit = true;
 
       preStart = ''
+        mkdir -p /etc/openafs
+        cp -r ${afsConfig}/* /etc/openafs #*/
         mkdir -p -m 0755 /afs
         mkdir -m 0700 -p ${cfg.cacheDirectory}
         ${pkgs.kmod}/bin/insmod ${openafsPkgs}/lib/openafs/libafs-*.ko || true
-        ${openafsPkgs}/sbin/afsd -confdir ${afsConfig} -cachedir ${cfg.cacheDirectory} ${if cfg.sparse then "-dynroot-sparse" else "-dynroot"} -fakestat -afsdb
+        ${openafsPkgs}/sbin/afsd -confdir ${afsConfig} -cachedir ${cfg.cacheDirectory} ${if cfg.sparse then "-dynroot-sparse" else "-dynroot"} -fakestat ${optionalString cfg.dns "-afsdb"}
         ${openafsPkgs}/bin/fs setcrypt ${if cfg.crypt then "on" else "off"}
       '';
 
