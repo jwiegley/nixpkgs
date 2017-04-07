@@ -37,7 +37,7 @@ with stdenv.lib;
   DEBUG_STACK_USAGE n
   DEBUG_STACKOVERFLOW n
   RCU_TORTURE_TEST n
-  SCHEDSTATS n
+  SCHEDSTATS y
   DETECT_HUNG_TASK y
 
   ${optionalString (versionOlder version "4.10") ''
