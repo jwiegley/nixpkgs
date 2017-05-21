@@ -147,6 +147,8 @@ in {
 
   automat = callPackage ../development/python-modules/automat { };
 
+  asana = callPackage ../development/python-modules/asana { };
+
   # packages defined elsewhere
 
   bap = callPackage ../development/python-modules/bap {
@@ -5679,6 +5681,8 @@ in {
     };
   };
 
+  diff-match-patch = callPackage ../development/python-modules/diff-match-patch { };
+
   requests-cache = buildPythonPackage (rec {
     name = "requests-cache-${version}";
     version = "0.4.13";
@@ -10296,6 +10300,10 @@ in {
     };
   };
 
+  django-ipware = callPackage ../development/python-modules/django-ipware { };
+
+  django-jinja = callPackage ../development/python-modules/django-jinja { };
+
   django_nose = buildPythonPackage rec {
     name = "django-nose-${version}";
     version = "1.4.4";
@@ -10339,6 +10347,10 @@ in {
   };
 
   djangorestframework = callPackage ../development/python-modules/djangorestframework { };
+
+  django-pglocks = callPackage ../development/python-modules/django-pglocks { };
+
+  django-picklefield = callPackage ../development/python-modules/django-picklefield { };
 
   django-raster = callPackage ../development/python-modules/django-raster { };
 
@@ -10387,6 +10399,8 @@ in {
     };
   };
 
+  django-sampledatahelper = callPackage ../development/python-modules/django-sampledatahelper { };
+
   django_silk = buildPythonPackage rec {
     name = "django-silk-${version}";
     version = "0.5.6";
@@ -10419,6 +10433,10 @@ in {
       license = licenses.mit;
     };
   };
+
+  django-sites = callPackage ../development/python-modules/django-sites { };
+
+  django-sr = callPackage ../development/python-modules/django-sr { };
 
   django_taggit = buildPythonPackage rec {
     name = "django-taggit-${version}";
@@ -10503,6 +10521,8 @@ in {
       homepage = https://github.com/djblets/djblets;
     };
   };
+
+  djmail = callPackage ../development/python-modules/djmail { };
 
   pillowfight = buildPythonPackage rec {
     name = "pillowfight-${version}";
@@ -10663,6 +10683,7 @@ in {
     disabled = isPy3k;
   };
 
+  easy-thumbnails = callPackage ../development/python-modules/easy-thumbnails { };
 
   ecdsa = buildPythonPackage rec {
     name = "ecdsa-${version}";
@@ -10915,6 +10936,8 @@ in {
       maintainers = with maintainers; [ domenkozar ];
     };
   });
+
+  fn = callPackage ../development/python-modules/fn { };
 
   pyfribidi = buildPythonPackage rec {
     version = "0.11.0";
@@ -16261,6 +16284,14 @@ in {
       license = licenses.bsd3;
     };
   });
+
+  premailer = callPackage ../development/python-modules/premailer { };
+
+  psd-tools = callPackage ../development/python-modules/psd-tools { };
+
+  pyjwkest = callPackage ../development/python-modules/pyjwkest { };
+
+  pycryptodomex = callPackage ../development/python-modules/pycryptodomex { };
 
   osc = buildPythonPackage {
     name = "osc-0.156.0-16-g9e6d1a5";
@@ -22608,6 +22639,8 @@ in {
     };
   };
 
+  sampledata = callPackage ../development/python-modules/sampledata { };
+
   seqdiag = buildPythonPackage rec {
     name = "seqdiag-0.9.4";
 
@@ -23544,6 +23577,8 @@ in {
       licenses =  [ licenses.gpl3Plus licenses.asl20 ];
     };
   };
+
+  serpy = callPackage ../development/python-modules/serpy { };
 
   sympy = buildPythonPackage rec {
     name = "sympy-1.0";
@@ -24689,6 +24724,8 @@ in {
     };
 
   };
+
+  taiga-back = callPackage ../development/python-modules/taiga-back { };
 
   targetcli_fb = buildPythonPackage rec {
     version = "2.1.fb33";
