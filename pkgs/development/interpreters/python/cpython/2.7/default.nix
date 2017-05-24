@@ -188,15 +188,18 @@ in stdenv.mkDerivation {
         # We're also not interested in building Windows installers.
         find "$out" -name 'wininst*.exe' | xargs -r rm -f
 
-        # Include a sitecustomize.py file
-        cp ${../../sitecustomize.py} $out/${sitePackages}/sitecustomize.py
-
         # Determinism: rebuild all bytecode
         # We exclude lib2to3 because that's Python 2 code which fails
         # We rebuild three times, once for each optimization level
         find $out -name "*.py" | $out/bin/python -m compileall -q -f -x "lib2to3" -i -
         find $out -name "*.py" | $out/bin/python -O -m compileall -q -f -x "lib2to3" -i -
         find $out -name "*.py" | $out/bin/python -OO -m compileall -q -f -x "lib2to3" -i -
+
+        # Include a sitecustomize.py file
+        # We do not compile because somehow it claims not having permission.
+        # Only happens with 2.7.
+        cp ${../../sitecustomize.py} $out/${sitePackages}/sitecustomize.py
+
       '' + optionalString hostPlatform.isCygwin ''
         cp libpython2.7.dll.a $out/lib
       '';
