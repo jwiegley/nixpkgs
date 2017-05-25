@@ -2097,6 +2097,8 @@ with pkgs;
 
   fdm = callPackage ../tools/networking/fdm {};
 
+  feedreader = callPackage ../applications/networking/feedreaders/feedreader {};
+
   ferm = callPackage ../tools/networking/ferm { };
 
   fgallery = callPackage ../tools/graphics/fgallery {
