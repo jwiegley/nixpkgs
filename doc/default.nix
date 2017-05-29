@@ -3,6 +3,7 @@ let
   lib = pkgs.lib;
   sources = lib.sourceFilesBySuffices ./. [".xml"];
   sources-langs = ./languages-frameworks;
+  libChapter = builtins.toFile "lib.xml" (import ./fn-docs.nix).docChapter;
 in
 pkgs.stdenv.mkDerivation {
   name = "nixpkgs-manual";
@@ -77,6 +78,8 @@ pkgs.stdenv.mkDerivation {
       outputFile = "./languages-frameworks/vim.xml";
     }
   + ''
+    cp ${libChapter} ./lib.xml
+
     echo ${lib.nixpkgsVersion} > .version
 
     # validate against relaxng schema
@@ -97,6 +100,7 @@ pkgs.stdenv.mkDerivation {
 
     mkdir -p $out/nix-support
     echo "doc manual $dst manual.html" >> $out/nix-support/hydra-build-products
+
 
     xsltproc $xsltFlags --nonet --xinclude \
       --output $dst/epub/ \
