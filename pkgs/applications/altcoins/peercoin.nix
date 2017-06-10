@@ -28,7 +28,6 @@ stdenv.mkDerivation rec {
   buildPhase = ''
     qmake
     make
-    find
   '';
 
   installPhase = ''
