@@ -209,6 +209,12 @@ args.stdenv.mkDerivation (args // {
 
 <section xml:id="sec-package-naming"><title>Package naming</title>
 
+<para> The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”,
+“SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this section
+are to be interpreted as described in
+<link xlink:href="https://tools.ietf.org/rfc/rfc2119.txt">RFC 2119</link>.
+</para>
+
 <para>In Nixpkgs, there are generally three different names associated with a package:
 
 <itemizedlist>
@@ -241,25 +247,24 @@ bound to the variable name <varname>e2fsprogs</varname> in
 
 <itemizedlist>
 
-  <listitem><para>Generally, try to stick to the upstream package
-  name.</para></listitem>
+  <listitem><para>The <literal>name</literal> attribute SHOULD be identical to
+  the upstream package name.</para></listitem>
 
-  <listitem><para>Don’t use uppercase letters in the
-  <literal>name</literal> attribute — e.g.,
-  <literal>"mplayer-1.0rc2"</literal> instead of
-  <literal>"MPlayer-1.0rc2"</literal>.</para></listitem>
+  <listitem><para>The <literal>name</literal> attribute MUST NOT contain
+  uppercase letters — e.g., <literal>"mplayer-1.0rc2"</literal> instead
+  of <literal>"MPlayer-1.0rc2"</literal>.</para></listitem>
 
   <listitem><para>The version part of the <literal>name</literal>
-  attribute <emphasis>must</emphasis> start with a digit (following a
-  dash) — e.g., <literal>"hello-0.3.1rc2"</literal>.</para></listitem>
+  attribute MUST start with a digit (following a dash) — e.g.,
+  <literal>"hello-0.3.1rc2"</literal>.</para></listitem>
 
   <listitem><para>If a package is not a release but a commit from a repository, then
-  the version part of the name <emphasis>must</emphasis> be the date of that 
-  (fetched) commit. The date must be in <literal>"YYYY-MM-DD"</literal> format.
+  the version part of the name MUST be the date of that 
+  (fetched) commit. The date MUST be in <literal>"YYYY-MM-DD"</literal> format.
   Also append <literal>"unstable"</literal> to the name - e.g.,
   <literal>"pkgname-unstable-2014-09-23"</literal>.</para></listitem>
 
-  <listitem><para>Dashes in the package name should be preserved
+  <listitem><para>Dashes in the package name SHOULD be preserved
   in new variable names, rather than converted to underscores
   (which was convention up to around 2013 and most names
    still have underscores instead of dashes) — e.g.,
@@ -267,7 +272,7 @@ bound to the variable name <varname>e2fsprogs</varname> in
   <varname>http_parser</varname>.</para></listitem>
 
   <listitem><para>If there are multiple versions of a package, this
-  should be reflected in the variable names in
+  SHOULD be reflected in the variable names in
   <filename>all-packages.nix</filename>,
   e.g. <varname>json-c-0-9</varname> and <varname>json-c-0-11</varname>.
   If there is an obvious “default” version, make an attribute like
