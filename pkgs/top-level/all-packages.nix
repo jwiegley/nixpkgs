@@ -14712,6 +14712,7 @@ with pkgs;
     };
   });
 
+  lifelines = callPackage ../applications/misc/lifelines { };
 
   liferea = callPackage ../applications/networking/newsreaders/liferea {
     inherit (gnome3) libpeas gsettings_desktop_schemas dconf;
