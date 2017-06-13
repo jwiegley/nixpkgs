@@ -8,11 +8,10 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "MarcNo";
     repo = "lifelines";
-    rev = "714b237e55793f229bbb7a599e534cc319a6a502";
-    sha256 = "0k8bb1i0q72q2nppcf5y51ps82nm566pcldl50wpjrp7lsspqqpw";
+    rev = "61974641d9e2ca6ee808597d934b0f70eab69a56";
+    sha256 = "1nqn395pljwdz3rbanqcakzs00svqk53xjazfp66rqzia7wdh0s5";
   };
 
-  hardeningDisable = [ "format" ];
   buildInputs = [
     autoconf
     automake
