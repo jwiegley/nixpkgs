@@ -9,17 +9,14 @@ import ./make-test.nix ({ pkgs, ...} : {
 
     { imports = [ ./common/user-account.nix ];
 
-      services.xserver.enable = true;
-
-      services.xserver.displayManager.slim.enable = false;
+      services.xserver.displayManager.select = "gdm";
       services.xserver.displayManager.gdm = {
-        enable = true;
         autoLogin = {
           enable = true;
           user = "alice";
         };
       };
-      services.xserver.desktopManager.gnome3.enable = true;
+      services.xserver.desktopManager.select = [ "gnome3" ];
 
       virtualisation.memorySize = 512;
     };

@@ -11,13 +11,13 @@ with lib;
   services.xserver = {
     enable = true;
     # GDM doesn't start in virtual machines with ISO
+    displayManager.select = "slim";
     displayManager.slim = {
-      enable = true;
       defaultUser = "root";
       autoLogin = true;
     };
+    desktopManager.select = [ "gnome3" ];
     desktopManager.gnome3 = {
-      enable = true;
       extraGSettingsOverrides = ''
         [org.gnome.desktop.background]
         show-desktop-icons=true

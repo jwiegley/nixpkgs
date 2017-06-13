@@ -13,6 +13,7 @@ let
       filter (x: !(builtins.elem (pkgName x) ysNames)) xs;
 
   xcfg = config.services.xserver;
+  dmcfg = xcfg.desktopManager;
   cfg = xcfg.desktopManager.lxqt;
 
 in
@@ -20,10 +21,14 @@ in
 {
   options = {
 
-    services.xserver.desktopManager.lxqt.enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Enable the LXQt desktop manager";
+    services.xserver.desktopManager.select = mkOption {
+      type = with types; listOf (enum [ "lxqt" ]);
+    };
+
+    services.xserver.desktopManager.lxqt.preferredDisplayManager = mkOption {
+      internal = true;
+      default = "sddm";
+      description = "Sets the preferred display manager for this desktop manager.";
     };
 
     environment.lxqt.excludePackages = mkOption {
@@ -35,7 +40,7 @@ in
 
   };
 
-  config = mkIf (xcfg.enable && cfg.enable) {
+  config = mkIf (elem "lxqt" dmcfg.select) {
 
     services.xserver.desktopManager.session = singleton {
       name = "lxqt";

@@ -27,6 +27,14 @@ let
     Xft.hintstyle: hintslight
   '';
 
+  defaultDM =
+    if cfg.desktopManager.select == [] then "none"
+    else head cfg.desktopManager.select;
+
+  defaultWM =
+    if cfg.windowManager.select == [] then "none"
+    else head cfg.windowManager.select;
+
   # file provided by services.xserver.displayManager.session.script
   xsession = wm: dm: pkgs.writeScript "xsession"
     ''
@@ -138,9 +146,9 @@ let
       # extract those (see:
       # http://wiki.bash-hackers.org/syntax/pe#substring_removal).
       windowManager="''${sessionType##*+}"
-      : ''${windowManager:=${cfg.windowManager.default}}
+      : ''${windowManager:=${defaultWM}}
       desktopManager="''${sessionType%%+*}"
-      : ''${desktopManager:=${cfg.desktopManager.default}}
+      : ''${desktopManager:=${defaultDM}}
 
       # Start the window manager.
       case "$windowManager" in
@@ -197,6 +205,22 @@ let
       '') names}
     '';
 
+    /* Select a default display manager according to desktop manager or window
+       manager settings.
+       If the selected Dm or WM have an internal `preferredDisplayManager` option,
+       its value will be used.
+    */
+    defaultDisplayManager =
+      let
+        dmcfg = cfg.desktopManager;
+        wmcfg = cfg.windowManager;
+      in
+      if dmcfg.select != []
+         then attrByPath [ (head dmcfg.select) "preferredDisplayManager" ] "slim" dmcfg
+      else if wmcfg.select != []
+           then attrByPath [ (head wmcfg.select) "preferredDisplayManager" ] "slim" wmcfg
+      else null;
+
 in
 
 {
@@ -204,6 +228,21 @@ in
   options = {
 
     services.xserver.displayManager = {
+
+      select = mkOption {
+        type = with types; nullOr (enum [ ]);
+        default = defaultDisplayManager;
+        description = ''
+          Select which display manager to use.
+        '';
+      };
+
+      defaultSessionName = mkOption {
+        type = types.str;
+        default = "${defaultDM}+${defaultWM}";
+        internal = true;
+        description = "Name of the default session.";
+      };
 
       xauthBin = mkOption {
         internal = true;
@@ -343,6 +382,17 @@ in
   imports = [
    (mkRemovedOptionModule [ "services" "xserver" "displayManager" "desktopManagerHandlesLidAndPower" ]
      "The option is no longer necessary because all display managers have already delegated lid management to systemd.")
+
+   # backward compatibility for pre extensible option types
+   (mkMergedOptionModule
+     (map
+       (dm: [ "services" "xserver" "displayManager" dm "enable" ])
+       [ "auto" "gdm" "kdm" "lightdm" "sddm" "slim" ])
+     [ "services" "xserver" "displayManager" "select" ]
+     (config:
+       findFirst (dm:
+         (getAttrFromPath [ "services" "xserver" "displayManager" dm "enable" ] config) == true
+       ) null [ "auto" "gdm" "kdm" "lightdm" "sddm" "slim" ]))
   ];
 
 }

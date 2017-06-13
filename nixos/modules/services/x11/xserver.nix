@@ -155,7 +155,7 @@ in
 
       enable = mkOption {
         type = types.bool;
-        default = false;
+        default = cfg.displayManager != null;
         description = ''
           Whether to enable the X server.
         '';

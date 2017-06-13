@@ -3,6 +3,7 @@
 with lib;
 
 let
+  dmcfg = config.services.xserver.desktopManager;
   cfg = config.services.xserver.desktopManager.gnome3;
   gnome3 = config.environment.gnome3.packageSet;
 
@@ -50,10 +51,16 @@ in {
 
   options = {
 
+    services.xserver.desktopManager.select = mkOption {
+      type = with types; listOf (enum [ "gnome3" ]);
+    };
+
     services.xserver.desktopManager.gnome3 = {
-      enable = mkOption {
-        default = false;
-        description = "Enable Gnome 3 desktop manager.";
+
+      preferredDisplayManager = mkOption {
+        internal = true;
+        default = "gdm";
+        description = "Sets the preferred display manager for this desktop manager.";
       };
 
       sessionPath = mkOption {
@@ -95,7 +102,7 @@ in {
 
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf (elem "gnome3" dmcfg.select) {
 
     # Enable helpful DBus services.
     security.polkit.enable = true;

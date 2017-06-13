@@ -58,32 +58,22 @@ let
     ${optionalString cfg.autoLogin.enable ''
     [Autologin]
     User=${cfg.autoLogin.user}
-    Session=${defaultSessionName}.desktop
+    Session=${dmcfg.defaultSessionName}.desktop
     Relogin=${boolToString cfg.autoLogin.relogin}
     ''}
 
     ${cfg.extraConfig}
   '';
 
-  defaultSessionName =
-    let
-      dm = xcfg.desktopManager.default;
-      wm = xcfg.windowManager.default;
-    in dm + optionalString (wm != "none") ("+" + wm);
-
 in
 {
   options = {
 
-    services.xserver.displayManager.sddm = {
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Whether to enable sddm as the display manager.
-        '';
-      };
+    services.xserver.displayManager.select = mkOption {
+      type = with types; nullOr (enum [ "sddm" ]);
+    };
 
+    services.xserver.displayManager.sddm = {
       extraConfig = mkOption {
         type = types.lines;
         default = "";
@@ -183,7 +173,7 @@ in
 
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf (dmcfg.select == "sddm") {
 
     assertions = [
       { assertion = cfg.autoLogin.enable -> cfg.autoLogin.user != null;
@@ -191,16 +181,7 @@ in
           SDDM auto-login requires services.xserver.displayManager.sddm.autoLogin.user to be set
         '';
       }
-      { assertion = cfg.autoLogin.enable -> elem defaultSessionName dmcfg.session.names;
-        message = ''
-          SDDM auto-login requires that services.xserver.desktopManager.default and
-          services.xserver.windowMananger.default are set to valid values. The current
-          default session: ${defaultSessionName} is not valid.
-        '';
-      }
     ];
-
-    services.xserver.displayManager.slim.enable = false;
 
     services.xserver.displayManager.job = {
       logsXsession = true;

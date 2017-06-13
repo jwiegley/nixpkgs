@@ -8,10 +8,8 @@ import ./make-test.nix ({ pkgs, ...} :
 
   machine = { lib, ... }: {
     imports = [ ./common/user-account.nix ];
-    services.xserver.enable = true;
-    services.xserver.displayManager.sddm.enable = true;
-    services.xserver.desktopManager.plasma5.enable = true;
-    services.xserver.desktopManager.default = "plasma5";
+    services.xserver.displayManager.select = "sddm";
+    services.xserver.desktopManager.select = [ "plasma5" ];
     virtualisation.memorySize = 1024;
 
     # fontconfig-penultimate-0.3.3 -> 0.3.4 broke OCR apparently, but no idea why.
