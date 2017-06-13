@@ -2,16 +2,17 @@
 , gettext, libiconv, bison, ncurses, perl, autoreconfHook }:
 
 stdenv.mkDerivation rec {
-  version = "2017-06-12-unstable";
-  name = "lifelines-${version}";
+  version = "2017-06-12";
+  name = "lifelines-unstable-${version}";
 
   src = fetchFromGitHub {
-    owner = "disassembler";
+    owner = "MarcNo";
     repo = "lifelines";
-    rev = "71f3fa98b8939bd2217d5d76f83b5e5c596ab4de";
-    sha256 = "02rb15gwxv5c2kw86yib1wr9xhvly7h9fi604kwmsvl6yf3hbihy";
+    rev = "714b237e55793f229bbb7a599e534cc319a6a502";
+    sha256 = "0k8bb1i0q72q2nppcf5y51ps82nm566pcldl50wpjrp7lsspqqpw";
   };
 
+  hardeningDisable = [ "format" ];
   buildInputs = [
     autoconf
     automake
