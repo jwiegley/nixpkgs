@@ -1,7 +1,7 @@
-{ buildPythonPackage
+{ stdenv
 , fetchFromGitHub
+, buildPythonPackage
 , pythonOlder
-, future
 , numpy
 , six
 , scipy
@@ -10,16 +10,22 @@
 , pydot_ng
 , sphinx
 , pygments
-, libgpuarray
-, python
-, pycuda
-, cudatoolkit
-, cudnn
-, stdenv
+, future
+, cudaSupport ? false
+, cudatoolkit ? null
+, pycuda ? null
+, libgpuarray ? null
+, cudnn ? null
 }:
 
+assert cudaSupport
+  -> cudatoolkit != null
+  && pycuda != null
+  && libgpuarray != null
+  && cudnn != null;
+
 buildPythonPackage rec {
-  name = "Theano-cuda-${version}";
+  name = "Theano-${stdenv.lib.optionalString cudaSupport "cuda-"}${version}";
   version = "0.8.2";
 
   src = fetchFromGitHub {
@@ -31,7 +37,7 @@ buildPythonPackage rec {
 
   doCheck = false;
 
-  patchPhase = ''
+  patchPhase = stdenv.lib.optionalString (pythonOlder "3.0") ''
     pushd theano/sandbox/gpuarray
     sed -i -re '2s/^/from builtins import bytes\n/g' subtensor.py
     sed -i -re "s/(b'2')/int(bytes(\1))/g" subtensor.py
@@ -55,11 +61,12 @@ buildPythonPackage rec {
     pydot_ng
     sphinx
     pygments
-    pycuda
+  ] ++ stdenv.lib.optionals cudaSupport [
     cudatoolkit
+    pycuda
     libgpuarray
     cudnn
-  ] ++ (stdenv.lib.optional (pythonOlder "3.0") future);
+  ] ++ stdenv.lib.optional (pythonOlder "3.0") future;
 
-  passthru.cudaSupport = true;
+  passthru = { inherit cudaSupport; };
 }

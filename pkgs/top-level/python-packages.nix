@@ -22674,14 +22674,15 @@ in {
 
   Theano = self.TheanoWithoutCuda;
 
-  TheanoWithoutCuda = callPackage ../development/python-modules/Theano/theano-without-cuda { };
+  TheanoWithoutCuda = callPackage ../development/python-modules/Theano { };
 
-  TheanoWithCuda = callPackage ../development/python-modules/Theano/theano-with-cuda (
+  TheanoWithCuda = callPackage ../development/python-modules/Theano (
   let
     boost = pkgs.boost159.override {
       inherit (self) python numpy scipy;
     };
   in rec {
+    cudaSupport = true;
     cudatoolkit = pkgs.cudatoolkit75;
     cudnn = pkgs.cudnn5_cudatoolkit75;
     inherit (self) numpy scipy;
