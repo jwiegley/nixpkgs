@@ -1,0 +1,31 @@
+--- Theano-src/theano/configdefaults.py_	2017-06-16 22:48:52.405323657 -0400
++++ Theano-src/theano/configdefaults.py	2017-06-16 22:52:05.503376588 -0400
+@@ -165,19 +165,6 @@
+     BoolParam(True, allow_override=False),
+     in_c_key=False)
+ 
+-
+-def default_cuda_root():
+-    v = os.getenv('CUDA_ROOT', "")
+-    if v:
+-        return v
+-    s = os.getenv("PATH")
+-    if not s:
+-        return ''
+-    for dir in s.split(os.path.pathsep):
+-        if os.path.exists(os.path.join(dir, "nvcc")):
+-            return os.path.dirname(os.path.abspath(dir))
+-    return ''
+-
+ AddConfigVar(
+     'cuda.root',
+     """directory with bin/, lib/, include/ for cuda utilities.
+@@ -188,7 +175,7 @@
+        linker directives.  Default: environment variable "CUDA_ROOT"
+        or else "AUTO".
+        """,
+-    StrParam(default_cuda_root),
++    StrParam('@cuda_root@'),
+     in_c_key=False)
+ 
+ 

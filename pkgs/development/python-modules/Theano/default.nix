@@ -1,4 +1,5 @@
 { stdenv
+, runCommandCC
 , fetchFromGitHub
 , buildPythonPackage
 , pythonOlder
@@ -37,17 +38,42 @@ buildPythonPackage rec {
 
   doCheck = false;
 
-  patchPhase = stdenv.lib.optionalString (pythonOlder "3.0") ''
-    pushd theano/sandbox/gpuarray
-    sed -i -re '2s/^/from builtins import bytes\n/g' subtensor.py
-    sed -i -re "s/(b'2')/int(bytes(\1))/g" subtensor.py
-    sed -i -re "s/(ctx.bin_id\[\-2\])/int(\1)/g" subtensor.py
+  patches = [
+    ./paths.patch
+  ] ++ stdenv.lib.optionals cudaSupport [
+    ./paths-cuda.patch
+  ];
+  postPatch =
+    let
+      # Closure for running a command in a stdenv for building with given buildInputs
+      wrapped = command: buildInputs:
+        runCommandCC "${command}-wrapped" { inherit buildInputs; } ''
+          type -P '${command}' || { echo '${command}: not found'; exit 1; }
+          cat > "$out" <<EOF
+          #!$(type -P bash)
+          $(declare -xp | sed -e '/^[^=]\+="\('"''${NIX_STORE//\//\\/}"'\|[^\/]\)/!d')
+          $(type -P '${command}') "\$@"
+          EOF
+          chmod +x "$out"
+        '';
 
-    sed -i -re '2s/^/from builtins import bytes\n/g' dnn.py
-    sed -i -re "s/(b'30')/int(bytes(\1))/g" dnn.py
-    sed -i -re "s/(ctx.bin_id\[\-2:\])/int(\1)/g" dnn.py
-    popd
-  '';
+      # Theano spews warnings and disabled flags if the compiler isn't named g++
+      cxx_compiler = wrapped "g++" (stdenv.lib.optionals cudaSupport [ libgpuarray cudnn ]);
+    in ''
+      substituteInPlace theano/configdefaults.py \
+        --subst-var-by cxx_compiler '${cxx_compiler}'
+    '' + stdenv.lib.optionalString cudaSupport ''
+      substituteInPlace theano/configdefaults.py \
+        --subst-var-by cuda_root '${cudatoolkit}'
+    '' + stdenv.lib.optionalString (pythonOlder "3.0") ''
+      sed -i -re '1a\' -e 'from builtins import bytes' theano/sandbox/gpuarray/subtensor.py
+      sed -i -re "s/(b'2')/int(bytes(\1))/g" theano/sandbox/gpuarray/subtensor.py
+      sed -i -re "s/(ctx.bin_id\[\-2\])/int(\1)/g" theano/sandbox/gpuarray/subtensor.py
+
+      sed -i -re '1a\' -e 'from builtins import bytes' theano/sandbox/gpuarray/dnn.py
+      sed -i -re "s/(b'30')/int(bytes(\1))/g" theano/sandbox/gpuarray/dnn.py
+      sed -i -re "s/(ctx.bin_id\[\-2:\])/int(\1)/g" theano/sandbox/gpuarray/dnn.py
+    '';
 
   dontStrip = true;
 

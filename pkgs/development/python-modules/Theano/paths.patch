@@ -1,0 +1,81 @@
+--- Theano-src/theano/configdefaults.py_	2017-06-16 22:48:52.405323657 -0400
++++ Theano-src/theano/configdefaults.py	2017-06-16 22:52:05.503376588 -0400
+@@ -380,70 +367,21 @@
+             'FAST_COMPILE', 'PROFILE_MODE', 'DEBUG_MODE'),
+     in_c_key=False)
+ 
+-param = "g++"
+-
+-# Test whether or not g++ is present: disable C code if it is not.
+-try:
+-    rc = call_subprocess_Popen(['g++', '-v'])
+-except OSError:
+-    rc = 1
+-
+-if rc != 0:
+-    param = ""
+-
+-# On Mac we test for 'clang++' and use it by default
+-if sys.platform == 'darwin':
+-    try:
+-        rc = call_subprocess_Popen(['clang++', '-v'])
+-        if rc == 0:
+-            param = "clang++"
+-    except OSError:
+-        pass
+-
+-# Try to find the full compiler path from the name
+-if param != "":
+-    import distutils.spawn
+-    newp = distutils.spawn.find_executable(param)
+-    if newp is not None:
+-        param = newp
+-    del newp
+-    del distutils
+-
+ AddConfigVar('cxx',
+              "The C++ compiler to use. Currently only g++ is"
+              " supported, but supporting additional compilers should not be "
+              "too difficult. "
+              "If it is empty, no C++ code is compiled.",
+-             StrParam(param),
++             StrParam('@cxx_compiler@'),
+              in_c_key=False)
+-del param
+ 
+-if rc == 0 and config.cxx != "":
+-    # Keep the default linker the same as the one for the mode FAST_RUN
+-    AddConfigVar('linker',
+-                 ("Default linker used if the theano flags mode is Mode "
+-                  "or ProfileMode(deprecated)"),
+-                 EnumStr('cvm', 'c|py', 'py', 'c', 'c|py_nogc',
+-                         'vm', 'vm_nogc', 'cvm_nogc'),
+-                 in_c_key=False)
+-else:
+-    # g++ is not present or the user disabled it,
+-    # linker should default to python only.
+-    AddConfigVar('linker',
+-                 ("Default linker used if the theano flags mode is Mode "
+-                  "or ProfileMode(deprecated)"),
+-                 EnumStr('vm', 'py', 'vm_nogc'),
+-                 in_c_key=False)
+-    try:
+-        # If the user provided an empty value for cxx, do not warn.
+-        theano.configparser.fetch_val_for_key('cxx')
+-    except KeyError:
+-        _logger.warning(
+-            'g++ not detected ! Theano will be unable to execute '
+-            'optimized C-implementations (for both CPU and GPU) and will '
+-            'default to Python implementations. Performance will be severely '
+-            'degraded. To remove this warning, set Theano flags cxx to an '
+-            'empty string.')
++# Keep the default linker the same as the one for the mode FAST_RUN
++AddConfigVar('linker',
++             ("Default linker used if the theano flags mode is Mode "
++              "or ProfileMode(deprecated)"),
++             EnumStr('cvm', 'c|py', 'py', 'c', 'c|py_nogc',
++                     'vm', 'vm_nogc', 'cvm_nogc'),
++             in_c_key=False)
+ 
+ 
+ # Keep the default value the same as the one for the mode FAST_RUN
