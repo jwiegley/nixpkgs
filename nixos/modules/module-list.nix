@@ -340,6 +340,7 @@
   ./services/monitoring/collectd.nix
   ./services/monitoring/das_watchdog.nix
   ./services/monitoring/dd-agent/dd-agent.nix
+  ./services/monitoring/glances.nix
   ./services/monitoring/grafana.nix
   ./services/monitoring/graphite.nix
   ./services/monitoring/hdaps.nix
