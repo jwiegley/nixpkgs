@@ -29,3 +29,12 @@
      in_c_key=False)
  
  
++@@ -214,7 +201,7 @@
++ AddConfigVar('nvcc.compiler_bindir',
++              "If defined, nvcc compiler driver will seek g++ and gcc"
++              " in this directory",
++-             StrParam(""),
+++             StrParam('@nvcc_gcc@'),
++              in_c_key=False)
++ 
++ AddConfigVar('nvcc.fastmath',

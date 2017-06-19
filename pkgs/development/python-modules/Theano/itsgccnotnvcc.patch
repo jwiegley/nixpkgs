@@ -1,0 +1,11 @@
+--- Theano-src/theano/sandbox/gpuarray/dnn.py_	2017-06-16 23:54:47.061747680 -0400
++++ Theano-src/theano/sandbox/gpuarray/dnn.py	2017-06-16 23:54:59.593617165 -0400
+@@ -64,8 +64,6 @@
+         params.append("-I" + config.dnn.include_path)
+     if config.dnn.library_path:
+         params.append("-L" + config.dnn.library_path)
+-    if config.nvcc.compiler_bindir:
+-        params.extend(['--compiler-bindir', config.nvcc.compiler_bindir])
+     # Do not run here the test program. It would run on the
+     # default gpu, not the one selected by the user. If mixed
+     # GPU are installed or if the GPUs are configured in

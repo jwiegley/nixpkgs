@@ -22685,6 +22685,7 @@ in {
     cudaSupport = true;
     cudatoolkit = pkgs.cudatoolkit75;
     cudnn = pkgs.cudnn5_cudatoolkit75;
+    gcc49 = pkgs.gcc49;
     inherit (self) numpy scipy;
     pycuda = self.pycuda.override { inherit boost; };
     libgpuarray = self.libgpuarray-cuda.override {

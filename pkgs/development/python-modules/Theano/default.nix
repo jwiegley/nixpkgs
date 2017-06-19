@@ -14,6 +14,7 @@
 , future
 , cudaSupport ? false
 , cudatoolkit ? null
+, gcc49 ? null
 , pycuda ? null
 , libgpuarray ? null
 , cudnn ? null
@@ -21,6 +22,7 @@
 
 assert cudaSupport
   -> cudatoolkit != null
+  && gcc49 != null
   && pycuda != null
   && libgpuarray != null
   && cudnn != null;
@@ -42,6 +44,7 @@ buildPythonPackage rec {
     ./paths.patch
   ] ++ stdenv.lib.optionals cudaSupport [
     ./paths-cuda.patch
+    ./itsgccnotnvcc.patch
   ];
   postPatch =
     let
@@ -64,6 +67,7 @@ buildPythonPackage rec {
         --subst-var-by cxx_compiler '${cxx_compiler}'
     '' + stdenv.lib.optionalString cudaSupport ''
       substituteInPlace theano/configdefaults.py \
+        --subst-var-by nvcc_gcc '${gcc49}/bin' \
         --subst-var-by cuda_root '${cudatoolkit}'
     '' + stdenv.lib.optionalString (pythonOlder "3.0") ''
       sed -i -re '1a\' -e 'from builtins import bytes' theano/sandbox/gpuarray/subtensor.py
