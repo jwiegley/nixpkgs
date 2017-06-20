@@ -29,13 +29,13 @@ assert cudaSupport
 
 buildPythonPackage rec {
   name = "Theano-${stdenv.lib.optionalString cudaSupport "cuda-"}${version}";
-  version = "0.8.2";
+  version = "0.9.0";
 
   src = fetchFromGitHub {
     owner = "Theano";
     repo = "Theano";
-    rev = "46fbfeb628220b5e42bf8277a5955c52d153e874";
-    sha256 = "1sl91gli3jaw5gpjqqab4fiq4x6282spqciaid1s65pjsf3k55sc";
+    rev = "rel-${version}";
+    sha256 = "1smnbp7gyap2wjbqv6rirvzqspy6236ax8svf1igjb6hfh5zn5zs";
   };
 
   doCheck = false;
@@ -44,7 +44,7 @@ buildPythonPackage rec {
     ./paths.patch
   ] ++ stdenv.lib.optionals cudaSupport [
     ./paths-cuda.patch
-    ./itsgccnotnvcc.patch
+    ./memcpy.patch
   ];
   postPatch =
     let
@@ -69,14 +69,12 @@ buildPythonPackage rec {
       substituteInPlace theano/configdefaults.py \
         --subst-var-by nvcc_gcc '${gcc49}/bin' \
         --subst-var-by cuda_root '${cudatoolkit}'
+      substituteInPlace theano/gpuarray/dnn.py \
+        --subst-var-by cudnn_lib '${cudnn}/lib/libcudnn.so'
     '' + stdenv.lib.optionalString (pythonOlder "3.0") ''
-      sed -i -re '1a\' -e 'from builtins import bytes' theano/sandbox/gpuarray/subtensor.py
-      sed -i -re "s/(b'2')/int(bytes(\1))/g" theano/sandbox/gpuarray/subtensor.py
-      sed -i -re "s/(ctx.bin_id\[\-2\])/int(\1)/g" theano/sandbox/gpuarray/subtensor.py
-
-      sed -i -re '1a\' -e 'from builtins import bytes' theano/sandbox/gpuarray/dnn.py
-      sed -i -re "s/(b'30')/int(bytes(\1))/g" theano/sandbox/gpuarray/dnn.py
-      sed -i -re "s/(ctx.bin_id\[\-2:\])/int(\1)/g" theano/sandbox/gpuarray/dnn.py
+      sed -i -re '1a\' -e 'from builtins import bytes' theano/gpuarray/dnn.py
+      sed -i -re "s/(b'30')/int(bytes(\1))/g" theano/gpuarray/dnn.py
+      sed -i -re "s/(ctx.bin_id\[\-2:\])/int(\1)/g" theano/gpuarray/dnn.py
     '';
 
   dontStrip = true;
