@@ -21,13 +21,13 @@
 }: 
 buildPythonPackage rec {
   name = "libgpuarray-cuda-${version}";
-  version = "-9998.0"; 
+  version = "0.6.5";
 
   src = fetchFromGitHub {
     owner = "Theano"; 
     repo = "libgpuarray";
-    rev = "fc36a40526c0a8303ace6c574ffdefba7feafe17"; 
-    sha256 = "1kb0k42addqjxiahlcbv6v6271yhsmz71j12186fpy60870i7zm7"; 
+    rev = "v${version}";
+    sha256 = "1kamwn01063ak3g27xiazvd3c2ci55b11irwgn35d129yq5mgxjw";
   }; 
 
   doCheck = true;
@@ -47,14 +47,6 @@ buildPythonPackage rec {
     pushd Build
     make 
     make install
-
-    function fixRunPath {
-      p=$(patchelf --print-rpath $1)
-      patchelf --set-rpath "$p:${stdenv.lib.makeLibraryPath [ cudatoolkit clblas nvidia_x11 ]}" $1
-    }
-
-    fixRunPath Install/lib/libgpuarray.so
-
     popd
   ''; 
 
@@ -91,6 +83,15 @@ EOF
     popd
 
     cp -r my_bin $out/bin
+  '';
+
+  postFixup = ''
+    function fixRunPath {
+      p=$(patchelf --print-rpath $1)
+      patchelf --set-rpath "$p:${stdenv.lib.makeLibraryPath [ cudatoolkit clblas nvidia_x11 ]}" $1
+    }
+
+    fixRunPath $out/lib/libgpuarray.so
   '';
 
   dontStrip = true; 
