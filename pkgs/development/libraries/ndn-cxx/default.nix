@@ -14,6 +14,7 @@ stdenv.mkDerivation {
     patchShebangs waf
     ./waf configure \
       --with-cryptopp=${cryptopp} \
+      --with-openssl=${openssl.dev} \
       --boost-includes=${boost.dev}/include \
       --boost-libs=${boost.out}/lib \
       --prefix=$out
@@ -48,6 +49,6 @@ stdenv.mkDerivation {
     '';
     license = licenses.lgpl3;
     platforms = stdenv.lib.platforms.unix;
-    maintainers = [ maintainers.sjmackenzie ];
+    maintainers = with maintainers; [ sjmackenzie MostAwesomeDude ];
   };
 }
