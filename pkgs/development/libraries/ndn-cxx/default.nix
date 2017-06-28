@@ -1,30 +1,35 @@
 { stdenv, fetchgit, openssl, doxygen, boost, sqlite, cryptopp, pkgconfig, python, pythonPackages }:
 let
-  version = "4c32e7";
+  version = "0.5.1";
 in
 stdenv.mkDerivation {
-  name = "ndn-cxx-0.1-${version}";
+  name = "ndn-cxx-${version}";
   src = fetchgit {
     url = "https://github.com/named-data/ndn-cxx.git";
-    rev = "4c32e748863d5165cc0e3d6b54a8383f4836cdf1";
-    sha256 = "18szs3j3ig8wlcqngran0daxaj7j2qsmch0212ids6fymj1hgax4";
+    rev = "aa8b3785d6512c6e72f95997e06ef02228b2be5b";
+    sha256 = "09yaqswmaafm9zcj8bskaplx6315xzhz3m5w8r2qvx1x8lq5hp73";
   };
-  buildInputs = [ openssl doxygen boost sqlite cryptopp pkgconfig python pythonPackages.sphinx];
+  buildInputs = [ openssl doxygen boost sqlite cryptopp pkgconfig python pythonPackages.sphinx ];
   preConfigure = ''
     patchShebangs waf
     ./waf configure \
       --with-cryptopp=${cryptopp} \
       --boost-includes=${boost.dev}/include \
       --boost-libs=${boost.out}/lib \
-      --with-examples \
       --prefix=$out
   '';
   buildPhase = ''
     ./waf
   '';
+  # To do battle with the tests, add --with-tests to the configure above. ~ C.
+  doCheck = false;
+  checkPhase = ''
+    LD_LIBRARY_PATH=build/ build/unit-tests
+  '';
   installPhase = ''
     ./waf install
   '';
+  outputs = [ "dev" "out" "doc" ];
   meta = with stdenv.lib; {
     homepage = "http://named-data.net/";
     description = "A Named Data Neworking (NDN) or Content Centric Networking (CCN) abstraction";
