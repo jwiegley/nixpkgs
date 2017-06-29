@@ -1,14 +1,15 @@
-{ stdenv, fetchgit, openssl, doxygen, boost, sqlite, pkgconfig,
+{ stdenv, fetchFromGitHub, openssl, doxygen, boost, sqlite, pkgconfig,
   python, pythonPackages, libpcap, ndn-cxx }:
 let
-  version = "2b7b83";
+  version = "42290b";
 in
 stdenv.mkDerivation {
-  name = "ndn-tools-0.1-${version}";
-  src = fetchgit {
-    url = "https://github.com/named-data/repo-ng.git";
-    rev = "2b7b83185868c727350ec2066f4cb18394dbfb1a";
-    sha256 = "05zv7iyvv4bfqrvmw167h1gyfsfi6m140k2vik0qpcg2s3s0faik";
+  name = "repo-ng-0.1-${version}";
+  src = fetchFromGitHub {
+    owner = "named-data";
+    repo = "repo-ng";
+    rev = "42290b2b12b06ccbb028f04367f016f924f213e3";
+    sha256 = "0xlgc6ahswpjq1fbxs5kr7xh0ilbkz7vpwaildd8fcglvi2814yn";
   };
   buildInputs = [ libpcap openssl doxygen boost sqlite pkgconfig
                   python pythonPackages.sphinx ndn-cxx ];
