@@ -1,14 +1,17 @@
-{ stdenv, fetchgit, openssl, doxygen, boost, sqlite, cryptopp, pkgconfig, python, pythonPackages }:
+{ stdenv, fetchFromGitHub, openssl, doxygen, boost, sqlite, cryptopp, pkgconfig, python, pythonPackages }:
 let
   version = "0.5.1";
 in
 stdenv.mkDerivation {
   name = "ndn-cxx-${version}";
-  src = fetchgit {
-    url = "https://github.com/named-data/ndn-cxx.git";
-    rev = "aa8b3785d6512c6e72f95997e06ef02228b2be5b";
+
+  src = fetchFromGitHub {
+    owner = "named-data";
+    repo = "ndn-cxx";
+    rev = "ndn-cxx-${version}";
     sha256 = "09yaqswmaafm9zcj8bskaplx6315xzhz3m5w8r2qvx1x8lq5hp73";
   };
+
   buildInputs = [ openssl doxygen boost sqlite cryptopp pkgconfig python pythonPackages.sphinx ];
   preConfigure = ''
     patchShebangs waf
