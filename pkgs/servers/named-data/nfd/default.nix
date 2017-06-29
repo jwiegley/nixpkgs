@@ -1,14 +1,15 @@
-{ stdenv, fetchgit, doxygen, boost, pkgconfig, python, pythonPackages,
+{ stdenv, fetchFromGitHub, doxygen, boost, pkgconfig, python, pythonPackages,
   libpcap, openssl, ndn-cxx }:
 let
   version = "0.5.1";
 in
 stdenv.mkDerivation {
   name = "nfd-${version}";
-  src = fetchgit {
-    url = "https://github.com/named-data/NFD.git";
-    rev = "19e2e6d85890a037fd493d0415dbdd5bfc186241";
-    sha256 = "1fx479ybc4ldz0k8fg4d7b51wb0qdvl9q0rw3b2cc30b1dnr2awx";
+  src = fetchFromGitHub {
+    owner = "named-data";
+    repo = "NFD";
+    rev = "NFD-${version}";
+    sha256 = "1qd02xr7iic0d9mca1m2ps1cxb7z3hj7llmyvxx0fc1jl8djvy9z";
   };
   buildInputs = [ libpcap doxygen boost pkgconfig python pythonPackages.sphinx
                   openssl ndn-cxx ];
