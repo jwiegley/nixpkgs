@@ -1,15 +1,17 @@
-{ stdenv, fetchgit, openssl, boost, pkgconfig,
+{ stdenv, fetchFromGitHub, openssl, boost, pkgconfig,
   python, pythonPackages, libpcap, git, ndn-cxx }:
 let
   version = "0.4";
-in
-stdenv.mkDerivation {
+in stdenv.mkDerivation {
   name = "ndn-tools-${version}";
-  src = fetchgit {
-    url = "https://github.com/named-data/ndn-tools.git";
-    rev = "339161aca3603f2766481219c721281fa6df9858";
+
+  src = fetchFromGitHub {
+    owner = "named-data";
+    repo = "ndn-tools";
+    rev = "ndn-tools-${version}";
     sha256 = "19mrsbhv67ps3l2c8hds9d0gwjawpq1a3jnb917qqig0n6zs29vz";
   };
+
   buildInputs = [ libpcap openssl boost pkgconfig python pythonPackages.sphinx git ndn-cxx ];
   preConfigure = ''
     patchShebangs waf
@@ -29,7 +31,7 @@ stdenv.mkDerivation {
     homepage = "http://named-data.net/";
     description = "Named Data Neworking (NDN) Essential Tools";
     license = licenses.gpl3;
-    platforms = stdenv.lib.platforms.unix;
+    platforms = platforms.unix;
     maintainers = [ maintainers.MostAwesomeDude ];
   };
 }
