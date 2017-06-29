@@ -16,11 +16,11 @@ stdenv.mkDerivation {
   preConfigure = ''
     patchShebangs waf
     ./waf configure \
-      --with-cryptopp=${cryptopp} \
-      --with-openssl=${openssl.dev} \
-      --boost-includes=${boost.dev}/include \
-      --boost-libs=${boost.out}/lib \
-      --prefix=$out
+      --with-cryptopp="${cryptopp}" \
+      --with-openssl="${openssl.dev}" \
+      --boost-includes="${boost.dev}/include" \
+      --boost-libs="${boost.out}/lib" \
+      --prefix="$out"
   '';
   buildPhase = ''
     ./waf
