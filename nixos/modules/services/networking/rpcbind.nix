@@ -2,7 +2,11 @@
 
 with lib;
 
-{
+let
+
+  cfg = config.services.rpcbind;
+
+in {
 
   ###### interface
 
@@ -21,6 +25,14 @@ with lib;
         '';
       };
 
+      insecure = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Whether to run `rpcbind' in an insecure mode.
+        '';
+      };
+
     };
 
   };
@@ -34,6 +46,11 @@ with lib;
     systemd.packages = [ pkgs.rpcbind ];
 
     systemd.services.rpcbind = {
+      serviceConfig = {
+        Environment = optionalString cfg.insecure ''
+          RPCBIND_OPTIONS=-i
+        '';
+      };
       wantedBy = [ "multi-user.target" ];
     };
 
