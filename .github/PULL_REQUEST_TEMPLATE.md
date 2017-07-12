@@ -3,6 +3,7 @@
 
 ###### Things done
 
+- [ ] Added/updated the necessary documentation
 - [ ] Tested using sandboxing
   ([nix.useSandbox](http://nixos.org/nixos/manual/options.html#opt-nix.useSandbox) on NixOS,
     or option `build-use-sandbox` in [`nix.conf`](http://nixos.org/nix/manual/#sec-conf-file)
