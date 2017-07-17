@@ -10148,6 +10148,8 @@ with pkgs;
 
   simp_le = callPackage ../tools/admin/simp_le { };
 
+  simpleitk = callPackage ../development/libraries/simpleitk { lua = lua51Packages.lua; };
+
   sfml = callPackage ../development/libraries/sfml { };
 
   shapelib = callPackage ../development/libraries/shapelib { };
