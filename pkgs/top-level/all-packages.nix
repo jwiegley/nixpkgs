@@ -7523,7 +7523,11 @@ with pkgs;
 
   ccnx = callPackage ../development/libraries/ccnx { };
 
+  # Named data networking (NDN) libraries and tooling.
   ndn-cxx = callPackage ../development/libraries/ndn-cxx { };
+  nfd = callPackage ../servers/named-data/nfd { };
+  ndn-tools = callPackage ../tools/networking/named-data/ndn-tools { };
+  repo-ng = callPackage ../tools/networking/named-data/repo-ng { };
 
   cddlib = callPackage ../development/libraries/cddlib {};
 
