@@ -7088,15 +7088,7 @@ with pkgs;
 
   node_webkit = node_webkit_0_9;
 
-  nwjs_0_12 = callPackage ../development/tools/node-webkit/nw12.nix {
-    gconf = pkgs.gnome2.GConf;
-  };
-
-  node_webkit_0_11 = callPackage ../development/tools/node-webkit/nw11.nix {
-    gconf = pkgs.gnome2.GConf;
-  };
-
-  node_webkit_0_9 = callPackage ../development/tools/node-webkit/nw9.nix {
+  nwjs = callPackage ../development/tools/nwjs {
     gconf = pkgs.gnome2.GConf;
   };
 
