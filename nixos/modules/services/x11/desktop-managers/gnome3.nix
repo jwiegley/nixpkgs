@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, pkgs_multiarch, ... }:
 
 with lib;
 
@@ -135,12 +135,6 @@ in {
       { name = "gnome3";
         bgSupport = true;
         start = ''
-          # Set GTK_DATA_PREFIX so that GTK+ can find the themes
-          export GTK_DATA_PREFIX=${config.system.path}
-
-          # find theme engines
-          export GTK_PATH=${config.system.path}/lib/gtk-3.0:${config.system.path}/lib/gtk-2.0
-
           export XDG_MENU_PREFIX=gnome
 
           ${concatMapStrings (p: ''
@@ -163,9 +157,6 @@ in {
           # Let nautilus find extensions
           export NAUTILUS_EXTENSION_DIR=${config.system.path}/lib/nautilus/extensions-3.0/
 
-          # Find the mouse
-          export XCURSOR_PATH=~/.icons:${config.system.path}/share/icons
-
           # Update user dirs as described in http://freedesktop.org/wiki/Software/xdg-user-dirs/
           ${pkgs.xdg-user-dirs}/bin/xdg-user-dirs-update
 
@@ -176,9 +167,8 @@ in {
 
     services.xserver.updateDbusEnvironment = true;
 
-    environment.variables.GIO_EXTRA_MODULES = [ "${gnome3.dconf}/lib/gio/modules"
-                                                "${gnome3.glib_networking.out}/lib/gio/modules"
-                                                "${gnome3.gvfs}/lib/gio/modules" ];
+    libraries.packages = with pkgs_multiarch.gnome3; [ dconf glib_networking.out gvfs ];
+
     environment.systemPackages = gnome3.corePackages ++ cfg.sessionPath
       ++ (removePackagesByName gnome3.optionalPackages config.environment.gnome3.excludePackages);
 
