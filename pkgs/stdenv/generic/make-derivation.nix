@@ -52,6 +52,18 @@ rec {
         (map (drv: drv.crossDrv or drv) propagatedBuildInputs)
       ];
     in let
+      defaultHardeningFlags = [
+        "fortify" "stackprotector" "pic" "strictoverflow" "format" "relro" "bindnow"
+      ];
+
+      hardeningDisable = lib.toList (attrs.hardeningDisable or [ ]);
+
+      hardeningEnable = lib.toList (attrs.hardeningEnable or [ ]);
+
+      enabledHardeningOptions =
+        if builtins.elem "all" hardeningDisable
+        then []
+        else lib.subtractLists hardeningDisable (defaultHardeningFlags ++ hardeningEnable);
 
       outputs' =
         outputs ++
@@ -107,6 +119,8 @@ rec {
             ++ optional (elem "host"   configurePlatforms) "--host=${stdenv.hostPlatform.config}"
             ++ optional (elem "target" configurePlatforms) "--target=${stdenv.targetPlatform.config}";
 
+        } // lib.optionalAttrs (hardeningDisable != [] || hardeningEnable != []) {
+          NIX_HARDENING_ENABLE = enabledHardeningOptions;
         } // lib.optionalAttrs (stdenv.buildPlatform.isDarwin) {
           # TODO: remove lib.unique once nix has a list canonicalization primitive
           __sandboxProfile =

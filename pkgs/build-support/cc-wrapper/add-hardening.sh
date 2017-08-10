@@ -1,32 +1,42 @@
-hardeningFlags=(fortify stackprotector pic strictoverflow format relro bindnow)
-# Intentionally word-split in case 'hardeningEnable' is defined in Nix.
-hardeningFlags+=(${hardeningEnable[@]})
+allHardeningFlags=(fortify stackprotector pie pic strictoverflow format relro bindnow)
 hardeningCFlags=()
 hardeningLDFlags=()
 
-declare -A hardeningDisableMap
+declare -A hardeningDisableMap=()
+declare -A hardeningEnableMap=()
 
-# Intentionally word-split in case 'hardeningDisable' is defined in Nix. The
-# array expansion also prevents undefined variables from causing trouble with
-# `set -u`.
-for flag in ${hardeningDisable[@]} @hardening_unsupported_flags@
-do
+# Create table of unsupported flags for this toolchain.
+for flag in @hardening_unsupported_flags@; do
   hardeningDisableMap[$flag]=1
 done
 
+# Intentionally word-split in case 'NIX_HARDENING_ENABLE' is defined in Nix. The
+# array expansion also prevents undefined variables from causing trouble with
+# `set -u`.
+for flag in ${NIX_HARDENING_ENABLE-}; do
+  if [[ -z "${hardeningDisableMap[$flag]-}" ]]; then
+    hardeningEnableMap[$flag]=1
+  fi
+done
+
 if [[ -n "$NIX_DEBUG" ]]; then
+  # Determine which flags were effectively disabled so we can report below.
+  for flag in ${allHardeningFlags[@]}; do
+    if [[ -z "${hardeningEnableMap[$flag]-}" ]]; then
+      hardeningDisableMap[$flag]=1
+    fi
+  done
+
   printf 'HARDENING: disabled flags:' >&2
   (( "${#hardeningDisableMap[@]}" )) && printf ' %q' "${!hardeningDisableMap[@]}" >&2
   echo >&2
 fi
 
-if [[ -z "${hardeningDisableMap[all]}" ]]; then
+if (( "${#hardeningEnableMap[@]}" )); then
   if [[ -n "$NIX_DEBUG" ]]; then
     echo 'HARDENING: Is active (not completely disabled with "all" flag)' >&2;
   fi
-  for flag in "${hardeningFlags[@]}"
-  do
-    if [[ -z "${hardeningDisableMap[$flag]}" ]]; then
+  for flag in "${!hardeningEnableMap[@]}"; do
       case $flag in
         fortify)
           if [[ -n "$NIX_DEBUG" ]]; then echo HARDENING: enabling fortify >&2; fi
@@ -68,6 +78,5 @@ if [[ -z "${hardeningDisableMap[all]}" ]]; then
           echo "Hardening flag unknown: $flag" >&2
           ;;
       esac
-    fi
   done
 fi

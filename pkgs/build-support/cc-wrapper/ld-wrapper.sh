@@ -56,8 +56,8 @@ fi
 
 source @out@/nix-support/add-hardening.sh
 
-extraAfter=("${hardeningLDFlags[@]}")
-extraBefore=()
+extraAfter=()
+extraBefore=("${hardeningLDFlags[@]}")
 
 if [ -z "$NIX_LDFLAGS_SET" ]; then
     extraAfter+=($NIX_LDFLAGS)
