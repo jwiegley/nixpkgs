@@ -159,7 +159,8 @@ rec {
   cpan = [
     http://ftp.gwdg.de/pub/languages/perl/CPAN/
     ftp://download.xs4all.nl/pub/mirror/CPAN/
-    ftp://ftp.nl.uu.net/pub/CPAN/
+    http://ftp.tuwien.ac.at/pub/CPAN/
+    https://cpan.metacpan.org/
     http://ftp.funet.fi/pub/CPAN/
     http://cpan.perl.org/
     http://backpan.perl.org/  # for old releases
