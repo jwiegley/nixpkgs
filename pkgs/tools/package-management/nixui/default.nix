@@ -1,4 +1,4 @@
-{ stdenv, pkgs, fetchgit, nix, node_webkit, config, makeDesktopItem
+{ stdenv, pkgs, fetchgit, nix, nwjs, config, makeDesktopItem
 , writeScript }:
 let
   version = "0.2.1";
@@ -14,7 +14,7 @@ let
   script = writeScript "nixui" ''
     #! ${stdenv.shell}
     export PATH="${nix}/bin:\$PATH"
-    ${node_webkit}/bin/nw ${nixui}/lib/node_modules/nixui/
+    ${nwjs}/bin/nw ${nixui}/lib/node_modules/nixui/
   '';
   desktop = makeDesktopItem {
     name = "nixui";
