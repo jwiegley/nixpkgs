@@ -181,10 +181,7 @@ diff -ru -x '*~' -x '*.rej' perl-5.20.0-orig/hints/linux.sh perl-5.20.0/hints/li
  case "$plibpth" in
  '') plibpth=`LANG=C LC_ALL=C $gcc $ccflags $ldflags -print-search-dirs | grep libraries |
  	cut -f2- -d= | tr ':' $trnl | grep -v 'gcc' | sed -e 's:/$::'`
-@@ -178,32 +159,6 @@
-     ;;
- esac
- 
+@@ -178,26 +159,0 @@
 -case "$libc" in
 -'')
 -# If you have glibc, then report the version for ./myconfig bug reporting.
@@ -211,9 +208,6 @@ diff -ru -x '*~' -x '*.rej' perl-5.20.0-orig/hints/linux.sh perl-5.20.0/hints/li
 -    ;;
 -esac
 -
- # Are we using ELF?  Thanks to Kenneth Albanowski <kjahds@kjahds.com>
- # for this test.
- cat >try.c <<'EOM'
 @@ -367,33 +322,6 @@
  	;;
  esac

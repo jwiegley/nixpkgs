@@ -122,16 +122,21 @@ let
 
 in rec {
 
-  perl = perl524;
+  perl = perl526;
 
   perl522 = common {
-    version = "5.22.3";
-    sha256 = "10q087l1ffdy3gpryr8z540jcnsr0dhm37raicyfqqkyvys1yd8v";
+    version = "5.22.4";
+    sha256 = "1yk1xn4wmnrf2ph02j28khqarpyr24qwysjzkjnjv7vh5dygb7ms";
   };
 
   perl524 = common {
-    version = "5.24.1";
-    sha256 = "1bqqb5ghfj4486nqr77kgsd8aff6a289jy7n2cdkznwvn34qbhg6";
+    version = "5.24.2";
+    sha256 = "1x4yj814a79lcarwb3ab6bbcb36hvb5n4ph4zg3yb0nabsjfi6v0";
+  };
+
+  perl526 = common {
+    version = "5.26.0";
+    sha256 = "0zxn9hd7mqgq06ikyi6k70ngbvjf01z1paw0jd25byyl0rlwdrzb";
   };
 
 }
