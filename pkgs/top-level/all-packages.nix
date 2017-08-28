@@ -5629,6 +5629,7 @@ with pkgs;
         crossStageStatic = true;
         langCC = false;
         libcCross = libcCross1;
+        targetPackages.stdenv.cc.bintools = binutils;
         enableShared = false;
       };
       libc = libcCross1;
