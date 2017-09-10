@@ -3,6 +3,9 @@
 , libedit, ncurses5, gmp
 }:
 
+# Prebuilt only does native
+assert stdenv.targetPlatform == stdenv.hostPlatform;
+
 stdenv.mkDerivation rec {
   version = "6.10.2";
 

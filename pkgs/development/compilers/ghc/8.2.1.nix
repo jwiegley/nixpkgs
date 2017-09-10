@@ -1,15 +1,29 @@
-{ stdenv, lib, fetchurl, bootPkgs, perl, ncurses, libiconv, targetPackages, coreutils
-, autoconf, automake, happy, alex, python3, sphinx, hscolour
-, buildPlatform, targetPlatform , selfPkgs, cross ? null
+{ stdenv, __targetPackages
+, buildPlatform, hostPlatform, targetPlatform
+, selfPkgs, cross ? null
 
-  # If enabled GHC will be build with the GPL-free but slower integer-simple
+# build-tools
+, bootPkgs, alex, happy, hscolour
+, autoconf, automake, binutils, coreutils, fetchurl, perl, python3, sphinx
+
+, libiconv ? null, ncurses
+
+, # If enabled, GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
-, enableIntegerSimple ? false, gmp
+  enableIntegerSimple ? false, gmp ? null
 }:
+
+assert !enableIntegerSimple -> gmp != null;
 
 let
   inherit (bootPkgs) ghc;
+
   version = "8.2.1";
+
+  # TODO(@Ericson2314) Make unconditional
+  prefix = stdenv.lib.optionalString
+    (targetPlatform != hostPlatform)
+    "${targetPlatform.config}-";
 
   commonBuildInputs = [ alex autoconf automake ghc happy hscolour perl python3 sphinx ];
   commonPreConfigure =  ''
@@ -21,12 +35,13 @@ let
   '' + stdenv.lib.optionalString enableIntegerSimple ''
     echo "INTEGER_LIBRARY=integer-simple" > mk/build.mk
   '';
-in stdenv.mkDerivation (rec {
+in
+stdenv.mkDerivation (rec {
   inherit version;
-  name = "ghc-${version}";
+  name = "${prefix}ghc-${version}";
 
   src = fetchurl {
-    url = "https://downloads.haskell.org/~ghc/${version}/${name}-src.tar.xz";
+    url = "https://downloads.haskell.org/~ghc/${version}/ghc-${version}-src.tar.xz";
     sha256 = "1w4k0n23b9fg8kmarqhfamzpmf91p6jcdr6xlwzfmb4df2bd9hng";
   };
 
@@ -52,28 +67,30 @@ in stdenv.mkDerivation (rec {
 
   # required, because otherwise all symbols from HSffi.o are stripped, and
   # that in turn causes GHCi to abort
-  stripDebugFlags = [ "-S" ] ++ stdenv.lib.optional (!stdenv.isDarwin) "--keep-file-symbols";
+  stripDebugFlags = [ "-S" ] ++ stdenv.lib.optional (!targetPlatform.isDarwin) "--keep-file-symbols";
 
   checkTarget = "test";
 
+  # zsh and other shells are smart about `{ghc}` but bash isn't, and doesn't
+  # treat that as a unary `{x,y,z,..}` repetition.
   postInstall = ''
-    paxmark m $out/lib/${name}/bin/{ghc,haddock}
+    paxmark m $out/lib/${name}/bin/${if targetPlatform != hostPlatform then "ghc" else "{ghc,haddock}"}
 
     # Install the bash completion file.
-    install -D -m 444 utils/completion/ghc.bash $out/share/bash-completion/completions/ghc
+    install -D -m 444 utils/completion/ghc.bash $out/share/bash-completion/completions/${prefix}ghc
 
     # Patch scripts to include "readelf" and "cat" in $PATH.
     for i in "$out/bin/"*; do
       test ! -h $i || continue
       egrep --quiet '^#!' <(head -n 1 $i) || continue
-      sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ targetPackages.stdenv.cc.bintools coreutils ]}"' $i
+      sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ binutils coreutils ]}"' $i
     done
   '';
 
   outputs = [ "out" "doc" ];
 
   passthru = {
-    inherit bootPkgs;
+    inherit bootPkgs prefix;
   } // stdenv.lib.optionalAttrs (targetPlatform != buildPlatform) {
     crossCompiler = selfPkgs.ghc.override {
       cross = targetPlatform;
@@ -97,23 +114,23 @@ in stdenv.mkDerivation (rec {
 
   configureFlags = [
     "CC=${stdenv.ccCross}/bin/${cross.config}-cc"
-    "LD=${targetPackages.stdenv.cc.bintools}/bin/${cross.config}-ld"
-    "AR=${targetPackages.stdenv.cc.bintools}/bin/${cross.config}-ar"
-    "NM=${targetPackages.stdenv.cc.bintools}/bin/${cross.config}-nm"
-    "RANLIB=${targetPackages.stdenv.cc.bintools}/bin/${cross.config}-ranlib"
+    "LD=${stdenv.binutils}/bin/${cross.config}-ld"
+    "AR=${stdenv.binutils}/bin/${cross.config}-ar"
+    "NM=${stdenv.binutils}/bin/${cross.config}-nm"
+    "RANLIB=${stdenv.binutils}/bin/${cross.config}-ranlib"
     "--target=${cross.config}"
     "--enable-bootstrap-with-devel-snapshot"
   ] ++
     # fix for iOS: https://www.reddit.com/r/haskell/comments/4ttdz1/building_an_osxi386_to_iosarm64_cross_compiler/d5qvd67/
-    lib.optional (cross.config or null == "aarch64-apple-darwin14") "--disable-large-address-space";
+    stdenv.lib.optional (cross.config or null == "aarch64-apple-darwin14") "--disable-large-address-space";
 
-  buildInputs = commonBuildInputs ++ [ stdenv.ccCross stdenv.targetPackages.stdenv.cc.bintools ];
+  buildInputs = commonBuildInputs ++ [ stdenv.ccCross stdenv.binutils ];
 
   dontSetConfigureCross = true;
 
   passthru = {
     inherit bootPkgs cross;
     cc = "${stdenv.ccCross}/bin/${cross.config}-cc";
-    ld = "${stdenv.targetPackages.stdenv.cc.bintools}/bin/${cross.config}-ld";
+    ld = "${stdenv.binutils}/bin/${cross.config}-ld";
   };
 })
