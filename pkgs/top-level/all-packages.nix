@@ -8523,6 +8523,7 @@ with pkgs;
   isocodes = callPackage ../development/libraries/iso-codes { };
 
   ispc = callPackage ../development/compilers/ispc {
+    stdenv = libcxxStdenv;
     llvmPackages = llvmPackages_39;
   };
 
