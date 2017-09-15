@@ -61,7 +61,28 @@ let
     }
   '';
 
-  openCommand = name': { name, device, header, keyFile, keyFileSize, allowDiscards, yubikey, ... }: assert name' == name; ''
+  preCommands = ''
+    # A place to store crypto things
+
+    # A ramfs is used here to ensure that the file used to update
+    # the key slot with cryptsetup will never get swapped out.
+    # Warning: Do NOT replace with tmpfs!
+    mkdir -p /crypt-ramfs
+    mount -t ramfs none /crypt-ramfs
+
+    # A mountpoint for a FS with Yubikey salt
+    mkdir -p /crypt-storage
+  '';
+
+  postCommands = ''
+    umount /crypt-ramfs
+  '';
+
+  openCommand = name': { name, device, header, keyFile, keyFileSize, allowDiscards, yubikey, ... }: assert name' == name;
+  let
+    csopen   = "cryptsetup luksOpen ${device} ${name} ${optionalString allowDiscards "--allow-discards"} ${optionalString (header != null) "--header=${header}"}";
+    cschange = "cryptsetup luksChangeKey ${device} ${optionalString (header != null) "--header=${header}"}";
+  in ''
     # Wait for luksRoot (and optionally keyFile and/or header) to appear, e.g.
     # if on a USB drive.
     wait_target "device" ${device} || die "${device} is unavailable"
@@ -74,17 +95,64 @@ let
       wait_target "key file" ${keyFile} || die "${keyFile} is unavailable"
     ''}
 
-    open_normally() {
-        echo luksOpen ${device} ${name} ${optionalString allowDiscards "--allow-discards"} \
-          ${optionalString (header != null) "--header=${header}"} \
-          ${optionalString (keyFile != null) "--key-file=${keyFile} ${optionalString (keyFileSize != null) "--keyfile-size=${toString keyFileSize}"}"} \
-          > /.luksopen_args
-        cryptsetup-askpass
-        rm /.luksopen_args
+    do_open_passphrase() {
+        local passphrase
+
+        while true; do
+            echo -n "Passphrase for ${device}: "
+            passphrase=
+            while true; do
+                if [ -e /crypt-ramfs/passphrase ]; then
+                    echo "reused"
+                    passphrase=$(cat /crypt-ramfs/passphrase)
+                    break
+                else
+                    # ask cryptsetup-askpass
+                    echo -n "${device}" > /crypt-ramfs/device
+
+                    # and try reading it from /dev/console
+                    IFS= read -t 1 -rs passphrase
+                    if [ -n "$passphrase" ]; then
+                       ${if luks.reusePassphrases then ''
+                         # remember it for the next device
+                         echo -n "$passphrase" > /crypt-ramfs/passphrase
+                       '' else ''
+                         # Don't save it to ramfs. We are very paranoid
+                       ''}
+                       echo
+                       break
+                    fi
+                fi
+            done
+            echo -n "Verifiying passphrase for ${device}..."
+            echo -n "$passphrase" | ${csopen} --key-file=-
+            if [ $? == 0 ]; then
+                echo " - success"
+                ${if luks.reusePassphrases then ''
+                  # we don't rm here because we might reuse it for the next device
+                '' else ''
+                  rm -f /crypt-ramfs/passphrase
+                ''}
+                break
+            else
+                echo " - failure"
+                # ask for a different one
+                rm -f /crypt-ramfs/passphrase
+            fi
+        done
     }
 
-    ${optionalString (luks.yubikeySupport && (yubikey != null)) ''
+    # LUKS
+    open_normally() {
+        ${if (keyFile == null) then ''
+        do_open_passphrase
+        '' else ''
+        ${csopen} --key-file=${keyFile} ${optionalString (keyFileSize != null) "--keyfile-size=${toString keyFileSize}"}
+        ''}
+    }
 
+    # Yubikey
+    ${if (luks.yubikeySupport && (yubikey != null)) then ''
     rbtohex() {
         ( od -An -vtx1 | tr -d ' \n' )
     }
@@ -93,7 +161,7 @@ let
         ( tr '[:lower:]' '[:upper:]' | sed -e 's/\([0-9A-F]\{2\}\)/\\\\\\x\1/gI' | xargs printf )
     }
 
-    open_yubikey() {
+    do_open_yubikey() {
         # Make all of these local to this function
         # to prevent their values being leaked
         local salt
@@ -109,11 +177,11 @@ let
         local new_response
         local new_k_luks
 
-        mkdir -p ${yubikey.storage.mountPoint}
-        mount -t ${yubikey.storage.fsType} ${toString yubikey.storage.device} ${yubikey.storage.mountPoint}
+        mkdir -p /crypt-storage
+        mount -t ${yubikey.storage.fsType} ${toString yubikey.storage.device} /crypt-storage
 
-        salt="$(cat ${yubikey.storage.mountPoint}${yubikey.storage.path} | sed -n 1p | tr -d '\n')"
-        iterations="$(cat ${yubikey.storage.mountPoint}${yubikey.storage.path} | sed -n 2p | tr -d '\n')"
+        salt="$(cat /crypt-storage/${yubikey.storage.path} | sed -n 1p | tr -d '\n')"
+        iterations="$(cat /crypt-storage/${yubikey.storage.path} | sed -n 2p | tr -d '\n')"
         challenge="$(echo -n $salt | openssl-wrap dgst -binary -sha512 | rbtohex)"
         response="$(ykchalresp -${toString yubikey.slot} -x $challenge 2>/dev/null)"
 
@@ -130,7 +198,7 @@ let
                 k_luks="$(echo | pbkdf2-sha512 ${toString yubikey.keyLength} $iterations $response | rbtohex)"
             fi
 
-            echo -n "$k_luks" | hextorb | cryptsetup luksOpen ${device} ${name} ${optionalString allowDiscards "--allow-discards"} --key-file=-
+            echo -n "$k_luks" | hextorb | ${csopen} --key-file=-
 
             if [ $? == "0" ]; then
                 opened=true
@@ -142,7 +210,7 @@ let
         done
 
         if [ "$opened" == false ]; then
-            umount ${yubikey.storage.mountPoint}
+            umount /crypt-storage
             echo "Maximum authentication errors reached"
             exit 1
         fi
@@ -170,40 +238,51 @@ let
             new_k_luks="$(echo | pbkdf2-sha512 ${toString yubikey.keyLength} $new_iterations $new_response | rbtohex)"
         fi
 
-        mkdir -p ${yubikey.ramfsMountPoint}
-        # A ramfs is used here to ensure that the file used to update
-        # the key slot with cryptsetup will never get swapped out.
-        # Warning: Do NOT replace with tmpfs!
-        mount -t ramfs none ${yubikey.ramfsMountPoint}
-
-        echo -n "$new_k_luks" | hextorb > ${yubikey.ramfsMountPoint}/new_key
-        echo -n "$k_luks" | hextorb | cryptsetup luksChangeKey ${device} --key-file=- ${yubikey.ramfsMountPoint}/new_key
+        echo -n "$new_k_luks" | hextorb > /crypt-ramfs/new_key
+        echo -n "$k_luks" | hextorb | $(cschange} --key-file=- /crypt-ramfs/new_key
 
         if [ $? == "0" ]; then
-            echo -ne "$new_salt\n$new_iterations" > ${yubikey.storage.mountPoint}${yubikey.storage.path}
+            echo -ne "$new_salt\n$new_iterations" > /crypt-storage/${yubikey.storage.path}
         else
             echo "Warning: Could not update LUKS key, current challenge persists!"
         fi
 
-        rm -f ${yubikey.ramfsMountPoint}/new_key
-        umount ${yubikey.ramfsMountPoint}
-        rm -rf ${yubikey.ramfsMountPoint}
+        rm /crypt-ramfs/new_key
 
-        umount ${yubikey.storage.mountPoint}
+        umount /crypt-storage
     }
 
-    if wait_yubikey ${yubikey.gracePeriod}; then
-        open_yubikey
-    else
-        echo "no yubikey found, falling back to non-yubikey open procedure"
-        open_normally
-    fi
-    ''}
+    open_yubikey() {
+        if wait_yubikey ${yubikey.gracePeriod}; then
+            do_open_yubikey
+        else
+            echo "No yubikey found, falling back to non-yubikey open procedure"
+            open_normally
+        fi
+    }
 
-    # open luksRoot and scan for logical volumes
-    ${optionalString ((!luks.yubikeySupport) || (yubikey == null)) ''
+    open_yubikey
+    '' else ''
     open_normally
     ''}
+  '';
+
+  askPass = pkgs.writeScriptBin "cryptsetup-askpass" ''
+    #!/bin/sh
+
+    ${commonFunctions}
+
+    while true; do
+        wait_target "luks" /crypt-ramfs/device 10 "LUKS to request a passphrase" || die "Passphrase is not requested now"
+        device=$(cat /crypt-ramfs/device)
+
+        echo -n "Passphrase for $device: "
+        IFS= read -rs passphrase
+        echo
+
+        rm /crypt-ramfs/device
+        echo -n "$passphrase" > /crypt-ramfs/passphrase
+    done
   '';
 
   preLVM = filterAttrs (n: v: v.preLVM) luks.devices;
@@ -237,6 +316,22 @@ in
       description = ''
         A list of cryptographic kernel modules needed to decrypt the root device(s).
         The default includes all common modules.
+      '';
+    };
+
+    boot.initrd.luks.reusePassphrases = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        When opening a new LUKS device try reusing last successful
+        passphrase.
+
+        Useful for mounting a number of devices that use the same
+        passphrase without retyping it several times.
+
+        Such setup can be useful if you use <command>cryptsetup
+        luksSuspend</command>. Different LUKS devices will still have
+        different master keys even when using the same password.
       '';
     };
 
@@ -363,12 +458,6 @@ in
                   description = "Time in seconds to wait for the Yubikey.";
                 };
 
-                ramfsMountPoint = mkOption {
-                  default = "/crypt-ramfs";
-                  type = types.str;
-                  description = "Path where the ramfs used to update the LUKS key will be mounted during early boot.";
-                };
-
                 /* TODO: Add to the documentation of the current module:
 
                    Options related to the storing the salt.
@@ -389,26 +478,23 @@ in
                     description = "The filesystem of the unencrypted device.";
                   };
 
-                  mountPoint = mkOption {
-                    default = "/crypt-storage";
-                    type = types.str;
-                    description = "Path where the unencrypted device will be mounted during early boot.";
-                  };
-
                   path = mkOption {
-                    default = "/crypt-storage/default";
+                    default = "default";
                     type = types.str;
                     description = ''
-                      Absolute path of the salt on the unencrypted device with
-                      that device's root directory as "/".
+                      Path to the salt file on the unencrypted device.
                     '';
                   };
                 };
               };
+              imports = [
+                (mkRemovedOptionModule [ "ramfsMountPoint" ] "")
+                (mkRemovedOptionModule [ "storage" "mountPoint" ] "")
+              ];
             });
           };
-
-        }; }));
+        };
+      }));
     };
 
     boot.initrd.luks.yubikeySupport = mkOption {
@@ -434,18 +520,8 @@ in
     # copy the cryptsetup binary and it's dependencies
     boot.initrd.extraUtilsCommands = ''
       copy_bin_and_libs ${pkgs.cryptsetup}/bin/cryptsetup
-
-      cat > $out/bin/cryptsetup-askpass <<EOF
-      #!$out/bin/sh -e
-      if [ -e /.luksopen_args ]; then
-        cryptsetup \$(cat /.luksopen_args)
-        killall -q cryptsetup
-      else
-        echo "Passphrase is not requested now"
-        exit 1
-      fi
-      EOF
-      chmod +x $out/bin/cryptsetup-askpass
+      copy_bin_and_libs ${askPass}/bin/cryptsetup-askpass
+      sed -i s,/bin/sh,$out/bin/sh, $out/bin/cryptsetup-askpass
 
       ${optionalString luks.yubikeySupport ''
         copy_bin_and_libs ${pkgs.yubikey-personalization}/bin/ykchalresp
@@ -477,8 +553,8 @@ in
       ''}
     '';
 
-    boot.initrd.preLVMCommands = commonFunctions + concatStrings (mapAttrsToList openCommand preLVM);
-    boot.initrd.postDeviceCommands = commonFunctions + concatStrings (mapAttrsToList openCommand postLVM);
+    boot.initrd.preLVMCommands = commonFunctions + preCommands + concatStrings (mapAttrsToList openCommand preLVM) + postCommands;
+    boot.initrd.postDeviceCommands = commonFunctions + preCommands + concatStrings (mapAttrsToList openCommand postLVM) + postCommands;
 
     environment.systemPackages = [ pkgs.cryptsetup ];
   };
