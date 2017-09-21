@@ -1639,6 +1639,8 @@ in {
     };
   };
 
+  comp = callPackage ../applications/video/comp { };
+
   constantly = callPackage ../development/python-modules/constantly { };
 
   cornice = buildPythonPackage rec {
@@ -12161,24 +12163,7 @@ in {
     };
   };
 
-  mpv = buildPythonPackage rec {
-    name = "mpv-0.1";
-
-    src = pkgs.fetchurl {
-      url = "mirror://pypi/m/mpv/${name}.tar.gz";
-      sha256 = "0b9kd70mshdr713f3l1lbnz1q0vlg2y76h5d8liy1bzqm7hjcgfw";
-    };
-    buildInputs = [ pkgs.mpv ];
-    patchPhase = "substituteInPlace mpv.py --replace libmpv.so ${pkgs.mpv}/lib/libmpv.so";
-
-    meta = with pkgs.stdenv.lib; {
-      description = "A python interface to the mpv media player";
-      homepage = "https://github.com/jaseg/python-mpv";
-      license = licenses.agpl3;
-    };
-
-  };
-
+  mpv = callPackage ../development/python-modules/mpv { };
 
   mrbob = buildPythonPackage rec {
     name = "mrbob-${version}";
@@ -14666,23 +14651,7 @@ in {
   };
 
 
-  lz4 = buildPythonPackage rec {
-    name = "lz4-0.8.2";
-
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b5/f0/e1de2bb7feb54011f3c4dcf35b7cca3536e19526764db051b50ea26b58e7/lz4-0.8.2.tar.gz";
-      sha256 = "1irad4sq4hdr30fr53smvv3zzk4rddcf9b4jx19w8s9xsxhr1x3b";
-    };
-
-    buildInputs= with self; [ nose ];
-
-    meta = with stdenv.lib; {
-      description = "Compression library";
-      homepage = https://github.com/python-lz4/python-lz4;
-      license = licenses.bsd3;
-    };
-  };
-
+  lz4 = callPackage ../development/python-modules/lz4 { };
 
   oslo-concurrency = buildPythonPackage rec {
    name = "oslo-concurrency-${version}";
@@ -22541,6 +22510,8 @@ EOF
 
   wheel = callPackage ../development/python-modules/wheel { };
 
+  whitey = callPackage ../applications/video/whitey { };
+
   widgetsnbextension = callPackage ../development/python-modules/widgetsnbextension { };
 
 
@@ -25318,27 +25289,7 @@ EOF
     };
   };
 
-  pafy = buildPythonPackage rec {
-    name = "pafy-${version}";
-    version = "0.5.2";
-
-    src = pkgs.fetchurl {
-      url = "mirror://pypi/p/pafy/${name}.tar.gz";
-      sha256 = "1ckvrypyvb7jbqlgwdz0y337ajagjv7dgxyns326nqwypn1wpq0i";
-    };
-
-    # No tests included in archive
-    doCheck = false;
-
-    propagatedBuildInputs = with self; [ youtube-dl ];
-
-    meta = with stdenv.lib; {
-      description = "A library to download YouTube content and retrieve metadata";
-      homepage = http://np1.github.io/pafy/;
-      license = licenses.lgpl3Plus;
-      maintainers = with maintainers; [ odi ];
-    };
-  };
+  pafy = callPackage ../development/python-modules/pafy { };
 
   suds = buildPythonPackage rec {
     name = "suds-0.4";
@@ -25424,39 +25375,7 @@ EOF
     };
   };
 
-
-  mps-youtube = buildPythonPackage rec {
-    name = "mps-youtube-${version}";
-    version = "0.2.7.1";
-
-    disabled = (!isPy3k);
-
-    # disabled due to error in loading unittest
-    # don't know how to make test from: <mps_youtube. ...>
-    doCheck = false;
-
-    # before check create a directory and redirect XDG_CONFIG_HOME to it
-    preCheck = ''
-      mkdir -p check-phase
-      export XDG_CONFIG_HOME=$(pwd)/check-phase
-    '';
-
-    src = pkgs.fetchFromGitHub {
-      owner = "mps-youtube";
-      repo = "mps-youtube";
-      rev = "v${version}";
-      sha256 = "16zn5gwb3568w95lr21b88zkqlay61p1541sa9c3x69zpi8v0pys";
-    };
-
-    propagatedBuildInputs = with self; [ pafy ];
-
-    meta = with stdenv.lib; {
-      description = "Terminal based YouTube player and downloader";
-      homepage = http://github.com/np1/mps-youtube;
-      license = licenses.gpl3;
-      maintainers = with maintainers; [ odi ];
-    };
-  };
+  mps-youtube = callPackage ../applications/video/mps-youtube { };
 
   d2to1 = buildPythonPackage rec {
     name = "d2to1-${version}";
