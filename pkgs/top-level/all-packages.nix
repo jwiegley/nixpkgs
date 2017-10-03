@@ -634,6 +634,13 @@ with pkgs;
 
   androidsdk_extras = self.androidenv.androidsdk_8_0_extras;
 
+  webos = recurseIntoAttrs {
+    cmake-modules = callPackage ../development/mobile/webos/cmake-modules.nix { };
+
+    novacom = callPackage ../development/mobile/webos/novacom.nix { };
+    novacomd = callPackage ../development/mobile/webos/novacomd.nix { };
+  };
+
   arc-theme = callPackage ../misc/themes/arc { };
 
   adapta-gtk-theme = callPackage ../misc/themes/adapta { };
