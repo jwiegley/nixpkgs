@@ -9167,7 +9167,8 @@ with pkgs;
   libindicator-gtk2 = callPackage ../development/libraries/libindicator { gtkVersion = "2"; };
   libindicator-gtk3 = callPackage ../development/libraries/libindicator { gtkVersion = "3"; };
 
-  libiodbc = callPackage ../development/libraries/libiodbc {
+  # for drivers, see `odbcDrivers`
+  libiodbc = callPackage ../development/libraries/odbc/libiodbc {
     useGTK = config.libiodbc.gtk or false;
   };
 
@@ -9968,6 +9969,9 @@ with pkgs;
   nvidia-video-sdk = callPackage ../development/libraries/nvidia-video-sdk { };
 
   ocl-icd = callPackage ../development/libraries/ocl-icd { };
+
+  odbcDrivers = recurseIntoAttrs
+    (callPackage ../development/libraries/odbc/odbc-drivers.nix { });
 
   ode = callPackage ../development/libraries/ode { };
 
@@ -10804,9 +10808,10 @@ with pkgs;
 
   tsocks = callPackage ../development/libraries/tsocks { };
 
-  unixODBC = callPackage ../development/libraries/unixODBC { };
+  unixODBC = callPackage ../development/libraries/odbc/unixODBC { };
+  unixODBC-MSSQL = callPackage ../development/libraries/odbc/unixODBC/microsoft.nix { };
 
-  unixODBCDrivers = recurseIntoAttrs (callPackages ../development/libraries/unixODBCDrivers {});
+  unixODBCDrivers = recurseIntoAttrs (callPackages ../development/libraries/odbc/unixODBC-drivers.nix {});
 
   ustr = callPackage ../development/libraries/ustr { };
 
