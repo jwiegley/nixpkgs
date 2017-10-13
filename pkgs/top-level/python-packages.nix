@@ -8702,6 +8702,8 @@ in {
 
   google_gax = callPackage ../development/python-modules/google_gax { };
 
+  gpg = callPackage ../development/python-modules/gpg { };
+
   grammalecte = callPackage ../development/python-modules/grammalecte { };
 
   greenlet = buildPythonPackage rec {
