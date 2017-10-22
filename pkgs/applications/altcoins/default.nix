@@ -2,6 +2,9 @@
 
 rec {
 
+  peercoin  = callPackage ./peercoin.nix { withGui = true; };
+  peercoind = callPackage ./peercoin.nix { withGui = false; };
+
   bitcoin  = callPackage ./bitcoin.nix { withGui = true; };
   bitcoind = callPackage ./bitcoin.nix { withGui = false; };
 
