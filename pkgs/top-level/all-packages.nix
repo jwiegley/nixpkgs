@@ -1141,6 +1141,8 @@ with pkgs;
 
   masscan = callPackage ../tools/security/masscan { };
 
+  mawled = callPackage ../applications/window-managers/mawled { };
+
   meson = callPackage ../development/tools/build-managers/meson { };
 
   mp3fs = callPackage ../tools/filesystems/mp3fs { };
