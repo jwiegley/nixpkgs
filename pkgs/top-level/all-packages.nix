@@ -133,9 +133,7 @@ with pkgs;
       else throw "You need an adc_pass attribute in your config to download files from Apple Developer Connection";
   };
 
-  fetchbower = callPackage ../build-support/fetchbower {
-    inherit (nodePackages) bower2nix;
-  };
+  fetchbower = callPackage ../build-support/fetchbower { };
 
   fetchbzr = callPackage ../build-support/fetchbzr { };
 
