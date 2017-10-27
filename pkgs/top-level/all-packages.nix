@@ -184,7 +184,8 @@ with pkgs;
 
   # `fetchurl' downloads a file from the network.
   fetchurl = import ../build-support/fetchurl {
-    inherit curl stdenv;
+    inherit stdenv;
+    curl = buildPackages.curl;
   };
 
   fetchRepoProject = callPackage ../build-support/fetchrepoproject { };
