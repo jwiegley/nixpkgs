@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, fetchpatch, bc, dtc, python2
+{ stdenv, buildPackages, fetchurl, fetchpatch, bc, dtc, python2
 , hostPlatform
 }:
 
@@ -12,11 +12,11 @@ let
            stdenv.mkDerivation (rec {
 
     name = "uboot-${defconfig}-${version}";
-    version = "2017.11";
+    version = "2017.03";
 
     src = fetchurl {
       url = "ftp://ftp.denx.de/pub/u-boot/u-boot-${version}.tar.bz2";
-      sha256 = "01bcsah5imy6m3fbjwhqywxg0pfk5fl8ks9ylb7kv3zmrb9qy0ba";
+      sha256 = "0gqihplap05dlpwdb971wsqyv01nz2vabwq5g5649gr5jczsyjzm";
     };
 
     patches = [
@@ -38,11 +38,9 @@ let
       patchShebangs tools
     '';
 
-    nativeBuildInputs = [ bc dtc python2 ];
+    nativeBuildInputs = [ bc dtc python2 buildPackages.stdenv.cc ];
 
     hardeningDisable = [ "all" ];
-
-    makeFlags = [ "DTC=dtc" ];
 
     configurePhase = ''
       make ${defconfig}
@@ -60,12 +58,14 @@ let
     enableParallelBuilding = true;
     dontStrip = true;
 
-    crossAttrs = {
-      makeFlags = [
-        "ARCH=${hostPlatform.platform.kernelArch}"
+    makeFlags = stdenv.lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform)
+      [
+        "DTC=dtc"
         "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
+        "HOSTCC=${buildPackages.stdenv.cc.targetPrefix}gcc"
+        "HOSTCFLAGS+=-I${stdenv.lib.getDev buildPackages.openssl}/include"
+        "HOSTLDFLAGS+=-L${stdenv.lib.getLib buildPackages.openssl}/lib"
       ];
-    };
 
     meta = with stdenv.lib; {
       homepage = http://www.denx.de/wiki/U-Boot/;
