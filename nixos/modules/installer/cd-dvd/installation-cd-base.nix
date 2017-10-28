@@ -31,4 +31,9 @@ with lib;
 
   # Allow the user to log in as root without a password.
   users.extraUsers.root.initialHashedPassword = "";
+
+  environment.systemPackages = with pkgs; [
+    # Allow the user to generate password hashes for immutable users.
+    mkpasswd
+  ];
 }
