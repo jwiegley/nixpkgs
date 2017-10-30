@@ -19131,12 +19131,12 @@ in {
     cudnnSupport = cudaSupport;
   };
 
-  TheanoWithoutCuda = self.Theano.override {
+  TheanoWithCuda = self.Theano.override {
     cudaSupport = true;
     cudnnSupport = true;
   };
 
-  TheanoWithCuda = self.Theano.override {
+  TheanoWithoutCuda = self.Theano.override {
     cudaSupport = false;
     cudnnSupport = false;
   };
