@@ -1,32 +1,33 @@
-{stdenv, fetchurl, python27, python27Packages, makeWrapper}:
-
-with python27Packages;
+{ stdenv, lib, fetchurl, python, cffi, cryptography, pyopenssl, crcmod, google-compute-engine, makeWrapper }:
 
 # other systems not supported yet
-assert stdenv.system == "i686-linux" || stdenv.system == "x86_64-linux" || stdenv.system == "x86_64-darwin";
+let
+  pythonInputs = [ cffi cryptography pyopenssl crcmod google-compute-engine ];
+  pythonPath = lib.makeSearchPath python.sitePackages pythonInputs;
 
-stdenv.mkDerivation rec {
+in stdenv.mkDerivation rec {
   name = "google-cloud-sdk-${version}";
-  version = "155.0.0";
+  version = "171.0.0";
 
   src =
     if stdenv.system == "i686-linux" then
       fetchurl {
         url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${name}-linux-x86.tar.gz";
-        sha256 = "1xh8xy9p3qqmirvhih7vf96i5xn0z0zr5mmbqr6vfzx16r47bi2z";
+        sha256 = "0scp9nhd46mrnd02bw7skm5fa04i7azf68g08js8kawvjgbwq0sb";
       }
     else if stdenv.system == "x86_64-darwin" then
       fetchurl {
         url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${name}-darwin-x86_64.tar.gz";
-        sha256 = "19pr1pld6vdp5ig5i7zddfl1l5xjv9nx5sn00va4l1nnb410ac69";
+        sha256 = "0xvrqsg0vqws9n20lvipxilb45aln5p9iy0ldjfxx8vvi0s42298";
       }
     else
       fetchurl {
         url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${name}-linux-x86_64.tar.gz";
-        sha256 = "18hnabhdlrprhg8micy2z63jxyah3qr3pv9pgb64i7lbv6lznr2b";
+        sha256 = "0b9rqhwd30hn5l82a2x10rz86jz1j03b19di7bc3bqn4x041qii5";
       };
 
-  buildInputs = [python27 makeWrapper];
+
+  buildInputs = [ python makeWrapper ];
 
   phases = [ "installPhase" "fixupPhase" ];
 
@@ -34,20 +35,23 @@ stdenv.mkDerivation rec {
     mkdir -p "$out"
     tar -xzf "$src" -C "$out" google-cloud-sdk
 
+    mkdir $out/google-cloud-sdk/lib/surface/alpha
+    cp ${./alpha__init__.py} $out/google-cloud-sdk/lib/surface/alpha/__init__.py
+
+    mkdir $out/google-cloud-sdk/lib/surface/beta
+    cp ${./beta__init__.py} $out/google-cloud-sdk/lib/surface/beta/__init__.py
+
     # create wrappers with correct env
     for program in gcloud bq gsutil git-credential-gcloud.sh; do
         programPath="$out/google-cloud-sdk/bin/$program"
         binaryPath="$out/bin/$program"
         wrapProgram "$programPath" \
-            --set CLOUDSDK_PYTHON "${python27}/bin/python" \
-            --prefix PYTHONPATH : "$(toPythonPath ${cffi}):$(toPythonPath ${cryptography}):$(toPythonPath ${pyopenssl}):$(toPythonPath ${crcmod})"
+            --set CLOUDSDK_PYTHON "${python}/bin/python" \
+            --prefix PYTHONPATH : "${pythonPath}"
 
         mkdir -p $out/bin
         ln -s $programPath $binaryPath
     done
-
-    # install man pages
-    mv "$out/google-cloud-sdk/help/man" "$out"
 
     # setup bash completion
     mkdir -p "$out/etc/bash_completion.d/"
@@ -61,11 +65,10 @@ stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     description = "Tools for the google cloud platform";
     longDescription = "The Google Cloud SDK. This package has the programs: gcloud, gsutil, and bq";
-    version = version;
     # This package contains vendored dependencies. All have free licenses.
     license = licenses.free;
     homepage = "https://cloud.google.com/sdk/";
-    maintainers = with maintainers; [stephenmw zimbatm];
-    platforms = with platforms; linux ++ darwin;
+    maintainers = with maintainers; [ stephenmw zimbatm ];
+    platforms = [ "i686-linux" "x86_64-linux" "x86_64-darwin" ];
   };
 }

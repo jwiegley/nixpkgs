@@ -139,6 +139,7 @@
       btsync = 113;
       minecraft = 114;
       #monetdb = 115; # unused (not packaged), removed 2016-09-19
+      vault = 115;
       rippled = 116;
       murmur = 117;
       foundationdb = 118;
@@ -166,7 +167,7 @@
       dnsmasq = 141;
       uhub = 142;
       yandexdisk = 143;
-      collectd = 144;
+      #collectd = 144; #unused
       consul = 145;
       mailpile = 146;
       redmine = 147;
@@ -213,7 +214,7 @@
       plex = 193;
       grafana = 196;
       skydns = 197;
-      ripple-rest = 198;
+      # ripple-rest = 198; # unused, removed 2017-08-12
       nix-serve = 199;
       tvheadend = 200;
       uwsgi = 201;
@@ -253,7 +254,6 @@
       hydra-queue-runner = 235;
       hydra-www = 236;
       syncthing = 237;
-      mfi = 238;
       caddy = 239;
       taskd = 240;
       factorio = 241;
@@ -295,6 +295,10 @@
       aria2 = 277;
       clickhouse = 278;
       rslsync = 279;
+      minio = 280;
+      kanboard = 281;
+      pykms = 282;
+      kodi = 283;
 
       # When adding a uid, make sure it doesn't match an existing gid. And don't use uids above 399!
 
@@ -333,7 +337,7 @@
       dialout = 27;
       #polkituser = 28; # currently unused, polkitd doesn't need a group
       utmp = 29;
-      #ddclient = 30; # unused
+      ddclient = 30;
       davfs2 = 31;
       disnix = 33;
       osgi = 34;
@@ -414,6 +418,7 @@
       btsync = 113;
       #minecraft = 114; # unused
       #monetdb = 115; # unused (not packaged), removed 2016-09-19
+      vault = 115;
       #ripped = 116; # unused
       #murmur = 117; # unused
       foundationdb = 118;
@@ -424,7 +429,7 @@
       teamspeak = 124;
       influxdb = 125;
       nsd = 126;
-      #gitolite = 127; # unused
+      gitolite = 127;
       znc = 128;
       polipo = 129;
       mopidy = 130;
@@ -486,7 +491,7 @@
       sabnzbd = 194;
       #grafana = 196; #unused
       #skydns = 197; #unused
-      #ripple-rest = 198; #unused
+      # ripple-rest = 198; # unused, removed 2017-08-12
       #nix-serve = 199; #unused
       #tvheadend = 200; #unused
       uwsgi = 201;
@@ -519,7 +524,6 @@
       octoprint = 230;
       radicale = 234;
       syncthing = 237;
-      #mfi = 238; # unused
       caddy = 239;
       taskd = 240;
       factorio = 241;
@@ -559,6 +563,10 @@
       aria2 = 277;
       clickhouse = 278;
       rslsync = 279;
+      minio = 280;
+      kanboard = 281;
+      pykms = 282;
+      kodi = 283;
 
       # When adding a gid, make sure it doesn't match an existing
       # uid. Users and groups with the same name should have equal

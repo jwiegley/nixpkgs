@@ -36,7 +36,7 @@ in stdenv.mkDerivation rec {
 
   patches = stdenv.lib.optionals (!stdenv.isDarwin) [
     # llvm-config --libfiles returns (non-existing) static libs
-    ./fix-llvm-config.patch
+    ../fix-llvm-config.patch
   ];
 
   # hacky fix: created binaries need to be run before installation
@@ -50,7 +50,7 @@ in stdenv.mkDerivation rec {
     "-DLLVM_BUILD_TESTS=ON"
     "-DLLVM_ENABLE_FFI=ON"
     "-DLLVM_REQUIRES_RTTI=1"
-    "-DLLVM_BINUTILS_INCDIR=${binutils.dev or binutils}/include"
+    "-DLLVM_BINUTILS_INCDIR=${stdenv.lib.getDev binutils}/include"
     "-DCMAKE_CXX_FLAGS=-std=c++11"
   ] ++ stdenv.lib.optional (!stdenv.isDarwin) "-DBUILD_SHARED_LIBS=ON";
 

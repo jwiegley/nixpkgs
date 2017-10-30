@@ -8,6 +8,8 @@
 , google_talk_plugin, fribid, gnome3/*.gnome_shell*/
 , esteidfirefoxplugin
 , vlc_npapi
+, libudev
+, kerberos
 }:
 
 ## configurability of the wrapper itself
@@ -24,6 +26,7 @@ let
   cfg = stdenv.lib.attrByPath [ browserName ] {} config;
   enableAdobeFlash = cfg.enableAdobeFlash or false;
   ffmpegSupport = browser.ffmpegSupport or false;
+  gssSupport = browser.gssSupport or false;
   jre = cfg.jre or false;
   icedtea = cfg.icedtea or false;
 
@@ -45,8 +48,9 @@ let
       ++ lib.optional (cfg.enableVLC or false) vlc_npapi
      );
   libs = (if ffmpegSupport then [ ffmpeg ] else with gst_all; [ gstreamer gst-plugins-base ])
+         ++ lib.optional gssSupport kerberos
          ++ lib.optionals (cfg.enableQuakeLive or false)
-         (with xorg; [ stdenv.cc libX11 libXxf86dga libXxf86vm libXext libXt alsaLib zlib ])
+         (with xorg; [ stdenv.cc libX11 libXxf86dga libXxf86vm libXext libXt alsaLib zlib libudev ])
          ++ lib.optional (enableAdobeFlash && (cfg.enableAdobeFlashDRM or false)) hal-flash
          ++ lib.optional (config.pulseaudio or false) libpulseaudio;
   gst-plugins = with gst_all; [ gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-ffmpeg ];
@@ -127,6 +131,8 @@ in stdenv.mkDerivation {
   gtk_modules = map (x: x + x.gtkModule) gtk_modules;
 
   passthru = { unwrapped = browser; };
+
+  disallowedRequisites = [ stdenv.cc ];
 
   meta = browser.meta // {
     description =

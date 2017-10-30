@@ -55,7 +55,7 @@ in stdenv.mkDerivation rec {
 
   patches = stdenv.lib.optionals (!stdenv.isDarwin) [
     # llvm-config --libfiles returns (non-existing) static libs
-    ./fix-llvm-config.patch
+    ../fix-llvm-config.patch
   ];
 
   cmakeFlags = with stdenv; [
@@ -67,7 +67,7 @@ in stdenv.mkDerivation rec {
   ] ++ stdenv.lib.optional enableSharedLibraries
     "-DBUILD_SHARED_LIBS=ON"
     ++ stdenv.lib.optional (!isDarwin)
-    "-DLLVM_BINUTILS_INCDIR=${binutils.dev}/include"
+    "-DLLVM_BINUTILS_INCDIR=${stdenv.lib.getDev binutils}/include"
     ++ stdenv.lib.optionals ( isDarwin) [
     "-DLLVM_ENABLE_LIBCXX=ON"
     "-DCAN_TARGET_i386=false"

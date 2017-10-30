@@ -1,14 +1,14 @@
-{ stdenv, buildPythonPackage, fetchurl,
+{ stdenv, buildPythonPackage, fetchPypi,
   asgiref, asgi_ipc, msgpack, six, redis, cryptography
 }:
 buildPythonPackage rec {
-  version = "1.4.1";
+  version = "1.4.3";
   pname = "asgi_redis";
   name = "${pname}-${version}";
 
-  src = fetchurl {
-    url = "mirror://pypi/a/asgi_redis/${name}.tar.gz";
-    sha256 = "71a6147c8b08833815993f16e2b665a0e5483fae392f03decb8da54ed0882904";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "10xk7k7mcd28nb3v93mc8xa7sa6p02jnbl8idk6scr6p75jaixzi";
   };
 
   # Requires a redis server available

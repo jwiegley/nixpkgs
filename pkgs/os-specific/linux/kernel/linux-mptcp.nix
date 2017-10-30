@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, perl, buildLinux, ... } @ args:
+{ stdenv, hostPlatform, fetchurl, perl, buildLinux, ... } @ args:
 
 import ./generic.nix (args // rec {
   mptcpVersion = "0.91.3";
@@ -14,8 +14,6 @@ import ./generic.nix (args // rec {
     url = "https://github.com/multipath-tcp/mptcp/archive/v${mptcpVersion}.tar.gz";
     sha256 = "0vqjnkzcbbvyq24w3cryfmw7hhws1xqkkxqcv71szkbqqs6mcr14";
   };
-
-  kernelPatches = args.kernelPatches;
 
   extraConfig = ''
     IPV6 y
@@ -41,10 +39,6 @@ import ./generic.nix (args // rec {
     TCP_CONG_OLIA m
     TCP_CONG_WVEGAS m
     TCP_CONG_BALIA m
-  '';
 
-  features.iwlwifi = true;
-  features.efiBootStub = true;
-  features.needsCifsUtils = true;
-  features.netfilterRPFilter = true;
+  '' + (args.extraConfig or "");
 } // (args.argsOverride or {}))

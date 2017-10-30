@@ -1,17 +1,18 @@
-{ stdenv, fetchurl, coreutils, pam, groff
+{ stdenv, fetchurl, coreutils, pam, groff, sssd
 , sendmailPath ? "/run/wrappers/bin/sendmail"
 , withInsults ? false
+, withSssd ? false
 }:
 
 stdenv.mkDerivation rec {
-  name = "sudo-1.8.20p1";
+  name = "sudo-1.8.20p2";
 
   src = fetchurl {
     urls =
       [ "ftp://ftp.sudo.ws/pub/sudo/${name}.tar.gz"
         "ftp://ftp.sudo.ws/pub/sudo/OLD/${name}.tar.gz"
       ];
-    sha256 = "07fvh8qy0l1h93lccc625f48d8yp0pkp5rjjykq13pb07ar0x64y";
+    sha256 = "1na5likm1srnd1g5sjx7b0543sczw0yppacyqsazfdg9b48awhmx";
   };
 
   prePatch = ''
@@ -30,6 +31,9 @@ stdenv.mkDerivation rec {
   ] ++ stdenv.lib.optional withInsults [
     "--with-insults"
     "--with-all-insults"
+  ] ++ stdenv.lib.optional withSssd [
+    "--with-sssd"
+    "--with-sssd-lib=${sssd}/lib"
   ];
 
   configureFlagsArray = [

@@ -4,14 +4,13 @@
 # http://llvm.org/docs/doxygen/html/Triple_8cpp_source.html especially
 # Triple::normalize. Parsing should essentially act as a more conservative
 # version of that last function.
-
-with import ../lists.nix;
-with import ../types.nix;
-with import ../attrsets.nix;
-with (import ./inspect.nix).predicates;
+{ lib }:
+with lib.lists;
+with lib.types;
+with lib.attrsets;
+with (import ./inspect.nix { inherit lib; }).predicates;
 
 let
-  lib = import ../default.nix;
   setTypesAssert = type: pred:
     mapAttrs (name: value:
       assert pred value;
@@ -40,11 +39,11 @@ rec {
     armv6l   = { bits = 32; significantByte = littleEndian; family = "arm"; };
     armv7a   = { bits = 32; significantByte = littleEndian; family = "arm"; };
     armv7l   = { bits = 32; significantByte = littleEndian; family = "arm"; };
-    aarch64  = { bits = 64; significantByte = littleEndian; family = "arm"; };
+    aarch64  = { bits = 64; significantByte = littleEndian; family = "aarch64"; };
     i686     = { bits = 32; significantByte = littleEndian; family = "x86"; };
     x86_64   = { bits = 64; significantByte = littleEndian; family = "x86"; };
     mips64el = { bits = 32; significantByte = littleEndian; family = "mips"; };
-    powerpc  = { bits = 32; significantByte = bigEndian;    family = "powerpc"; };
+    powerpc  = { bits = 32; significantByte = bigEndian;    family = "power"; };
   };
 
   isVendor = isType "vendor";
@@ -68,21 +67,20 @@ rec {
   isKernelFamily = isType "kernel-family";
   kernelFamilies = setTypes "kernel-family" {
     bsd = {};
-    unix = {};
   };
 
   isKernel = x: isType "kernel" x;
   kernels = with execFormats; with kernelFamilies; setTypesAssert "kernel"
     (x: isExecFormat x.execFormat && all isKernelFamily (attrValues x.families))
   {
-    darwin  = { execFormat = macho;   families = { inherit unix; }; };
-    freebsd = { execFormat = elf;     families = { inherit unix bsd; }; };
-    hurd    = { execFormat = elf;     families = { inherit unix; }; };
-    linux   = { execFormat = elf;     families = { inherit unix; }; };
-    netbsd  = { execFormat = elf;     families = { inherit unix bsd; }; };
-    none    = { execFormat = unknown; families = { inherit unix; }; };
-    openbsd = { execFormat = elf;     families = { inherit unix bsd; }; };
-    solaris = { execFormat = elf;     families = { inherit unix; }; };
+    darwin  = { execFormat = macho;   families = { }; };
+    freebsd = { execFormat = elf;     families = { inherit bsd; }; };
+    hurd    = { execFormat = elf;     families = { }; };
+    linux   = { execFormat = elf;     families = { }; };
+    netbsd  = { execFormat = elf;     families = { inherit bsd; }; };
+    none    = { execFormat = unknown; families = { }; };
+    openbsd = { execFormat = elf;     families = { inherit bsd; }; };
+    solaris = { execFormat = elf;     families = { }; };
     windows = { execFormat = pe;      families = { }; };
   } // { # aliases
     # TODO(@Ericson2314): Handle these Darwin version suffixes more generally.
@@ -164,7 +162,7 @@ rec {
   mkSystemFromString = s: mkSystemFromSkeleton (mkSkeletonFromList (lib.splitString "-" s));
 
   doubleFromSystem = { cpu, vendor, kernel, abi, ... }:
-    if vendor == kernels.windows && abi == abis.cygnus
+    if abi == abis.cygnus
     then "${cpu.name}-cygwin"
     else "${cpu.name}-${kernel.name}";
 

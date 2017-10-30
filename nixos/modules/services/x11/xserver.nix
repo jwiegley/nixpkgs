@@ -71,7 +71,7 @@ let
       name = "multihead${toString num}";
       inherit config;
     };
-  in imap mkHead cfg.xrandrHeads;
+  in imap1 mkHead cfg.xrandrHeads;
 
   xrandrDeviceSection = let
     monitors = flip map xrandrHeads (h: ''
@@ -480,6 +480,15 @@ in
         '';
       };
 
+      verbose = mkOption {
+        type = types.nullOr types.int;
+        default = 3;
+        example = 7;
+        description = ''
+          Controls verbosity of X logging.
+        '';
+      };
+
       useGlamor = mkOption {
         type = types.bool;
         default = false;
@@ -631,10 +640,11 @@ in
       [ "-config ${configFile}"
         "-xkbdir" "${cfg.xkbDir}"
         # Log at the default verbosity level to stderr rather than /var/log/X.*.log.
-        "-verbose" "3" "-logfile" "/dev/null"
+         "-logfile" "/dev/null"
       ] ++ optional (cfg.display != null) ":${toString cfg.display}"
         ++ optional (cfg.tty     != null) "vt${toString cfg.tty}"
         ++ optional (cfg.dpi     != null) "-dpi ${toString cfg.dpi}"
+        ++ optional (cfg.verbose != null) "-verbose ${toString cfg.verbose}"
         ++ optional (!cfg.enableTCP) "-nolisten tcp"
         ++ optional (cfg.autoRepeatDelay != null) "-ardelay ${toString cfg.autoRepeatDelay}"
         ++ optional (cfg.autoRepeatInterval != null) "-arinterval ${toString cfg.autoRepeatInterval}"
@@ -648,34 +658,13 @@ in
 
     services.xserver.xkbDir = mkDefault "${pkgs.xkeyboard_config}/etc/X11/xkb";
 
-    system.extraDependencies = [
-      (pkgs.runCommand "xkb-layouts-exist" {
-            layouts=cfg.layout;
-        } ''
-        missing=()
-        while read -d , layout
-        do
-          [[ -f "${cfg.xkbDir}/symbols/$layout" ]] || missing+=($layout)
-        done <<< "$layouts,"
-        if [[ ''${#missing[@]} -eq 0 ]]
-        then
-          touch $out
-          exit 0
-        fi
-
-        cat >&2 <<EOF
-
-        Some of the selected keyboard layouts do not exist:
-
-          ''${missing[@]}
-
-        Set services.xserver.layout to the name of an existing keyboard
-        layout (check ${cfg.xkbDir}/symbols for options).
-
-        EOF
-        exit -1
-      '')
-    ];
+    system.extraDependencies = singleton (pkgs.runCommand "xkb-validated" {
+      inherit (cfg) xkbModel layout xkbVariant xkbOptions;
+      nativeBuildInputs = [ pkgs.xkbvalidate ];
+    } ''
+      validate "$xkbModel" "$layout" "$xkbVariant" "$xkbOptions"
+      touch "$out"
+    '');
 
     services.xserver.config =
       ''

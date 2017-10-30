@@ -1,21 +1,21 @@
-{ mkDerivation, lib, fetchFromGitHub, cmake, python3, qtbase, curaengine }:
+{ mkDerivation, lib, fetchFromGitHub, cmake, python3, qtbase, qtquickcontrols, curaengine }:
 
 mkDerivation rec {
   name = "cura-${version}";
-  version = "2.4.0";
+  version = "3.0.3";
 
   src = fetchFromGitHub {
     owner = "Ultimaker";
     repo = "Cura";
     rev = version;
-    sha256 = "04iglmjg9rzmlfrll6g7bcckkla327938xh8qmbdfrh215aivdlp";
+    sha256 = "0ks8bb3mif6kyvb01ddhpn1c2l31s8fxivi70kmpm743sqv4kjaa";
   };
 
-  buildInputs = [ qtbase ];
-  propagatedBuildInputs = with python3.pkgs; [ uranium zeroconf pyserial ];
+  buildInputs = [ qtbase qtquickcontrols ];
+  propagatedBuildInputs = with python3.pkgs; [ uranium zeroconf pyserial numpy-stl ];
   nativeBuildInputs = [ cmake python3.pkgs.wrapPython ];
 
-  cmakeFlags = [ "-DCMAKE_MODULE_PATH=${python3.pkgs.uranium}/share/cmake-${cmake.majorVersion}/Modules" ];
+  cmakeFlags = [ "-DURANIUM_DIR=${python3.pkgs.uranium.src}" ];
 
   postPatch = ''
     sed -i 's,/python''${PYTHON_VERSION_MAJOR}/dist-packages,/python''${PYTHON_VERSION_MAJOR}.''${PYTHON_VERSION_MINOR}/site-packages,g' CMakeLists.txt

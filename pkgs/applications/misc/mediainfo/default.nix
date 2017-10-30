@@ -1,11 +1,11 @@
 { stdenv, fetchurl, autoreconfHook, pkgconfig, libzen, libmediainfo, zlib }:
 
 stdenv.mkDerivation rec {
-  version = "0.7.95";
+  version = "0.7.99";
   name = "mediainfo-${version}";
   src = fetchurl {
-    url = "http://mediaarea.net/download/source/mediainfo/${version}/mediainfo_${version}.tar.xz";
-    sha256 = "0bil5hsjas585s83j0srxwlplzpw2wny2wklp8az8iayvxmmi20m";
+    url = "https://mediaarea.net/download/source/mediainfo/${version}/mediainfo_${version}.tar.xz";
+    sha256 = "127d6wsrq3wg3ibbb28m26wrm54qbkv8h8xycanvml6ys4zqsc6a";
   };
 
   nativeBuildInputs = [ autoreconfHook pkgconfig ];
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
       MediaInfo is a convenient unified display of the most relevant technical
       and tag data for video and audio files.
     '';
-    homepage = http://mediaarea.net/;
+    homepage = https://mediaarea.net/;
     license = licenses.bsd2;
     platforms = platforms.unix;
     maintainers = [ maintainers.devhell ];

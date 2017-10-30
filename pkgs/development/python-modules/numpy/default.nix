@@ -1,13 +1,14 @@
-{lib, fetchurl, python, buildPythonPackage, isPy27, isPyPy, gfortran, nose, blas}:
+{lib, fetchPypi, python, buildPythonPackage, isPy27, isPyPy, gfortran, nose, blas}:
 
 buildPythonPackage rec {
   pname = "numpy";
-  version = "1.12.1";
+  version = "1.13.3";
   name = "${pname}-${version}";
 
-  src = fetchurl {
-    url = "mirror://pypi/n/numpy/numpy-${version}.zip";
-    sha256 = "a65266a4ad6ec8936a1bc85ce51f8600634a31a258b722c9274a80ff189d9542";
+  src = fetchPypi {
+    inherit pname version;
+    extension = "zip";
+    sha256 = "36ee86d5adbabc4fa2643a073f93d5504bdfed37a149a3a49f4dde259f35a750";
   };
 
   disabled = isPyPy;
@@ -21,6 +22,7 @@ buildPythonPackage rec {
 
   preConfigure = ''
     sed -i 's/-faltivec//' numpy/distutils/system_info.py
+    export NPY_NUM_BUILD_JOBS=$NIX_BUILD_CORES
   '';
 
   preBuild = ''
@@ -31,6 +33,8 @@ buildPythonPackage rec {
     library_dirs = ${blas}/lib
     EOF
   '';
+
+  enableParallelBuilding = true;
 
   checkPhase = ''
     runHook preCheck
@@ -55,7 +59,7 @@ buildPythonPackage rec {
 
   meta = {
     description = "Scientific tools for Python";
-    homepage = "http://numpy.scipy.org/";
+    homepage = http://numpy.scipy.org/;
     maintainers = with lib.maintainers; [ fridh ];
   };
 }

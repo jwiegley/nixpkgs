@@ -1,19 +1,19 @@
-{ stdenv, fetchFromGitHub, buildPythonPackage, pip, pytest, click, six, first, glibcLocales }:
+{ stdenv, fetchurl, buildPythonPackage, pip, pytest, click, six, first
+, setuptools_scm, glibcLocales, mock }:
+
 buildPythonPackage rec {
   pname = "pip-tools";
-  version = "1.9.0";
+  version = "1.10.1";
   name = "pip-tools-${version}";
 
-  src = fetchFromGitHub {
-    owner = "jazzband";
-    repo = "pip-tools";
-    rev = version;
-    sha256 = "0706feb27263a2dade6d39cc508e718282bd08f455d0643f251659f905be4d56";
+  src = fetchurl {
+    url = "mirror://pypi/p/pip-tools/${name}.tar.gz";
+    sha256 = "37b85d69ceed97337aeefb3e52e41fe0884a505c874757a5bbaa58d92b533ce0";
   };
 
   LC_ALL = "en_US.UTF-8";
-  buildInputs = [ pytest glibcLocales ];
-  propagatedBuildInputs = [ pip click six first ];
+  checkInputs = [ pytest glibcLocales mock ];
+  propagatedBuildInputs = [ pip click six first setuptools_scm ];
 
   checkPhase = ''
     export HOME=$(mktemp -d)

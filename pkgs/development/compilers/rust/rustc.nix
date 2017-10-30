@@ -10,6 +10,8 @@
 , targetPatches
 , targetToolchains
 , doCheck ? true
+, broken ? false
+, buildPlatform, hostPlatform
 } @ args:
 
 let
@@ -46,14 +48,17 @@ stdenv.mkDerivation {
   configureFlags = configureFlags
                 ++ [ "--enable-local-rust" "--local-rust-root=${rustPlatform.rust.rustc}" "--enable-rpath" ]
                 ++ [ "--enable-vendor" "--disable-locked-deps" ]
-                ++ [ "--enable-llvm-link-shared" ]
                 # ++ [ "--jemalloc-root=${jemalloc}/lib"
                 ++ [ "--default-linker=${stdenv.cc}/bin/cc" "--default-ar=${binutils.out}/bin/ar" ]
+                ++ optional (!forceBundledLLVM) [ "--enable-llvm-link-shared" ]
                 ++ optional (stdenv.cc.cc ? isClang) "--enable-clang"
                 ++ optional (targets != []) "--target=${target}"
                 ++ optional (!forceBundledLLVM) "--llvm-root=${llvmShared}";
 
   patches = patches ++ targetPatches;
+
+  # the rust build system complains that nix alters the checksums
+  dontFixLibtool = true;
 
   passthru.target = target;
 
@@ -113,13 +118,17 @@ stdenv.mkDerivation {
   dontUseCmakeConfigure = true;
 
   # ps is needed for one of the test cases
-  nativeBuildInputs = [ file python2 procps rustPlatform.rust.rustc git cmake
-    which libffi gdb ];
+  nativeBuildInputs =
+    [ file python2 procps rustPlatform.rust.rustc git cmake
+      which libffi
+    ]
+    # Only needed for the debuginfo tests
+    ++ optional (!stdenv.isDarwin) gdb;
 
   buildInputs = [ ncurses ] ++ targetToolchains
     ++ optional (!forceBundledLLVM) llvmShared;
 
-  outputs = [ "out" "doc" ];
+  outputs = [ "out" "man" "doc" ];
   setOutputFlags = false;
 
   # Disable codegen units for the tests.
@@ -137,7 +146,7 @@ stdenv.mkDerivation {
 
   inherit doCheck;
 
-  dontSetConfigureCross = true;
+  configurePlatforms = [];
 
   # https://github.com/NixOS/nixpkgs/pull/21742#issuecomment-272305764
   # https://github.com/rust-lang/rust/issues/30181
@@ -149,5 +158,6 @@ stdenv.mkDerivation {
     maintainers = with maintainers; [ madjar cstrahan wizeman globin havvy wkennington ];
     license = [ licenses.mit licenses.asl20 ];
     platforms = platforms.linux ++ platforms.darwin;
+    broken = broken;
   };
 }

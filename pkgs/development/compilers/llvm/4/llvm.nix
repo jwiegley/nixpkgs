@@ -16,14 +16,13 @@
 , compiler-rt_src
 , libcxxabi
 , debugVersion ? false
-, enableManpages ? true
+, enableManpages ? false
 , enableSharedLibraries ? true
 , darwin
 }:
 
 let
-  src = fetch "llvm" "1giklnw71wzsgbqg9wb5x7dxnbj39m6zpfvskvzvhwvfz4fm244d";
-  shlib = if stdenv.isDarwin then "dylib" else "so";
+  src = fetch "llvm" "0l9bf7kdwhlj0kq1hawpyxhna1062z3h7qcz2y8nfl9dz2qksy6s";
 
   # Used when creating a version-suffixed symlink of libLLVM.dylib
   shortVersion = with stdenv.lib;
@@ -59,18 +58,15 @@ in stdenv.mkDerivation rec {
   postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
     substituteInPlace ./projects/compiler-rt/cmake/config-ix.cmake \
       --replace 'set(COMPILER_RT_HAS_TSAN TRUE)' 'set(COMPILER_RT_HAS_TSAN FALSE)'
+
+    substituteInPlace cmake/modules/AddLLVM.cmake \
+      --replace 'set(_install_name_dir INSTALL_NAME_DIR "@rpath")' "set(_install_name_dir INSTALL_NAME_DIR "$lib/lib")" \
+      --replace 'set(_install_rpath "@loader_path/../lib" ''${extra_libdir})' ""
   ''
   # Patch llvm-config to return correct library path based on --link-{shared,static}.
   + stdenv.lib.optionalString (enableSharedLibraries) ''
     substitute '${./llvm-outputs.patch}' ./llvm-outputs.patch --subst-var lib
     patch -p1 < ./llvm-outputs.patch
-  ''
-  # Remove broken tests: (https://bugs.llvm.org//show_bug.cgi?id=31610)
-  + ''
-    rm test/CodeGen/AMDGPU/invalid-opencl-version-metadata1.ll
-    rm test/CodeGen/AMDGPU/invalid-opencl-version-metadata2.ll
-    rm test/CodeGen/AMDGPU/invalid-opencl-version-metadata3.ll
-    rm test/CodeGen/AMDGPU/runtime-metadata.ll
   '';
 
   # hacky fix: created binaries need to be run before installation
@@ -97,7 +93,7 @@ in stdenv.mkDerivation rec {
     "-DSPHINX_WARNINGS_AS_ERRORS=OFF"
   ]
   ++ stdenv.lib.optional (!isDarwin)
-    "-DLLVM_BINUTILS_INCDIR=${binutils.dev}/include"
+    "-DLLVM_BINUTILS_INCDIR=${stdenv.lib.getDev binutils}/include"
   ++ stdenv.lib.optionals (isDarwin) [
     "-DLLVM_ENABLE_LIBCXX=ON"
     "-DCAN_TARGET_i386=false"
@@ -122,20 +118,18 @@ in stdenv.mkDerivation rec {
   ''
   + stdenv.lib.optionalString enableSharedLibraries ''
     moveToOutput "lib/libLLVM-*" "$lib"
-    moveToOutput "lib/libLLVM.${shlib}" "$lib"
-    substituteInPlace "$out/lib/cmake/llvm/LLVMExports-release.cmake" \
+    moveToOutput "lib/libLLVM${stdenv.hostPlatform.extensions.sharedLibrary}" "$lib"
+    substituteInPlace "$out/lib/cmake/llvm/LLVMExports-${if debugVersion then "debug" else "release"}.cmake" \
       --replace "\''${_IMPORT_PREFIX}/lib/libLLVM-" "$lib/lib/libLLVM-"
   ''
   + stdenv.lib.optionalString (stdenv.isDarwin && enableSharedLibraries) ''
-    substituteInPlace "$out/lib/cmake/llvm/LLVMExports-release.cmake" \
+    substituteInPlace "$out/lib/cmake/llvm/LLVMExports-${if debugVersion then "debug" else "release"}.cmake" \
       --replace "\''${_IMPORT_PREFIX}/lib/libLLVM.dylib" "$lib/lib/libLLVM.dylib"
-    install_name_tool -id $lib/lib/libLLVM.dylib $lib/lib/libLLVM.dylib
-    install_name_tool -change @rpath/libLLVM.dylib $lib/lib/libLLVM.dylib $out/bin/llvm-config
     ln -s $lib/lib/libLLVM.dylib $lib/lib/libLLVM-${shortVersion}.dylib
     ln -s $lib/lib/libLLVM.dylib $lib/lib/libLLVM-${release_version}.dylib
   '';
 
-  doCheck = stdenv.isLinux;
+  doCheck = stdenv.isLinux && (!stdenv.isi686);
 
   checkTarget = "check-all";
 

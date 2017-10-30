@@ -1,4 +1,4 @@
-{ stdenv, fetchurl
+{ stdenv, hostPlatform, fetchurl
 , bzip2
 , gdbm
 , fetchpatch
@@ -29,7 +29,7 @@ with stdenv.lib;
 
 let
   majorVersion = "2.7";
-  minorVersion = "13";
+  minorVersion = "14";
   minorVersionSuffix = "";
   pythonVersion = majorVersion;
   version = "${majorVersion}.${minorVersion}${minorVersionSuffix}";
@@ -38,7 +38,7 @@ let
 
   src = fetchurl {
     url = "https://www.python.org/ftp/python/${majorVersion}.${minorVersion}/Python-${version}.tar.xz";
-    sha256 = "0cgpk3zk0fgpji59pb4zy9nzljr70qzgv1vpz5hq5xw2d2c47m9m";
+    sha256 = "0rka541ys16jwzcnnvjp2v12m4cwgd2jp6wj4kj511p715pb5zvi";
   };
 
   hasDistutilsCxxPatch = !(stdenv.cc.isGNU or false);
@@ -67,9 +67,7 @@ let
       # libuuid, slowing down program startup a lot).
       ./no-ldconfig.patch
 
-      ./glibc-2.25-enosys.patch
-
-    ] ++ optionals stdenv.isCygwin [
+    ] ++ optionals hostPlatform.isCygwin [
       ./2.5.2-ctypes-util-find_library.patch
       ./2.5.2-tkinter-x11.patch
       ./2.6.2-ssl-threads.patch
@@ -110,22 +108,24 @@ let
     "--enable-shared"
     "--with-threads"
     "--enable-unicode=ucs4"
-  ] ++ optionals stdenv.isCygwin [
+  ] ++ optionals (hostPlatform.isCygwin || hostPlatform.isAarch64) [
     "--with-system-ffi"
+  ] ++ optionals hostPlatform.isCygwin [
     "--with-system-expat"
     "ac_cv_func_bind_textdomain_codeset=yes"
   ] ++ optionals stdenv.isDarwin [
     "--disable-toolbox-glue"
   ];
 
-  postConfigure = if stdenv.isCygwin then ''
+  postConfigure = if hostPlatform.isCygwin then ''
     sed -i Makefile -e 's,PYTHONPATH="$(srcdir),PYTHONPATH="$(abs_srcdir),'
   '' else null;
 
   buildInputs =
     optional (stdenv ? cc && stdenv.cc.libc != null) stdenv.cc.libc ++
     [ bzip2 openssl zlib ]
-    ++ optionals stdenv.isCygwin [ expat libffi ]
+    ++ optional (hostPlatform.isCygwin || hostPlatform.isAarch64) libffi
+    ++ optional hostPlatform.isCygwin expat
     ++ [ db gdbm ncurses sqlite readline ]
     ++ optionals x11Support [ tcl tk xlibsWrapper libX11 ]
     ++ optionals stdenv.isDarwin [ CF configd ];
@@ -162,7 +162,9 @@ in stdenv.mkDerivation {
         # needed for some packages, especially packages that backport
         # functionality to 2.x from 3.x
         for item in $out/lib/python${majorVersion}/test/*; do
-          if [[ "$item" != */test_support.py* ]]; then
+          if [[ "$item" != */test_support.py*
+             && "$item" != */test/support
+             && "$item" != */test/regrtest.py* ]]; then
             rm -rf "$item"
           else
             echo $item
@@ -190,6 +192,8 @@ in stdenv.mkDerivation {
         find $out -name "*.py" | $out/bin/python -m compileall -q -f -x "lib2to3" -i -
         find $out -name "*.py" | $out/bin/python -O -m compileall -q -f -x "lib2to3" -i -
         find $out -name "*.py" | $out/bin/python -OO -m compileall -q -f -x "lib2to3" -i -
+      '' + optionalString hostPlatform.isCygwin ''
+        cp libpython2.7.dll.a $out/lib
       '';
 
     passthru = let
@@ -208,7 +212,7 @@ in stdenv.mkDerivation {
     enableParallelBuilding = true;
 
     meta = {
-      homepage = "http://python.org";
+      homepage = http://python.org;
       description = "A high-level dynamically-typed programming language";
       longDescription = ''
         Python is a remarkably powerful dynamic programming language that

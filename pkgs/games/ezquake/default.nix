@@ -14,8 +14,9 @@ stdenv.mkDerivation rec {
     sha256 = "14wck0r64z5haacp7g7qb2qrbhff3x6jfjmn4268dyb9dl5663f2";
   };
 
+  nativeBuildInputs = [ pkgconfig ];
   buildInputs = [
-    expat curl jansson libpng libjpeg mesa pcre pkgconfig SDL2 vimNox
+    expat curl jansson libpng libjpeg mesa pcre SDL2 vimNox
   ];
 
   installPhase = with stdenv.lib; let
@@ -28,7 +29,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = "http://ezquake.github.io/";
+    homepage = http://ezquake.github.io/;
     description = "A modern QuakeWorld client focused on competitive online play.";
     license = licenses.gpl2;
     platforms = platforms.linux;

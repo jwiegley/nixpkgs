@@ -25,13 +25,13 @@ in
 
 stdenv.mkDerivation rec {
   name = "go-${version}";
-  version = "1.8.3";
+  version = "1.8.5";
 
   src = fetchFromGitHub {
     owner = "golang";
     repo = "go";
     rev = "go${version}";
-    sha256 = "0g83xm9gb872rsqzwqr1zw5szq69xhynljj2nglg4yyfi7dm2r1c";
+    sha256 = "1ab021l3v29ciaxp738cjpbkh1chlsl6928672q3i82anmdzn5m5";
   };
 
   # perl is used for testing go vet
@@ -128,6 +128,7 @@ stdenv.mkDerivation rec {
            else if stdenv.system == "i686-linux" then "386"
            else if stdenv.system == "x86_64-linux" then "amd64"
            else if stdenv.isArm then "arm"
+           else if stdenv.isAarch64 then "arm64"
            else throw "Unsupported system";
   GOARM = optionalString (stdenv.system == "armv5tel-linux") "5";
   GO386 = 387; # from Arch: don't assume sse2 on i686

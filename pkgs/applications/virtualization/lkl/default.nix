@@ -1,8 +1,8 @@
 { stdenv, fetchFromGitHub, bc, python, fuse, libarchive }:
 
 stdenv.mkDerivation rec {
-  name = "lkl-2017-03-24";
-  rev  = "a063e1631db5e2b9b04f184c5e6d185c1cd645cb";
+  name = "lkl-2017-10-18";
+  rev  = "bfb315c4612c38427e3239d0a427a125d9ba0ede";
 
   outputs = [ "dev" "lib" "out" ];
 
@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
     inherit rev;
     owner  = "lkl";
     repo   = "linux";
-    sha256 = "07dmira76i0ki577sra4fdl1wvzfzxzd75252lza0sc6jdzrrwvj";
+    sha256 = "172ccn2gsybnji7giiqq63bvp9nsw8kri88pjlvinwpwsv7x81aa";
   };
 
   # Fix a /usr/bin/env reference in here that breaks sandboxed builds

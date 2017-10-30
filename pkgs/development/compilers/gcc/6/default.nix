@@ -26,7 +26,7 @@
 , enablePlugin ? true             # whether to support user-supplied plug-ins
 , name ? "gcc"
 , libcCross ? null
-, crossStageStatic ? true
+, crossStageStatic ? false
 , gnat ? null
 , libpthread ? null, libpthreadCross ? null  # required for GNU/Hurd
 , stripped ? true
@@ -58,7 +58,7 @@ assert langGo -> langCC;
 with stdenv.lib;
 with builtins;
 
-let version = "6.3.0";
+let version = "6.4.0";
 
     # Whether building a cross-compiler for GNU/Hurd.
     crossGNU = targetPlatform != hostPlatform && targetPlatform.config == "i586-pc-gnu";
@@ -72,8 +72,7 @@ let version = "6.3.0";
       # The GNAT Makefiles did not pay attention to CFLAGS_FOR_TARGET for its
       # target libraries and tools.
       ++ optional langAda ../gnat-cflags.patch
-      ++ optional langFortran ../gfortran-driving.patch
-      ++ optional hostPlatform.isDarwin ./darwin-const-correct.patch; # Kill this after 6.3.0
+      ++ optional langFortran ../gfortran-driving.patch;
 
     javaEcj = fetchurl {
       # The `$(top_srcdir)/ecj.jar' file is automatically picked up at
@@ -137,7 +136,6 @@ let version = "6.3.0";
         withFloat = if gccFloat != null then " --with-float=${gccFloat}" else "";
         withMode = if gccMode != null then " --with-mode=${gccMode}" else "";
       in
-        "--target=${targetPlatform.config}" +
         withArch +
         withCpu +
         withAbi +
@@ -213,19 +211,33 @@ stdenv.mkDerivation ({
   builder = ../builder.sh;
 
   src = fetchurl {
-    url = "mirror://gnu/gcc/gcc-${version}/gcc-${version}.tar.bz2";
-    sha256 = "17xjz30jb65hcf714vn9gcxvrrji8j20xm7n33qg1ywhyzryfsph";
+    url = "mirror://gnu/gcc/gcc-${version}/gcc-${version}.tar.xz";
+    sha256 = "1m0lr7938lw5d773dkvwld90hjlcq2282517d1gwvrfzmwgg42w5";
   };
 
   inherit patches;
 
-  outputs = [ "out" "lib" "man" "info" ];
+  outputs = if langJava || langGo then ["out" "man" "info"]
+    else [ "out" "lib" "man" "info" ];
   setOutputFlags = false;
   NIX_NO_SELF_RPATH = true;
 
   libc_dev = stdenv.cc.libc_dev;
 
   hardeningDisable = [ "format" ];
+
+  # This should kill all the stdinc frameworks that gcc and friends like to
+  # insert into default search paths.
+  prePatch = stdenv.lib.optionalString hostPlatform.isDarwin ''
+    substituteInPlace gcc/config/darwin-c.c \
+      --replace 'if (stdinc)' 'if (0)'
+
+    substituteInPlace libgcc/config/t-slibgcc-darwin \
+      --replace "-install_name @shlib_slibdir@/\$(SHLIB_INSTALL_NAME)" "-install_name $lib/lib/\$(SHLIB_INSTALL_NAME)"
+
+    substituteInPlace libgfortran/configure \
+      --replace "-install_name \\\$rpath/\\\$soname" "-install_name $lib/lib/\\\$soname"
+  '';
 
   postPatch =
     if (hostPlatform.isHurd
@@ -281,7 +293,9 @@ stdenv.mkDerivation ({
         ''
     else null;
 
-  inherit noSysDirs staticCompiler langJava crossStageStatic
+  # TODO(@Ericson2314): Make passthru instead. Weird to avoid mass rebuild,
+  crossStageStatic = targetPlatform == hostPlatform || crossStageStatic;
+  inherit noSysDirs staticCompiler langJava
     libcCross crossMingw;
 
   nativeBuildInputs = [ texinfo which gettext ]
@@ -310,9 +324,20 @@ stdenv.mkDerivation ({
     export LDFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $LDFLAGS_FOR_TARGET"
     export CXXFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $CXXFLAGS_FOR_TARGET"
     export CFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $CFLAGS_FOR_TARGET"
-  '';
+  ''
+  + stdenv.lib.optionalString (langJava || langGo) ''
+    export lib=$out;
+  ''
+  ;
 
   dontDisableStatic = true;
+
+  # TODO(@Ericson2314): Always pass "--target" and always prefix.
+  configurePlatforms =
+    # TODO(@Ericson2314): Figure out what's going wrong with Arm
+    if hostPlatform == targetPlatform && targetPlatform.isArm
+    then []
+    else [ "build" "host" ] ++ stdenv.lib.optional (targetPlatform != hostPlatform) "target";
 
   configureFlags = "
     ${if hostPlatform.isSunOS then
@@ -404,7 +429,7 @@ stdenv.mkDerivation ({
     NM_FOR_TARGET = "${targetPlatform.config}-nm";
     CXX_FOR_TARGET = "${targetPlatform.config}-g++";
     # If we are making a cross compiler, cross != null
-    NIX_CC_CROSS = if targetPlatform == hostPlatform then "${stdenv.ccCross}" else "";
+    NIX_CC_CROSS = optionalString (targetPlatform == hostPlatform) builtins.toString stdenv.cc;
     dontStrip = true;
     configureFlags = ''
       ${if enableMultilib then "" else "--disable-multilib"}
@@ -431,7 +456,6 @@ stdenv.mkDerivation ({
         )
       }
       ${if langAda then " --enable-libada" else ""}
-      --target=${targetPlatform.config}
       ${xwithArch}
       ${xwithCpu}
       ${xwithAbi}
@@ -469,7 +493,7 @@ stdenv.mkDerivation ({
 
     # On GNU/Hurd glibc refers to Mach & Hurd
     # headers.
-    ++ optionals (libcCross != null && libcCross ? "propagatedBuildInputs")
+    ++ optionals (libcCross != null && libcCross ? propagatedBuildInputs)
                  libcCross.propagatedBuildInputs);
 
   LIBRARY_PATH = makeLibraryPath ([]
@@ -546,4 +570,10 @@ stdenv.mkDerivation ({
 // optionalAttrs (!stripped || targetPlatform != hostPlatform) { dontStrip = true; }
 
 // optionalAttrs (enableMultilib) { dontMoveLib64 = true; }
+
+// optionalAttrs (langJava) {
+     postFixup = ''
+       target="$(echo "$out/libexec/gcc"/*/*/ecj*)"
+       patchelf --set-rpath "$(patchelf --print-rpath "$target"):$out/lib" "$target"
+     '';}
 )

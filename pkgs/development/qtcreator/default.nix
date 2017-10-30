@@ -6,8 +6,8 @@
 with stdenv.lib;
 
 let
-  baseVersion = "4.3";
-  revision = "0";
+  baseVersion = "4.4";
+  revision = "1";
 in
 
 stdenv.mkDerivation rec {
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "http://download.qt-project.org/official_releases/qtcreator/${baseVersion}/${version}/qt-creator-opensource-src-${version}.tar.xz";
-    sha256 = "1n3ihky72p6q69n6c8s5hacq8rxdqmmr6msg89w5amwd17sam7p9";
+    sha256 = "0kn1k2zvc93xin4kdp2fpiz21i5j0qymyx6jjzkqp7r3x8yxwr06";
   };
 
   buildInputs = [ qtbase qtscript qtquickcontrols qtdeclarative ];
@@ -32,7 +32,7 @@ stdenv.mkDerivation rec {
   installFlags = [ "INSTALL_ROOT=$(out)" ] ++ optional withDocumentation "install_docs";
 
   preBuild = optional withDocumentation ''
-    ln -s ${qtbase}/$qtDocPrefix $NIX_QT5_TMP/share
+    ln -s ${getLib qtbase}/$qtDocPrefix $NIX_QT5_TMP/share
   '';
 
   postInstall = ''
@@ -47,7 +47,7 @@ stdenv.mkDerivation rec {
       tailored to the needs of Qt developers. It includes features such as an
       advanced code editor, a visual debugger and a GUI designer.
     '';
-    homepage = "https://wiki.qt.io/Category:Tools::QtCreator";
+    homepage = https://wiki.qt.io/Category:Tools::QtCreator;
     license = "LGPL";
     maintainers = [ maintainers.akaWolf ];
     platforms = platforms.all;

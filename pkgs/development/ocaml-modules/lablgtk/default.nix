@@ -1,4 +1,4 @@
-{stdenv, fetchurl, ocaml, findlib, pkgconfig, gtk2, libgnomecanvas, libglade, gtksourceview, camlp4}:
+{ stdenv, fetchurl, ocaml, findlib, pkgconfig, gtk2, libgnomecanvas, libglade, gtksourceview }:
 
 let
   pname = "lablgtk";
@@ -15,7 +15,8 @@ stdenv.mkDerivation rec {
     sha256 = "0cyj6sfdvzx8hw7553lhgwc0krlgvlza0ph3dk9gsxy047dm3wib";
   };
 
-  buildInputs = [ocaml findlib pkgconfig gtk2 libgnomecanvas libglade gtksourceview camlp4];
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ ocaml findlib gtk2 libgnomecanvas libglade gtksourceview ];
 
   configureFlags = "--with-libdir=$(out)/lib/ocaml/${ocaml.version}/site-lib";
   buildFlags = "world";
@@ -24,6 +25,8 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/ocaml/${ocaml.version}/site-lib
     export OCAMLPATH=$out/lib/ocaml/${ocaml.version}/site-lib/:$OCAMLPATH
   '';
+
+  dontStrip = true;
 
   meta = with stdenv.lib; {
     platforms = ocaml.meta.platforms or [];

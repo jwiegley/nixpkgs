@@ -3,20 +3,21 @@
 , buildPythonPackage
 , pytest
 , isPy3k
+, psutil
 }:
 
 let
   pname = "multidict";
-  version = "2.1.6";
+  version = "3.3.0";
 in buildPythonPackage rec {
   name = "${pname}-${version}";
 
   src = fetchurl {
     url = "mirror://pypi/${builtins.substring 0 1 pname}/${pname}/${name}.tar.gz";
-    sha256 = "9ec33a1da4d2096949e29ddd66a352aae57fad6b5483087d54566a2f6345ae10";
+    sha256 = "e76909da2fad6966281d4e0e4ccfd3c3025699ebcc30806afa09fa1384c3532b";
   };
 
-  buildInputs = [ pytest ];
+  checkInputs = [ pytest psutil ];
 
   checkPhase = ''
     py.test

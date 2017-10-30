@@ -2,7 +2,7 @@
 , vala, cmake, wrapGAppsHook, pkgconfig, gettext
 , gobjectIntrospection, gnome3, glib, gdk_pixbuf, gtk3, glib_networking
 , xorg, libXdmcp, libxkbcommon
-, libnotify
+, libnotify, libsoup
 , libgcrypt
 , epoxy
 , at_spi2_core
@@ -13,13 +13,13 @@
  }:
 
 stdenv.mkDerivation rec {
-  name = "dino-unstable-2017-06-13";
+  name = "dino-unstable-2017-09-26";
 
   src = fetchFromGitHub {
     owner = "dino";
     repo = "dino";
-    rev = "7bbbb738fdb233f4ad91ffdd7d9247b28849d715";
-    sha256 = "09w26c6b5rkrrz7wvm629cncpdmd5n0d0805h8hw69bbzirpjjh2";
+    rev = "9d8e1e88ec61403659a8cc410d5c4414e3bd3a96";
+    sha256 = "1p8sda99n8zsb49qd6wzwb8hddlgrzr2hp7il5v7yqxjjm2vgqfl";
     fetchSubmodules = true;
   };
 
@@ -42,6 +42,7 @@ stdenv.mkDerivation rec {
     libnotify
     gpgme
     libgcrypt
+    libsoup
     pcre
     xorg.libxcb
     xorg.libpthreadstubs

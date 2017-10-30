@@ -11,9 +11,9 @@ let
   elasticArch = archOverrides."${arch}" or arch;
   plat = elemAt info 1;
   shas = {
-    "x86_64-linux"  = "1g5i81wq77fk6pyaq3rpfqs2m23xsbz2cndh3rg4b59ibg5qv0sq";
-    "i686-linux"    = "0pxnpg3g8l6hy8qz404kbkk5rd9y65jrzd0y9j8wr5fd4pqs7vgv";
-    "x86_64-darwin" = "0pffl2hbck3s271jlzdibp5698djm5fdvj15w2knm815rs2kfbl5";
+    "x86_64-linux"  = "02dhhp16pmkrpi2dfrca9qzz1q7jrxhaw6l3cfflgxx77hz0hlnw";
+    "i686-linux"    = "1h1zr342dq7nngvzpf9pn9mvwsi7aksa3qjyqpcc4yvbmmyrlk0m";
+    "x86_64-darwin" = "0van8cnir6s520crc20bf2clbkf822c3ylpk7iiq7da8hwvsypp9";
   };
 in stdenv.mkDerivation rec {
   name = "kibana-${version}";

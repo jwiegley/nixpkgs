@@ -32,8 +32,8 @@ let
   build = {flags, target}: stdenv.mkDerivation rec {
     name = "pixie-${version}";
     version = "0-r${commit-count}-${variant}";
-    nativeBuildInputs = libs;
-    buildInputs = [ pkgconfig makeWrapper ];
+    nativeBuildInputs = [ makeWrapper pkgconfig ];
+    buildInputs = libs;
     PYTHON = if buildWithPypy
       then "${pypy}/pypy-c/.pypy-c-wrapped"
       else "${python2.interpreter}";
@@ -77,7 +77,7 @@ let
     '';
     meta = {
       description = "A clojure-like lisp, built with the pypy vm toolkit";
-      homepage = "https://github.com/pixie-lang/pixie";
+      homepage = https://github.com/pixie-lang/pixie;
       license = stdenv.lib.licenses.lgpl3;
       platforms = ["x86_64-linux" "i686-linux"];
     };

@@ -32,7 +32,8 @@ stdenv.mkDerivation rec {
 
   dontUseCmakeConfigure = true;
 
-  buildInputs = [ avahi dbus cmake gettext git gnutar gzip bzip2 ffmpeg libiconv openssl pkgconfig python
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ avahi dbus cmake gettext git gnutar gzip bzip2 ffmpeg libiconv openssl python
     which zlib ];
 
   preConfigure = ''
@@ -46,7 +47,7 @@ stdenv.mkDerivation rec {
 	Tvheadend is a TV streaming server and recorder for Linux, FreeBSD and Android 
         supporting DVB-S, DVB-S2, DVB-C, DVB-T, ATSC, IPTV, SAT>IP and HDHomeRun as input sources.
 	Tvheadend offers the HTTP (VLC, MPlayer), HTSP (Kodi, Movian) and SAT>IP streaming.'';
-    homepage = "https://tvheadend.org";
+    homepage = https://tvheadend.org;
     license = licenses.gpl3;
     platforms = platforms.unix;
     maintainers = [ maintainers.simonvandel ];

@@ -41,17 +41,26 @@ let
 
       propagate = out:
         let setupHook = { writeScript }:
-              writeScript "setup-hook.sh" ''
-                # Propagate $${out} output
-                propagatedUserEnvPkgs+=" @${out}@"
+              writeScript "setup-hook" ''
+                if [ "$hookName" != postHook ]; then
+                    postHooks+=("source @dev@/nix-support/setup-hook")
+                else
+                    # Propagate $${out} output
+                    propagatedUserEnvPkgs="$propagatedUserEnvPkgs @${out}@"
 
-                # Propagate $dev so that this setup hook is propagated
-                # But only if there is a separate $dev output
-                if [ "$outputDev" != out ]; then
-                    if [ -n "$crossConfig" ]; then
-                      propagatedBuildInputs+=" @dev@"
-                    else
-                      propagatedNativeBuildInputs+=" @dev@"
+                    if [ -z "$outputDev" ]; then
+                        echo "error: \$outputDev is unset!" >&2
+                        exit 1
+                    fi
+
+                    # Propagate $dev so that this setup hook is propagated
+                    # But only if there is a separate $dev output
+                    if [ "$outputDev" != out ]; then
+                        if [ -n "$crossConfig" ]; then
+                          propagatedBuildInputs="$propagatedBuildInputs @dev@"
+                        else
+                          propagatedNativeBuildInputs="$propagatedNativeBuildInputs @dev@"
+                        fi
                     fi
                 fi
               '';
@@ -69,7 +78,7 @@ let
             inherit (args) name;
             inherit (srcs."${name}") src version;
 
-            outputs = args.outputs or [ "out" "dev" "bin" ];
+            outputs = args.outputs or [ "bin" "dev" "out" ];
             hasBin = lib.elem "bin" outputs;
             hasDev = lib.elem "dev" outputs;
 
@@ -77,7 +86,7 @@ let
             setupHook = args.setupHook or defaultSetupHook;
 
             meta = {
-              homepage = "http://www.kde.org";
+              homepage = http://www.kde.org;
               license = with lib.licenses; [
                 lgpl21Plus lgpl3Plus bsd2 mit gpl2Plus gpl3Plus fdl12
               ];
@@ -123,6 +132,7 @@ let
       sonnet = callPackage ./sonnet.nix {};
       syntax-highlighting = callPackage ./syntax-highlighting.nix {};
       threadweaver = callPackage ./threadweaver.nix {};
+      kirigami2 = callPackage ./kirigami2.nix {};
 
     # TIER 2
       kactivities = callPackage ./kactivities.nix {};

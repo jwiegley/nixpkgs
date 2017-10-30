@@ -1,17 +1,28 @@
-{ stdenv, fetchurl, fetchgit, gambit, openssl, zlib, coreutils, rsync, bash }:
+{ stdenv, fetchurl, fetchgit, gambit,
+  coreutils, rsync, bash,
+  openssl, zlib, sqlite, libxml2, libyaml, libmysql, lmdb, leveldb }:
+
+# TODO: distinct packages for gerbil-release and gerbil-devel
 
 stdenv.mkDerivation rec {
   name    = "gerbil-${version}";
 
-  version = "0.11";
-  src = fetchurl {
-    url    = "https://github.com/vyzo/gerbil/archive/v${version}.tar.gz";
-    sha256 = "0mqg6cqdcf5qr7vk79x5zkls7z2wm8i3lhwn0b7i0g1m6yyyyff7";
+  version = "0.12-DEV-777-gd855915";
+  src = fetchgit {
+    url = "https://github.com/vyzo/gerbil.git";
+    rev = "9db6187dc996eec4087f83b86339e7b17bb69bad";
+    sha256 = "1hqmsy77d62dvil3az4vdr0rmwvxhinjl1dbcxzamz2c2kcjv1jg";
   };
 
-  buildInputs = [ gambit openssl zlib coreutils rsync bash ];
+  buildInputs = [
+    gambit
+    coreutils rsync bash
+    openssl zlib sqlite libxml2 libyaml libmysql lmdb leveldb
+  ];
 
   postPatch = ''
+    echo '(define (gerbil-version-string) "v${version}")' > src/gerbil/runtime/gx-version.scm
+
     patchShebangs .
 
     find . -type f -executable -print0 | while IFS= read -r -d ''$'\0' f; do
@@ -21,7 +32,13 @@ stdenv.mkDerivation rec {
 
   buildPhase = ''
     runHook preBuild
+
+    # Enable all optional libraries
+    substituteInPlace "src/std/build-features.ss" --replace '#f' '#t'
+
+    # Build, replacing make by build.sh
     ( cd src && sh build.sh )
+
     runHook postBuild
   '';
 

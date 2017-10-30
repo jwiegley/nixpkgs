@@ -1,6 +1,6 @@
-{ pkgs }:
+{ pkgs, haskellLib }:
 
-with import ./lib.nix { inherit pkgs; };
+with haskellLib;
 
 self: super: {
 
@@ -45,6 +45,9 @@ self: super: {
 
   # Avoid inconsistent 'binary' versions from 'text' and 'Cabal'.
   cabal-install = super.cabal-install.overrideScope (self: super: { binary = dontCheck self.binary_0_8_5_1; });
+
+  # Requires ghc 8.2
+  ghc-proofs = dontDistribute super.ghc-proofs;
 
   # https://github.com/tibbe/hashable/issues/85
   hashable = dontCheck super.hashable;
@@ -97,8 +100,15 @@ self: super: {
   # Needs tagged on pre 7.6.x compilers.
   reflection = addBuildDepend super.reflection self.tagged;
 
-  # These builds Need additional dependencies on pre 7.6.x compilers.
+  # These builds need additional dependencies on old compilers.
   semigroups = addBuildDepends super.semigroups (with self; [nats bytestring-builder tagged unordered-containers transformers]);
   QuickCheck = addBuildDepends super.QuickCheck (with self; [nats semigroups]);
+  optparse-applicative = addBuildDepend super.optparse-applicative self.semigroups;
+  text = addBuildDepend super.text self.bytestring-builder;
+  vector = addBuildDepend super.vector self.semigroups;
+
+  # Newer versions don't compile any longer.
+  network_2_6_3_1 = dontCheck super.network_2_6_3_1;
+  network = self.network_2_6_3_1;
 
 }

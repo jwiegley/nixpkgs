@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchurl, ruby }:
+{ lib, stdenv, fetchurl, findXMLCatalogs }:
 
 let
 
@@ -10,7 +10,7 @@ let
       inherit sha256;
     };
 
-    buildInputs = [ ruby ];
+    propagatedBuildInputs = [ findXMLCatalogs ];
 
     dontBuild = true;
 
@@ -23,9 +23,6 @@ let
       # Backwards compatibility. Will remove eventually.
       mkdir -p $out/xml/xsl
       ln -s $dst $out/xml/xsl/docbook
-
-      ln -sv $dst/epub/bin $out
-      chmod +x $out/bin/dbtoepub
     '';
 
     meta = {
