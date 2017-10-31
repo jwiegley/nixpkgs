@@ -21,20 +21,22 @@
 assert cudnnSupport -> cudaSupport;
 
 let
-  wrapped = command: buildInputs:
+  wrapped = command: buildTop: buildInputs:
     runCommandCC "${command}-wrapped" { inherit buildInputs; } ''
       type -P '${command}' || { echo '${command}: not found'; exit 1; }
       cat > "$out" <<EOF
       #!$(type -P bash)
       $(declare -xp | sed -e '/^[^=]\+="\('"''${NIX_STORE//\//\\/}"'\|[^\/]\)/!d')
+      declare -x NIX_BUILD_TOP="${buildTop}"
       $(type -P '${command}') "\$@"
       EOF
       chmod +x "$out"
     '';
 
   # Theano spews warnings and disabled flags if the compiler isn't named g++
-  cxx_compiler = wrapped "g++" (   stdenv.lib.optional cudaSupport libgpuarray
-                                ++ stdenv.lib.optional cudnnSupport cudnn );
+  cxx_compiler = wrapped "g++" "\\$HOME/.theano"
+    (    stdenv.lib.optional cudaSupport libgpuarray
+      ++ stdenv.lib.optional cudnnSupport cudnn );
 
   libgpuarray_ = libgpuarray.override { inherit cudaSupport; };
 
