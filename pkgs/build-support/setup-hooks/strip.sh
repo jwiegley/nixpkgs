@@ -4,14 +4,14 @@ fixupOutputHooks+=(_doStrip)
 
 _doStrip() {
     if [ -z "$dontStrip" ]; then
-        stripDebugList=${stripDebugList:-lib lib32 lib64 libexec bin sbin}
+        stripDebugList=${stripDebugList:-lib lib32 lib64}
         if [ -n "$stripDebugList" ]; then
-            stripDirs "$stripDebugList" "${stripDebugFlags:--S}"
+            stripDirs "$stripDebugList" "${stripDebugFlags:--strip-debug --strip-unneeded}"
         fi
 
-        stripAllList=${stripAllList:-}
+        stripAllList=${stripAllList:-libexec bin sbin}
         if [ -n "$stripAllList" ]; then
-            stripDirs "$stripAllList" "${stripAllFlags:--s}"
+            stripDirs "$stripAllList" "${stripAllFlags:--strip-all}"
         fi
     fi
 }
