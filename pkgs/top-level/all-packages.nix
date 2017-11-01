@@ -11029,6 +11029,8 @@ with pkgs;
 
   x265 = callPackage ../development/libraries/x265 { };
 
+  xandikos = callPackage ../servers/xandikos { };
+
   inherit (callPackages ../development/libraries/xapian { })
     xapian_1_2_22 xapian_1_4_4;
   xapian = xapian_1_4_4;
