@@ -37,7 +37,7 @@ has the following highlights: </para>
 
 <itemizedlist>
   <listitem>
-    <para></para>
+    <para><literal>services/networking/tuntox.nix</literal></para>
   </listitem>
 </itemizedlist>
 
