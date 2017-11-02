@@ -15,11 +15,25 @@ in
     sha256 = "0zgr6qdbc29qw6sikhrh6diwwz7150rqc8a49f2qf37j2rvyyr2f";
   };
 
+  cudnn5_cudatoolkit75 = generic rec {
+    version = "5.1";
+    cudatoolkit = cudatoolkit75;
+    srcName = "cudnn-${cudatoolkit.majorVersion}-linux-x64-v${version}.tgz";
+    sha256 = "0ib3w6grmb6f3gsbn21vrpz78ixj37s86c1r0ghbcm4bfbvp3jk9";
+  };
+
   cudnn_cudatoolkit75 = generic rec {
     version = "6.0";
     cudatoolkit = cudatoolkit75;
     srcName = "cudnn-${cudatoolkit.majorVersion}-linux-x64-v${version}.tgz";
     sha256 = "0b68hv8pqcvh7z8xlgm4cxr9rfbjs0yvg1xj2n5ap4az1h3lp3an";
+  };
+
+  cudnn5_cudatoolkit8 = generic rec {
+    version = "5.1";
+    cudatoolkit = cudatoolkit8;
+    srcName = "cudnn-${cudatoolkit.majorVersion}-linux-x64-v${version}.tgz";
+    sha256 = "1kj50smlkm347wfbfqvy09ylvad1zapqjc9yqvfykmiddyrij1y1";
   };
 
   cudnn6_cudatoolkit8 = generic rec {

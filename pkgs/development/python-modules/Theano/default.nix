@@ -39,7 +39,7 @@ let
     (    stdenv.lib.optional cudaSupport libgpuarray
       ++ stdenv.lib.optional cudnnSupport cudnn );
 
-  libgpuarray_ = libgpuarray.override { inherit cudaSupport; };
+  libgpuarray_ = libgpuarray.override { inherit cudaSupport cudatoolkit; };
 
 in buildPythonPackage rec {
   name = "${pname}-${version}";
