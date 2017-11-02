@@ -13,6 +13,7 @@
 , pydot_ng
 , scipy
 , six
+, future
 , libgpuarray
 , cudaSupport ? false, cudatoolkit, gcc49
 , cudnnSupport ? false, cudnn
@@ -84,7 +85,8 @@ in buildPythonPackage rec {
 
   # keep Nose around since running the tests by hand is possible from Python or bash
   checkInputs = [ nose ];
-  propagatedBuildInputs = [ numpy numpy.blas scipy six libgpuarray_ ];
+  propagatedBuildInputs = [ numpy numpy.blas scipy six libgpuarray_ ]
+    ++ stdenv.lib.optional (pythonOlder "3.0") future;
 
   passthru = { inherit cudaSupport; };
 
