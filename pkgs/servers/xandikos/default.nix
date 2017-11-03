@@ -1,11 +1,5 @@
 { stdenv, fetchFromGitHub, python3Packages }:
 
-let
-  dulwich = python3Packages.dulwich.override {
-    fastimport = null;
-    withTests = false;
-  };
-in
 python3Packages.buildPythonApplication rec {
   version = "0.0.6";
   name = "xandikos-${version}";
