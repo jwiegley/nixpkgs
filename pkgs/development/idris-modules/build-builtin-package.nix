@@ -6,19 +6,20 @@ let
   inherit (builtins.parseDrvName idris.name) version;
 in
 build-idris-package {
-  name = "${name}-${version}";
 
-  propagatedBuildInputs = deps;
+
+  pkgName = name;
+  version = version;
 
   inherit (idris) src;
+
+  idrisDeps = deps;
 
   postUnpack = ''
     sourceRoot=$sourceRoot/libs/${name}
   '';
 
-  postPatch = ''
-    sed -i ${name}.ipkg -e "/^opts/ s|-i \\.\\./|-i $IDRIS_LIBRARY_PATH/|g"
-  '';
+
 
   meta = idris.meta // {
     description = "${name} builtin Idris library";
