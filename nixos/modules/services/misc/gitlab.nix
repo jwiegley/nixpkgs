@@ -17,16 +17,6 @@ let
   pathUrlQuote = url: replaceStrings ["/"] ["%2F"] url;
   pgSuperUser = config.services.postgresql.superUser;
 
-  databaseYml = ''
-    production:
-      adapter: postgresql
-      database: ${cfg.databaseName}
-      host: ${cfg.databaseHost}
-      password: $DBPASSWORD
-      username: ${cfg.databaseUsername}
-      encoding: utf8
-  '';
-
   gitalyToml = pkgs.writeText "gitaly.toml" ''
     socket_path = "${lib.escape ["\""] gitalySocket}"
     bin_dir = "${cfg.packages.gitaly}/bin"
@@ -67,14 +57,6 @@ let
   redisYml = ''
     production:
       url: redis://localhost:6379/
-  '';
-
-  secretsYml = ''
-    production:
-      secret_key_base: $SECRETKEY
-      otp_key_base: $OTPKEY
-      db_key_base: $DBKEY
-      jws_private_key: $JWSKEY
   '';
 
   gitlabConfig = {
@@ -601,20 +583,24 @@ in {
         chown -R ${cfg.user}:${cfg.group} ${cfg.statePath}/
         chmod -R ug+rwX,o-rwx+X ${cfg.statePath}/
 
-        # export secrets as variables for envsubst
-        export DBPASSWORD=$(cat "${cfg.databasePassword}")
-        export SECRETKEY=$(cat "${cfg.secrets.secret}")
-        export OTPKEY=$(cat "${cfg.secrets.otp}")
-        export DBKEY=$(cat "${cfg.secrets.db}")
-        export JWSKEY=$(${pkgs.jq}/bin/jq -Rs . "${cfg.secrets.jws}")
+        cat > ${cfg.statePath}/config/secrets.yml << EOF
+        production:
+          secret_key_base: $(cat "${cfg.secrets.secret}")
+          otp_key_base: $(cat "${cfg.secrets.otp}")
+          db_key_base: $(cat "${cfg.secrets.db}")
+          jws_private_key: $(${pkgs.jq}/bin/jq -Rs . "${cfg.secrets.jws}")
+        EOF
 
-        ${pkgs.gettext}/bin/envsubst \
-          < ${pkgs.writeText "database.yml" databaseYml} \
-          > ${cfg.statePath}/config/database.yml
-
-        ${pkgs.gettext}/bin/envsubst \
-          < ${pkgs.writeText "secrets.yml" secretsYml} \
-          > ${cfg.statePath}/config/secrets.yml
+        DBPASSWORD=$(cat "${cfg.databasePassword}")
+        cat > ${cfg.statePath}/config/database.yml << EOF
+        production:
+          adapter: postgresql
+          database: ${cfg.databaseName}
+          host: ${cfg.databaseHost}
+          password: $DBPASSWORD
+          username: ${cfg.databaseUsername}
+          encoding: utf8
+        EOF
 
         # Install the shell required to push repositories
         ln -fs ${pkgs.writeText "config.yml" gitlabShellYml} "$GITLAB_SHELL_CONFIG_PATH"
