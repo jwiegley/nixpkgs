@@ -22,7 +22,7 @@ let
       adapter: postgresql
       database: ${cfg.databaseName}
       host: ${cfg.databaseHost}
-      password: #dbpasswordplaceholder#
+      password: $DBPASSWORD
       username: ${cfg.databaseUsername}
       encoding: utf8
   '';
@@ -71,10 +71,10 @@ let
 
   secretsYml = ''
     production:
-      secret_key_base: #secretkeyplaceholder#
-      otp_key_base: #otpkeyplaceholder#
-      db_key_base: #dbkeyplaceholder#
-      jws_private_key: #jwskeyplaceholder#
+      secret_key_base: $SECRETKEY
+      otp_key_base: $OTPKEY
+      db_key_base: $DBKEY
+      jws_private_key: $JWSKEY
   '';
 
   gitlabConfig = {
@@ -596,24 +596,25 @@ in {
 
         # JSON is a subset of YAML
         ln -fs ${pkgs.writeText "gitlab.yml" (builtins.toJSON gitlabConfig)} ${cfg.statePath}/config/gitlab.yml
-        cp -f  ${pkgs.writeText "database.yml" databaseYml} ${cfg.statePath}/config/database.yml
-        cp -f  ${pkgs.writeText "secrets.yml" secretsYml} ${cfg.statePath}/config/secrets.yml
         ln -fs ${pkgs.writeText "unicorn.rb" unicornConfig} ${cfg.statePath}/config/unicorn.rb
 
         chown -R ${cfg.user}:${cfg.group} ${cfg.statePath}/
         chmod -R ug+rwX,o-rwx+X ${cfg.statePath}/
 
-        DBPASSWORD=$(cat "${cfg.databasePassword}")
-        SECRETKEY=$(cat "${cfg.secrets.secret}")
-        OTPKEY=$(cat "${cfg.secrets.otp}")
-        DBKEY=$(cat "${cfg.secrets.db}")
-        JWSKEY=$(${pkgs.jq}/bin/jq -Rs . "${cfg.secrets.jws}" | sed -e 's,\\n,\\\\n,g')
+        # export secrets as variables for envsubst
+        export DBPASSWORD=$(cat "${cfg.databasePassword}")
+        export SECRETKEY=$(cat "${cfg.secrets.secret}")
+        export OTPKEY=$(cat "${cfg.secrets.otp}")
+        export DBKEY=$(cat "${cfg.secrets.db}")
+        export JWSKEY=$(${pkgs.jq}/bin/jq -Rs . "${cfg.secrets.jws}")
 
-        sed -e "s,#dbpasswordplaceholder#,$DBPASSWORD,g" -i ${cfg.statePath}/config/database.yml
-        sed -e "s,#secretkeyplaceholder#,$SECRETKEY,g"   -i ${cfg.statePath}/config/secrets.yml
-        sed -e "s,#otpkeyplaceholder#,$OTPKEY,g"         -i ${cfg.statePath}/config/secrets.yml
-        sed -e "s,#dbkeyplaceholder#,$DBKEY,g"           -i ${cfg.statePath}/config/secrets.yml
-        sed -e "s,#jwskeyplaceholder#,$JWSKEY,g"         -i ${cfg.statePath}/config/secrets.yml
+        ${pkgs.gettext}/bin/envsubst \
+          < ${pkgs.writeText "database.yml" databaseYml} \
+          > ${cfg.statePath}/config/database.yml
+
+        ${pkgs.gettext}/bin/envsubst \
+          < ${pkgs.writeText "secrets.yml" secretsYml} \
+          > ${cfg.statePath}/config/secrets.yml
 
         # Install the shell required to push repositories
         ln -fs ${pkgs.writeText "config.yml" gitlabShellYml} "$GITLAB_SHELL_CONFIG_PATH"
