@@ -603,11 +603,11 @@ in {
         chown -R ${cfg.user}:${cfg.group} ${cfg.statePath}/
         chmod -R ug+rwX,o-rwx+X ${cfg.statePath}/
 
-        DBPASSWORD=$(cat ${cfg.databasePassword})
-        SECRETKEY=$(cat ${cfg.secrets.secret})
-        OTPKEY=$(cat ${cfg.secrets.otp})
-        DBKEY=$(cat ${cfg.secrets.db})
-        JWSKEY=$(${pkgs.jq}/bin/jq -Rs . ${cfg.secrets.jws} | sed -e 's,\\n,\\\\n,g')
+        DBPASSWORD=$(cat "${cfg.databasePassword}")
+        SECRETKEY=$(cat "${cfg.secrets.secret}")
+        OTPKEY=$(cat "${cfg.secrets.otp}")
+        DBKEY=$(cat "${cfg.secrets.db}")
+        JWSKEY=$(${pkgs.jq}/bin/jq -Rs . "${cfg.secrets.jws}" | sed -e 's,\\n,\\\\n,g')
 
         sed -e "s,#dbpasswordplaceholder#,$DBPASSWORD,g" -i ${cfg.statePath}/config/database.yml
         sed -e "s,#secretkeyplaceholder#,$SECRETKEY,g"   -i ${cfg.statePath}/config/secrets.yml
