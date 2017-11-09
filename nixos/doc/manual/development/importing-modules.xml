@@ -1,0 +1,82 @@
+<section xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         version="5.0"
+         xml:id="sec-importing-modules">
+
+<title>Importing Modules</title>
+
+<para>Sometimes NixOS modules exist outside of Nixpkgs, and you want
+to get them into your NixOS configuration.
+</para>
+
+<para>
+The simplest way to do this is to import the module:
+</para>
+
+<programlisting>
+{ config, lib, pkgs, ... }:
+
+{
+  imports =
+    [ # Use a locally-available module definition in
+      # ./example-module/default.nix
+        ./example-module
+    ];
+
+  services.exampleModule.enable = true;
+}
+</programlisting>
+
+<para>
+If the list of modules you need to import grows large, you can move
+them to a separate file:
+</para>
+
+<programlisting>
+# ./module-list/default.nix
+[
+  ./example-module1
+  ./example-module2
+]
+</programlisting>
+
+<programlisting>
+{ config, lib, pkgs, ... }:
+
+{
+  imports = (import ./module-list);
+
+  services.exampleModule1.enable = true;
+
+  # Note exampleModule2 has not been enabled, and is therefore not
+  # used in this configuration.
+
+}
+</programlisting>
+
+<para>
+The environment variable <literal>NIXOS_EXTRA_MODULE_PATH</literal> is
+an absolute path to a NixOS module that is included alongside the
+Nixpkgs NixOS modules. Like any NixOS module, this module can import
+additional modules. Using the same module list as the previous
+example, you could do:
+</para>
+
+<programlisting>
+# ./extra-module/default.nix
+{ imports = import ./module-list.nix; }
+</programlisting>
+
+<programlisting>
+# NIXOS_EXTRA_MODULE_PATH=/path/to/extra-module
+{ config, lib, pkgs, ... }:
+
+{
+  # No `imports` needed
+
+  services.exampleModule1.enable = true;
+}
+</programlisting>
+
+</section>
