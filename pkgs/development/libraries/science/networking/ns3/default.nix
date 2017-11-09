@@ -54,8 +54,8 @@ stdenv.mkDerivation rec {
     ++ stdenv.lib.optional withManual [ python.pkgs.sphinx dia tetex ghostscript
    texlive.combined.scheme-medium ];
 
-  propagatedBuildInputs = with python.pythonPackages; [ gcc6 python ]
-    ++ optional withGsl gsl
+  propagatedBuildInputs = [ gcc6 python ]
+    ++ stdenv.lib.optional withGsl gsl
     ;
 
   postPatch = ''
@@ -67,7 +67,7 @@ stdenv.mkDerivation rec {
   configureFlags = with stdenv.lib; [
       "--enable-modules=${stdenv.lib.concatStringsSep "," modules}"
       ]
-      ++ optional build_profile "--build-profile=${build_profile}"
+      ++ optional (build_profile != null) "--build-profile=${build_profile}"
       ++ optional withExamples " --enable-examples "
       ++ optional doCheck " --enable-tests "
       ;
