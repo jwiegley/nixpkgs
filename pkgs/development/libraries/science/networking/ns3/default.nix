@@ -13,18 +13,12 @@
 , dia, tetex ? null, ghostscript ? null, texlive ? null
 
 , enableDoxygen ? false
-, withManual ? false
-
-# to improve wifi precision
-, withGsl ? false, gsl ? null
 
 # e.g. "optimized" or "debug". If not set, use default one
 , build_profile ? null
 
 # --enable-examples
 , withExamples ? false
-
-, generateBindings ? false
 
 # All modules can be enabled by choosing 'all_modules'.
 # included here the DCE mandatory ones
@@ -33,6 +27,14 @@
 , lib
 }:
 
+let
+  # there are various problems with manual generation see PR #31346
+  # once those are solved, promote it to an option
+  withManual = false;
+
+  # required packages are not in mainline yet
+  generateBindings = false;
+in
 stdenv.mkDerivation rec {
 
   name = "ns-3.${version}";
@@ -54,9 +56,7 @@ stdenv.mkDerivation rec {
     ++ stdenv.lib.optional withManual [ python.pkgs.sphinx dia tetex ghostscript
    texlive.combined.scheme-medium ];
 
-  propagatedBuildInputs = [ gcc6 python ]
-    ++ stdenv.lib.optional withGsl gsl
-    ;
+  propagatedBuildInputs = [ gcc6 python ];
 
   postPatch = ''
     patchShebangs doc/ns3_html_theme/get_version.sh
