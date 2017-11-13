@@ -3,6 +3,7 @@
   apis ? ["*"]
 , # Whether to enable AWS' custom memory management.
   customMemoryManagement ? true
+, darwin
 }:
 
 let
@@ -28,7 +29,9 @@ in stdenv.mkDerivation rec {
   outputs = [ "out" "dev" ];
   separateDebugInfo = stdenv.isLinux;
 
-  buildInputs = [ cmake curl ];
+  buildInputs = [ cmake curl ]
+    ++ lib.optionals stdenv.isDarwin
+         (with darwin.apple_sdk.frameworks; [ CoreAudio AudioToolbox ]);
 
   cmakeFlags =
     lib.optional (!customMemoryManagement) "-DCUSTOM_MEMORY_MANAGEMENT=0"
