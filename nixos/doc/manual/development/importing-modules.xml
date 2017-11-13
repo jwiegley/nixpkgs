@@ -6,12 +6,9 @@
 
 <title>Importing Modules</title>
 
-<para>Sometimes NixOS modules exist outside of Nixpkgs, and you want
-to get them into your NixOS configuration.
-</para>
-
 <para>
-The simplest way to do this is to import the module:
+  Sometimes NixOS modules need to be used in configuration but exist
+  outside of Nixpkgs. These modules can be imported:
 </para>
 
 <programlisting>
@@ -29,8 +26,10 @@ The simplest way to do this is to import the module:
 </programlisting>
 
 <para>
-If the list of modules you need to import grows large, you can move
-them to a separate file:
+  The environment variable <literal>NIXOS_EXTRA_MODULE_PATH</literal> is
+  an absolute path to a NixOS module that is included alongside the
+  Nixpkgs NixOS modules. Like any NixOS module, this module can import
+  additional modules:
 </para>
 
 <programlisting>
@@ -42,34 +41,12 @@ them to a separate file:
 </programlisting>
 
 <programlisting>
-{ config, lib, pkgs, ... }:
-
-{
-  imports = (import ./module-list);
-
-  services.exampleModule1.enable = true;
-
-  # Note exampleModule2 has not been enabled, and is therefore not
-  # used in this configuration.
-
-}
-</programlisting>
-
-<para>
-The environment variable <literal>NIXOS_EXTRA_MODULE_PATH</literal> is
-an absolute path to a NixOS module that is included alongside the
-Nixpkgs NixOS modules. Like any NixOS module, this module can import
-additional modules. Using the same module list as the previous
-example, you could do:
-</para>
-
-<programlisting>
 # ./extra-module/default.nix
 { imports = import ./module-list.nix; }
 </programlisting>
 
 <programlisting>
-# NIXOS_EXTRA_MODULE_PATH=/path/to/extra-module
+# NIXOS_EXTRA_MODULE_PATH=/absolute/path/to/extra-module
 { config, lib, pkgs, ... }:
 
 {
