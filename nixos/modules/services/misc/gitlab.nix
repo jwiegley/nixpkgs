@@ -585,13 +585,13 @@ in {
 
         cat > ${cfg.statePath}/config/secrets.yml << EOF
         production:
-          secret_key_base: $(cat "${cfg.secrets.secret}")
-          otp_key_base: $(cat "${cfg.secrets.otp}")
-          db_key_base: $(cat "${cfg.secrets.db}")
-          jws_private_key: $(${pkgs.jq}/bin/jq -Rs . "${cfg.secrets.jws}")
+          secret_key_base: $(cat "${toString cfg.secrets.secret}")
+          otp_key_base: $(cat "${toString cfg.secrets.otp}")
+          db_key_base: $(cat "${toString cfg.secrets.db}")
+          jws_private_key: $(${pkgs.jq}/bin/jq -Rs . "${toString cfg.secrets.jws}")
         EOF
 
-        DBPASSWORD=$(cat "${cfg.databasePassword}")
+        DBPASSWORD=$(cat "${toString cfg.databasePassword}")
         cat > ${cfg.statePath}/config/database.yml << EOF
         production:
           adapter: postgresql
