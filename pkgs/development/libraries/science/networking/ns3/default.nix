@@ -22,7 +22,7 @@
 
 # All modules can be enabled by choosing 'all_modules'.
 # included here the DCE mandatory ones
-, modules ? [ "core" "network" "internet" "point-to-point"]
+, modules ? [ "core" "network" "internet" "point-to-point" "fd-net-device" "netanim"]
 , gcc6
 , lib
 }:
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
   name = "ns-3.${version}";
   version = "27.0";
 
-  outputs = [ "out" "doc" ];
+  outputs = [ "out" ];
 
   # the all in one https://www.nsnam.org/release/ns-allinone-3.27.tar.bz2;
   # fetches everything (netanim etc), this package focuses ns3-core
