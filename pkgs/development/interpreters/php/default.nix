@@ -4,7 +4,7 @@
 , mysql, libxml2, readline, zlib, curl, postgresql, gettext
 , openssl, pcre, pkgconfig, sqlite, config, libjpeg, libpng, freetype
 , libxslt, libmcrypt, bzip2, icu, openldap, cyrus_sasl, libmhash, freetds
-, uwimap, pam, gmp, apacheHttpd, libiconv, systemd }:
+, uwimap, pam, gmp, apacheHttpd, libiconv, systemd, libtidy }:
 
 let
 
@@ -226,6 +226,11 @@ let
         calendar = {
           configureFlags = ["--enable-calendar"];
         };
+
+        tidy = {
+          configureFlags = [ "--with-tidy=${libtidy}" ];
+          buildInputs = [ libtidy ];
+        };
       };
 
       cfg = {
@@ -265,6 +270,7 @@ let
         mssqlSupport = (!php7) && (config.php.mssql or (!stdenv.isDarwin));
         ztsSupport = config.php.zts or false;
         calendarSupport = config.php.calendar or true;
+        tidySupport = php7 && config.php.tidy or true;
       };
 
       hardeningDisable = [ "bindnow" ];
