@@ -34,6 +34,7 @@ stdenv.mkDerivation rec {
       --with-syslog=journald
       --without-selinux
       --without-semanage
+      --with-xml-catalog-path=$(echo "$XML_CATALOG_FILES" | sed "s/ *\([^ ]*\).*/\1/")
       --with-ldb-lib-dir=$out/modules/ldb
       --with-nscd=${glibc.bin}/sbin/nscd
     )
@@ -49,6 +50,10 @@ stdenv.mkDerivation rec {
                   cifs_utils glib keyutils dbus fakeroot libxslt libxml2
                   libuuid ldap systemd nspr check cmocka uid_wrapper
                   nss_wrapper ncurses Po4a http-parser jansson ];
+
+  makeFlags = [
+    "SGML_CATALOG_FILES="
+  ];
 
   installFlags = [
      "sysconfdir=$(out)/etc"
