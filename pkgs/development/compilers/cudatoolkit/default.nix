@@ -5,6 +5,15 @@
 
 let
 
+  patchedFloatn = stdenv.mkDerivation {
+    name = "cuda-floatn.h";
+
+    buildCommand = ''
+      mkdir -p $out/include/bits
+      sed 's,define __HAVE_FLOAT128 1,define __HAVE_FLOAT128 0,g' ${glibc.dev}/include/bits/floatn.h > $out/include/bits/floatn.h
+    '';
+  };
+
   common =
     args@{ gcc, version, sha256
     , url ? ""
@@ -91,9 +100,6 @@ let
             mv "$out"/cuda-samples "$out"/samples
         fi
 
-        # Change the #error on GCC > 4.9 to a #warning.
-        sed -i $out/include/host_config.h -e 's/#error\(.*unsupported GNU version\)/#warning\1/'
-
         # Ensure that cmake can find CUDA.
         mkdir -p $out/nix-support
         echo "cmakeFlags+=' -DCUDA_TOOLKIT_ROOT_DIR=$out'" >> $out/nix-support/setup-hook
@@ -106,12 +112,11 @@ let
         # Remove OpenCL libraries as they are provided by ocl-icd and driver.
         rm -f $out/lib64/libOpenCL*
 
-        # Set compiler for NVCC.
+        # Set compiler for NVCC and hacks to fix building against recent Glibc/GCC.
         wrapProgram $out/bin/nvcc \
-          --prefix PATH : ${gcc}/bin
-      '' + lib.optionalString (lib.versionOlder version "8.0") ''
-        # Hack to fix building against recent Glibc/GCC.
-        echo "NIX_CFLAGS_COMPILE+=' -D_FORCE_INLINES'" >> $out/nix-support/setup-hook
+          --prefix PATH : ${gcc}/bin \
+          --prefix NIX_CFLAGS_COMPILE ' ' '${lib.concatStringsSep " " passthru.ccFlags}' \
+          --add-flags '$NIX_NVCCFLAGS'
       '';
 
       passthru = {
@@ -119,6 +124,8 @@ let
         majorVersion =
           let versionParts = lib.splitString "." version;
           in "${lib.elemAt versionParts 0}.${lib.elemAt versionParts 1}";
+        ccFlags = lib.optional (lib.versionOlder version "8.0") "-D_FORCE_INLINES" ++
+                  [ "-isystem ${patchedFloatn}/include" ];
       };
 
       meta = with stdenv.lib; {
@@ -163,7 +170,8 @@ in {
     version = "8.0.61";
     url = "https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run";
     sha256 = "1i4xrsqbad283qffvysn88w2pmxzxbbby41lw0j1113z771akv4w";
-    gcc = gcc5;
+    # Fails in avx512vlintrin.h with gcc5
+    gcc = gcc49;
   };
 
   cudatoolkit9 = common {
