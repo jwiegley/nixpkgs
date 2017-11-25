@@ -241,6 +241,7 @@
   ./services/hardware/udev.nix
   ./services/hardware/udisks2.nix
   ./services/hardware/upower.nix
+  ./services/hardware/vdr.nix
   ./services/hardware/thermald.nix
   ./services/logging/SystemdJournal2Gelf.nix
   ./services/logging/awstats.nix
