@@ -28,8 +28,8 @@ in {
       };
 
       extraArguments = mkOption {
-        type = types.str;
-        default = "";
+        type = types.listOf types.str;
+        default = [];
         description = "Extra arguments to lircd.";
       };
 
@@ -46,16 +46,18 @@ in {
     environment.systemPackages = [ pkgs.lirc ];
 
     system.activationScripts.lirc = ''
-      umask 027
-      mkdir -p /var/run/lirc
-      chown -R lirc:lirc /var/run/lirc
+      if ! [ -d /run/lirc ]; then
+        umask 027
+        mkdir -p /run/lirc
+        chown lirc:lirc /run/lirc
+      fi
     '';
 
     systemd.sockets.lircd = {
       description = "LIRC";
       wantedBy = [ "sockets.target" ];
       socketConfig = {
-        ListenStream = "/var/run/lirc/lircd";
+        ListenStream = "/run/lirc/lircd";
         SocketUser = "lirc";
         SocketMode = "0660";
       };
@@ -70,7 +72,11 @@ in {
       unitConfig.Documentation = [ "man:lircd(8)" ];
 
       serviceConfig = {
-        ExecStart = "${pkgs.lirc}/bin/lircd --nodaemon ${cfg.extraArguments} ${configFile}";
+        ExecStart = ''
+          ${pkgs.lirc}/bin/lircd --nodaemon \
+            ${escapeShellArgs cfg.extraArguments} \
+            ${configFile}
+        '';
         User = "lirc";
       };
     };
