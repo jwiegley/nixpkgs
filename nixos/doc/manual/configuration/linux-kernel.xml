@@ -6,6 +6,7 @@
 
 <title>Linux Kernel</title>
 
+<section><title>Choose your kernel</title>
 <para>You can override the Linux kernel and associated packages using
 the option <option>boot.kernelPackages</option>.  For instance, this
 selects the Linux 3.10 kernel:
@@ -65,6 +66,25 @@ boot.kernel.sysctl."net.ipv4.tcp_keepalive_time" = 120;
 </programlisting>
 sets the kernel’s TCP keepalive time to 120 seconds.  To see the
 available parameters, run <command>sysctl -a</command>.</para>
+</section>
+
+
+<section><title>Configure/hack on the kernel</title>
+
+  <para>The first step before compiling the kernel is to generate an appropriate
+	  <literal>.config</literal> configuration. Nixpkgs does it by automatically
+	  answering the interactive kernel utility <command>make config</command>.
+	  The answers depend on parameters
+	  passed to pkgs/os-specific/linux/kernel/generic.nix (<literal>extraConfig</literal>) either directly or via
+	  the <literal>hostPlatform</literal> attributes (<literal>autoModules, preferBuiltin, extraConfig</literal>).
+	  To pass a custom platform, you can use for instance the following command.
+  <screen><![CDATA[
+$ nix-build -A linuxPackages.kernel  --arg localSystem '(import <nixpkgs/lib>).systems.examples.aarch64-multiplatform' '<nixpkgs>' --show-trace$ nix-build '<nixpkgs>' -A linuxPackages.kernel.dev
+$ nix-build -A linux_mptcp --arg 'localSystem' 'let lib = (import <nixpkgs/lib>); in lib.recursiveUpdate (lib.systems.elaborate { system = builtins.currentSystem; }) { platform = test-platform; }' '<nixpkgs>' --show-trace
+]]></screen>
+  </para>
+</section>
+
 
 <section>
   <title>Developing kernel modules</title>
