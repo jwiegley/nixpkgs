@@ -525,7 +525,9 @@ in {
     };
 
     systemd.services.gitlab = {
-      after = [ "network.target" "postgresql.service" "redis.service" ];
+      # keys.target is often used by NixOps deployments to indicate keys are present
+      after = [ "network.target" "postgresql.service" "redis.service" "keys.target" ];
+      wants = [ "keys.target" ];
       requires = [ "gitlab-sidekiq.service" ];
       wantedBy = [ "multi-user.target" ];
       environment = gitlabEnv;
