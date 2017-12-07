@@ -24,7 +24,7 @@ in {
 
       config = mkOption {
         type = types.lines;
-        description = "Configuration to load.";
+        description = "Configuration for lircd to load, see man:lircd.conf(5) for details";
       };
 
       extraArguments = mkOption {
