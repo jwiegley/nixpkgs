@@ -1,13 +1,17 @@
-{ stdenv, fetchurl, libpcap }:
+{ stdenv, fetchFromGitHub, autoreconfHook, libpcap }:
 
 stdenv.mkDerivation rec {
-  name = "arp-scan-1.9";
+  name = "arp-scan-${version}";
+  version = "2017-07-17";
 
-  src = fetchurl {
-    url = "http://www.nta-monitor.com/files/arp-scan/${name}.tar.gz";
-    sha256 = "14nqjzbmnlx2nac7lwa93y5m5iqk3layakyxyvfmvs283k3qm46f";
+  src = fetchFromGitHub {
+    owner = "royhills";
+    repo = "arp-scan";
+    rev = "75f4f63f0bf7c36895c579e22b599c7702b0e667";
+    sha256 = "0lpb6mg2gx1pxdiks6spr02r4k5zlkx1slg53n68mk8k158m1pas";
   };
 
+  nativeBuildInputs = [ autoreconfHook ];
   buildInputs = [ libpcap ];
 
   meta = with stdenv.lib; {
@@ -19,6 +23,6 @@ stdenv.mkDerivation rec {
     homepage = http://www.nta-monitor.com/wiki/index.php/Arp-scan_Documentation;
     license = licenses.gpl3;
     platforms = platforms.linux;
-    maintainers = [ maintainers.bjornfor ];
+    maintainers = with maintainers; [ bjornfor mikoim ];
   };
 }
