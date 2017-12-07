@@ -7862,7 +7862,8 @@ with pkgs;
 
   accountsservice = callPackage ../development/libraries/accountsservice { };
 
-  acl = callPackage ../development/libraries/acl { };
+  # There is a circular dependency between acl and gettext
+  acl = callPackage ../development/libraries/acl { gettext = gettext-boot; };
 
   activemq = callPackage ../development/libraries/apache-activemq { };
 
@@ -8404,6 +8405,9 @@ with pkgs;
   getdata = callPackage ../development/libraries/getdata { };
 
   gettext = callPackage ../development/libraries/gettext { };
+
+  # There is a circular dependency between acl and gettext
+  gettext-boot = callPackage ../development/libraries/gettext { acl = null; };
 
   gf2x = callPackage ../development/libraries/gf2x {};
 
