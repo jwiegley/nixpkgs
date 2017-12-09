@@ -18424,6 +18424,8 @@ with pkgs;
 
   ### DESKTOP ENVIRONMENTS
 
+  cdesktopenv = callPackage ../desktops/cdesktopenv { };
+
   clearlooks-phenix = callPackage ../misc/themes/clearlooks-phenix { };
 
   enlightenment = recurseIntoAttrs (callPackage ../desktops/enlightenment {

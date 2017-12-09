@@ -1,0 +1,78 @@
+From 2e0db98c0f84c00db29ec42c866ae330a8d90dce Mon Sep 17 00:00:00 2001
+From: Alex Ivanov <gnidorah@users.noreply.github.com>
+Date: Mon, 10 Jul 2017 14:48:22 +0300
+Subject: [PATCH 2/2] Allow overriding of m4 for Linux and BSD
+
+---
+ cde/config/cf/FreeBSD.cf      | 1 +
+ cde/config/cf/NetBSD.cf       | 1 +
+ cde/config/cf/OpenBSD.cf      | 2 ++
+ cde/config/cf/linux.cf        | 1 +
+ cde/programs/nsgmls/Imakefile | 2 +-
+ 5 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/cde/config/cf/FreeBSD.cf b/cde/config/cf/FreeBSD.cf
+index 929b2c61..94f461fb 100644
+--- a/cde/config/cf/FreeBSD.cf
++++ b/cde/config/cf/FreeBSD.cf
+@@ -208,6 +208,7 @@ ICONVSYSLIB != if test -f /usr/local/include/iconv.h; then echo -liconv; else ec
+ #define DefaultSystemPath	/sbin:/usr/sbin:/bin:/usr/bin:$(BINDIR)
+ 
+ #define TroffCmd		groff -Tps
++#define M4Cmd			/usr/bin/m4
+ #define SetTtyGroup		YES
+ #define HasNdbm			YES
+ #define HasShm			YES
+diff --git a/cde/config/cf/NetBSD.cf b/cde/config/cf/NetBSD.cf
+index 1379dfa1..e48abbc0 100644
+--- a/cde/config/cf/NetBSD.cf
++++ b/cde/config/cf/NetBSD.cf
+@@ -186,6 +186,7 @@ XCOMM operating system:  OSName
+ #define NeqnCmd			neqn -Tlatin1
+ #define	EqnCmd 			eqn -Tps
+ #define TroffCmd        	groff -Tps
++#define M4Cmd			/usr/bin/m4
+ 
+ /*
+  * To use the NetBSD Aperture driver
+diff --git a/cde/config/cf/OpenBSD.cf b/cde/config/cf/OpenBSD.cf
+index 51de4311..f18256fa 100644
+--- a/cde/config/cf/OpenBSD.cf
++++ b/cde/config/cf/OpenBSD.cf
+@@ -267,6 +267,8 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
+ # define TblCmd			cat
+ #endif
+ 
++#define M4Cmd			/usr/bin/m4
++
+ #define HasGroff		YES
+ 
+ #ifndef HasCookieMaker
+diff --git a/cde/config/cf/linux.cf b/cde/config/cf/linux.cf
+index 22ba1a31..515064cd 100644
+--- a/cde/config/cf/linux.cf
++++ b/cde/config/cf/linux.cf
+@@ -89,6 +89,7 @@ XCOMM binutils:  (LinuxBinUtilsMajorVersion)
+ #define HasMakefileSafeInclude  YES
+ #define DependFileName          .depend
+ #define DependCmd               $(CC) -E -MM -MG
++#define M4Cmd			/usr/bin/m4
+ 
+ #ifdef IncludeMakefile
+ # undef IncludeMakefile
+diff --git a/cde/programs/nsgmls/Imakefile b/cde/programs/nsgmls/Imakefile
+index 1816e02c..41249b5f 100644
+--- a/cde/programs/nsgmls/Imakefile
++++ b/cde/programs/nsgmls/Imakefile
+@@ -93,7 +93,7 @@ CXXOPTIONS = \
+  */
+ CXXTEMPLATEFLAGS = -fno-implicit-templates
+ 
+-M4 = /usr/bin/m4
++M4 = M4Cmd
+ 
+ #endif
+ 
+-- 
+2.13.2
+
