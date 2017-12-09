@@ -10,7 +10,7 @@
   , doCheck ? true
   }:
 let
-  idris-with-packages = idrisPackages.with-packages (idrisDeps);
+  idris-with-packages = idrisPackages.with-packages idrisDeps;
 in
 stdenv.mkDerivation ({
 
