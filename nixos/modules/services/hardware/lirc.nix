@@ -45,6 +45,16 @@ in {
 
     environment.systemPackages = [ pkgs.lirc ];
 
+    systemd.sockets.lircd = {
+      description = "LIRC daemon socket";
+      wantedBy = [ "sockets.target" ];
+      socketConfig = {
+        ListenStream = "/run/lirc/lircd";
+        SocketUser = "lirc";
+        SocketMode = "0660";
+      };
+    };
+
     systemd.services.lircd = let
       configFile = pkgs.writeText "lircd.conf" cfg.config;
     in {
