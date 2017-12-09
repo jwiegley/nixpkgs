@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, icu, expat, zlib, bzip2, python, fixDarwinDylibNames, libiconv
+{ stdenv, buildPackages, fetchurl, which, icu, expat, zlib, bzip2, python, fixDarwinDylibNames, libiconv
 , buildPlatform, hostPlatform
 , toolset ? if stdenv.cc.isClang then "clang" else null
 , enableRelease ? true
@@ -25,6 +25,20 @@ assert enableShared || enableStatic;
 
 assert enablePython -> hostPlatform == buildPlatform;
 assert enableNumpy -> enablePython;
+
+# The plan for cross-compilation:
+#
+# Cross-compiling boost is a bit of a nightmare due to its build system,
+# boost-build. When not cross-compiling the bootstrap.sh script will compiling
+# bjam, the boost build system's executable, and then use it to build the library.
+#
+# In principle it is possible for the bootstrap.sh script to use a cross
+# compiler to build bjam. However, in practice boost-build is so terribly broken
+# that this is all but impossible (see, for instance, boost ticket #5917, which
+# makes it impossible to specify a non-standard compiler path to bootstrap.sh).
+#
+# Because of this, we instead compile and package the bjam utility when not
+# cross-compiling and then use it as a nativeBuildInput when cross-compiling.
 
 with stdenv.lib;
 let
@@ -81,8 +95,10 @@ let
     "address-model=${toString hostPlatform.parsed.cpu.bits}"
     "architecture=x86"
   ] ++ optional (variant == "release") "debug-symbols=off"
-    ++ optional (!enablePython) "--without-python"
+    ++ optional (enablePython) "--with-python"
     ++ optional (hostPlatform != buildPlatform) "toolset=gcc-cross");
+
+  b2 = if hostPlatform == buildPlatform then "./b2" else "${buildPackages.boost.bjam}/bin/bjam";
 
 in
 
@@ -118,7 +134,11 @@ stdenv.mkDerivation {
     EOF
   '' + optionalString (hostPlatform != buildPlatform) ''
     cat << EOF > user-config.jam
-    using gcc : cross : ${stdenv.cc.targetPrefix}c++ ;
+    using gcc : cross :
+        ${stdenv.cc.targetPrefix}c++ :
+        <archiver>${stdenv.cc.targetPrefix}ar
+        <ranlib>${stdenv.cc.targetPrefix}ranlib
+        ;
     EOF
   '';
 
@@ -132,6 +152,8 @@ stdenv.mkDerivation {
     ++ optional stdenv.isDarwin fixDarwinDylibNames
     ++ optional enablePython python
     ++ optional enableNumpy numpy;
+  nativeBuildInputs = [ which ]
+    ++ optional (hostPlatform != buildPlatform) buildPackages.boost.bjam;
 
   configureScript = "./bootstrap.sh";
   configurePlatforms = [];
@@ -144,11 +166,13 @@ stdenv.mkDerivation {
       "--with-python=${python.interpreter}"
     ] else [
       "--without-icu"
-      "--without-python"
+      "--with-bjam=${buildPackages.boost.bjam}/bin/bjam"
     ]);
 
   buildPhase = ''
-    ./b2 ${b2Args}
+    export AR=${stdenv.cc.targetPrefix}ar
+    export RANLIB=${stdenv.cc.targetPrefix}ranlib
+    ${b2} ${b2Args}
   '';
 
   installPhase = ''
@@ -157,7 +181,12 @@ stdenv.mkDerivation {
     cp -a tools/boostbook/{xsl,dtd} $dev/share/boostbook/
 
     # Let boost install everything else
-    ./b2 ${b2Args} install
+    ${b2} ${b2Args} install
+
+  '' # See the plan for cross-compiling above.
+     + optionalString (hostPlatform == buildPlatform) ''
+    mkdir -p $bjam/bin
+    cp ./bjam $bjam/bin
   '';
 
   setupHook = ./setup-hook.sh;
@@ -170,6 +199,8 @@ stdenv.mkDerivation {
     ${stdenv.cc.targetPrefix}ranlib "$out/lib/"*.a
   '';
 
-  outputs = [ "out" "dev" ];
+  outputs = [ "out" "dev" ]
+    # See the plan for cross-compiling above.
+    ++ optional (buildPlatform == hostPlatform) "bjam";
   setOutputFlags = false;
 }
