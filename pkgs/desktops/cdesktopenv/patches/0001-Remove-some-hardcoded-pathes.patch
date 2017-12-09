@@ -1,0 +1,243 @@
+From e796a6522b490b46ac4df01267355e2cfba156b0 Mon Sep 17 00:00:00 2001
+From: Alex Ivanov <gnidorah@users.noreply.github.com>
+Date: Mon, 10 Jul 2017 10:11:10 +0300
+Subject: [PATCH 1/2] Remove some hardcoded pathes
+
+---
+ cde/admin/IntegTools/dbTools/installCDE.src        | 58 +++++++++++-----------
+ cde/admin/IntegTools/dbTools/udbToAny.ksh          |  2 +-
+ .../dtinfo/dtinfogen/infolib/etc/dtinfogen         |  4 --
+ cde/programs/dtlogin/config/Xsession.src           |  4 +-
+ cde/programs/dtsession/dtloadresources.src         |  2 +-
+ cde/programs/localized/util/merge.c                |  8 +--
+ 6 files changed, 37 insertions(+), 41 deletions(-)
+
+diff --git a/cde/admin/IntegTools/dbTools/installCDE.src b/cde/admin/IntegTools/dbTools/installCDE.src
+index 5a62a342..634232ab 100755
+--- a/cde/admin/IntegTools/dbTools/installCDE.src
++++ b/cde/admin/IntegTools/dbTools/installCDE.src
+@@ -49,9 +49,11 @@ LOGFILE="installCDE.$$.log"
+ 
+ REVISION="$(echo "$Revision: /main/20 $" | awk '{print $2}')"
+ 
++TMPDIR=${TMPDIR:-/tmp}
++
+ Log()
+ {
+-  /bin/echo "$1" | tee -a $LOGFILE
++  echo "$1" | tee -a $LOGFILE
+ }
+ 
+ MakeTarball()
+@@ -182,10 +184,10 @@ CreatePackingList()
+     for i in `echo $DATABASE_FILES`
+     do
+       Log "  for $i"
+-      KORNSHELL $TOOL_DIR/udbToAny.ksh -toDB -ReleaseStream $PLATFORM $DATABASE_DIR/${i}.udb > /tmp/${i}.db
+-      if [ -r /tmp/${i}.db ]
++      KORNSHELL $TOOL_DIR/udbToAny.ksh -toDB -ReleaseStream $PLATFORM $DATABASE_DIR/${i}.udb > $TMPDIR/${i}.db
++      if [ -r $TMPDIR/${i}.db ]
+       then
+-        for file in `fgrep install_target /tmp/${i}.db | cut -sf 2 -d \: ` 
++        for file in `fgrep install_target $TMPDIR/${i}.db | cut -sf 2 -d \: ` 
+         do
+ 	  echo "$file" >>$INSTALL_LOCATION/Packing_list
+         done
+@@ -209,46 +211,46 @@ CleanDaemons()
+       fi
+     elif [ "$PLATFORM" = "openbsd" ]
+     then
+-      ps axo pid,comm | grep $i > /tmp/tmppsout
+-      if [ -s /tmp/tmppsout ]
++      ps axo pid,comm | grep $i > $TMPDIR/tmppsout
++      if [ -s $TMPDIR/tmppsout ]
+       then
+-        awk '{print "kill " $1}' /tmp/tmppsout | /bin/csh -f
++        awk '{print "kill " $1}' $TMPDIR/tmppsout | /bin/csh -f
+         sleep 2
+       fi
+     elif [ "$PLATFORM" = "freebsd" ]
+     then
+-      ps axo pid,comm | grep $i > /tmp/tmppsout
+-      if [ -s /tmp/tmppsout ]
++      ps axo pid,comm | grep $i > $TMPDIR/tmppsout
++      if [ -s $TMPDIR/tmppsout ]
+       then
+-        awk '{print "kill " $1}' /tmp/tmppsout | /bin/csh -f
++        awk '{print "kill " $1}' $TMPDIR/tmppsout | /bin/csh -f
+         sleep 2
+       fi
+     elif [ "$PLATFORM" = "netbsd" ]
+     then
+-      ps axo pid,comm | grep $i > /tmp/tmppsout
+-      if [ -s /tmp/tmppsout ]
++      ps axo pid,comm | grep $i > $TMPDIR/tmppsout
++      if [ -s $TMPDIR/tmppsout ]
+       then
+-        awk '{print "kill " $1}' /tmp/tmppsout | /bin/csh -f
++        awk '{print "kill " $1}' $TMPDIR/tmppsout | /bin/csh -f
+         sleep 2
+       fi
+     elif [ "$PLATFORM" = "linux" ]
+     then
+-      ps axo pid,comm | grep $i > /tmp/tmppsout
+-      if [ -s /tmp/tmppsout ]
++      ps axo pid,comm | grep $i > $TMPDIR/tmppsout
++      if [ -s $TMPDIR/tmppsout ]
+       then
+-        awk '{print "kill " $1}' /tmp/tmppsout | /bin/sh -f
++        awk '{print "kill " $1}' $TMPDIR/tmppsout | /bin/sh -f
+         sleep 2
+       fi
+     else    
+-      ps -ef | grep $i | grep -v grep >/tmp/tmppsout
+-      if [ -s /tmp/tmppsout ]
++      ps -ef | grep $i | grep -v grep >$TMPDIR/tmppsout
++      if [ -s $TMPDIR/tmppsout ]
+       then
+-        awk '{print "kill " $2}' /tmp/tmppsout | /bin/csh -f
++        awk '{print "kill " $2}' $TMPDIR/tmppsout | /bin/csh -f
+         sleep 2
+       fi
+     fi
+   done
+-  rm -f /tmp/tmppsout
++  rm -f $TMPDIR/tmppsout
+ }
+ 
+ RestartInetd()
+@@ -533,20 +535,20 @@ XCOMM don't bother if the fileset doesn't exist
+   Log "  $num installing database $2"
+   Log "      - creating ${2}.lst file"
+   KORNSHELL $TOOL_DIR/udbToAny.ksh  -toLst -ReleaseStream $PLATFORM \
+-            $DATABASE_DIR/${2}.udb >  /tmp/${2}.lst
++            $DATABASE_DIR/${2}.udb >  $TMPDIR/${2}.lst
+   Log "      - installing ... "
+-  KORNSHELL $TOOL_DIR/mkProd -D / -S $BUILD_TREE /tmp/${2}.lst \
+-            2>/tmp/${2}.err 1>/tmp/${2}.good
++  KORNSHELL $TOOL_DIR/mkProd -D / -S $BUILD_TREE $TMPDIR/${2}.lst \
++            2>$TMPDIR/${2}.err 1>$TMPDIR/${2}.good
+   Log "        done."
+ 
+   Log "      - checking for errors ..."
+-  rm -f /tmp/${2}.missing
++  rm -f $TMPDIR/${2}.missing
+   awk '{if ($1 == "ERROR:") print "           " $4}' \
+-            /tmp/${2}.err >> /tmp/${2}.missing
+-  if [ -s /tmp/${2}.missing ]
++            $TMPDIR/${2}.err >> $TMPDIR/${2}.missing
++  if [ -s $TMPDIR/${2}.missing ]
+   then
+     Log "      - missing files:"
+-    cat /tmp/${2}.missing | tee -a $LOGFILE
++    cat $TMPDIR/${2}.missing | tee -a $LOGFILE
+   fi
+ }
+ 
+@@ -624,8 +626,6 @@ XCOMM
+     umask 000
+   fi
+ 
+-  unset TMPDIR
+-
+   CLEANING="no"
+   CLEANING_ETC="no"
+   TARBALL="no"
+diff --git a/cde/admin/IntegTools/dbTools/udbToAny.ksh b/cde/admin/IntegTools/dbTools/udbToAny.ksh
+index 655b627f..5d727ba4 100755
+--- a/cde/admin/IntegTools/dbTools/udbToAny.ksh
++++ b/cde/admin/IntegTools/dbTools/udbToAny.ksh
+@@ -102,7 +102,7 @@ ConvertRoutine()
+     shift
+     shift
+ 
+-    AWK=/usr/bin/awk
++    AWK=awk
+     if [ -x /usr/bin/nawk ]; then
+ 	AWK=/usr/bin/nawk
+     fi
+diff --git a/cde/programs/dtinfo/dtinfogen/infolib/etc/dtinfogen b/cde/programs/dtinfo/dtinfogen/infolib/etc/dtinfogen
+index 0cb6ac27..c5fe4bb2 100755
+--- a/cde/programs/dtinfo/dtinfogen/infolib/etc/dtinfogen
++++ b/cde/programs/dtinfo/dtinfogen/infolib/etc/dtinfogen
+@@ -30,8 +30,6 @@
+ #
+ ###############################################################################
+ 
+-USERPATH=$PATH
+-PATH=/bin:/usr/bin:/usr/sbin
+ RETCODE=0
+ 
+ trap '\
+@@ -375,8 +373,6 @@ if [ ! -d $DTINFO_LIB ] ; then
+ 
+ fi
+ 
+-PATH=${PATH}:${USERPATH}
+-
+ ###############################################################################
+ #
+ #	Create the command line and invoke the DtInfo build tools
+diff --git a/cde/programs/dtlogin/config/Xsession.src b/cde/programs/dtlogin/config/Xsession.src
+index 35b65273..fe87d3fa 100644
+--- a/cde/programs/dtlogin/config/Xsession.src
++++ b/cde/programs/dtlogin/config/Xsession.src
+@@ -435,12 +435,12 @@ XCOMM ##########################################################################
+     for i in $DT_CONFIG_PATH
+     do
+       if [ -f $i/$DTSYSPROFILE ]; then
+-        /usr/bin/awk '
++        awk '
+           BEGIN {printit=1}
+           /SYSPROFILE COMMENT START/ {printit=0; next}
+           /SYSPROFILE COMMENT END/ {printit=1; next}
+           printit==1 {print}' <$i/$DTSYSPROFILE >$HOME/$DTPROFILE
+-        /bin/chmod 755 $HOME/$DTPROFILE
++        chmod 755 $HOME/$DTPROFILE
+         break
+       fi
+     done
+diff --git a/cde/programs/dtsession/dtloadresources.src b/cde/programs/dtsession/dtloadresources.src
+index 69c05188..165e1717 100644
+--- a/cde/programs/dtsession/dtloadresources.src
++++ b/cde/programs/dtsession/dtloadresources.src
+@@ -159,7 +159,7 @@ XCOMM converts ":0" to "0", but leaves "pablo:0" as is
+ display=${DISPLAY##:}
+ 
+ XCOMM converts "blanco.flexicat.com:0.0" to "blanco_flexicat_com_0"
+-display=$(echo ${display%.*} | /usr/bin/tr ".:" "__") 
++display=$(echo ${display%.*} | tr ".:" "__") 
+ 
+ (
+   echo "dtsession_res*files: $resourceFiles"
+diff --git a/cde/programs/localized/util/merge.c b/cde/programs/localized/util/merge.c
+index 379d64ff..099e02ea 100644
+--- a/cde/programs/localized/util/merge.c
++++ b/cde/programs/localized/util/merge.c
+@@ -243,9 +243,9 @@ void cat_open ()
+     if(pfile != NULL)
+     {
+ #if defined(USL) || defined(__uxp__)
+-        sprintf(line,"/usr/bin/gencat -m ./.dt_pfile.cat %s",pfile);
++        sprintf(line,"gencat -m ./.dt_pfile.cat %s",pfile);
+ #else
+-        sprintf(line,"/usr/bin/gencat ./.dt_pfile.cat %s",pfile);
++        sprintf(line,"gencat ./.dt_pfile.cat %s",pfile);
+ #endif
+         if ( system(line) != 0 )
+ 	{
+@@ -258,9 +258,9 @@ void cat_open ()
+     if(dfile != NULL)
+     {
+ #if defined(USL) || defined(__uxp__)
+-        sprintf(line,"/usr/bin/gencat -m ./.dt_dfile.cat %s",dfile);
++        sprintf(line,"gencat -m ./.dt_dfile.cat %s",dfile);
+ #else
+-        sprintf(line,"/usr/bin/gencat ./.dt_dfile.cat %s",dfile);
++        sprintf(line,"gencat ./.dt_dfile.cat %s",dfile);
+ #endif
+         if ( system(line) != 0 )
+ 	{
+-- 
+2.13.2
+
