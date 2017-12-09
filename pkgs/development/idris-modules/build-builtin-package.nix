@@ -1,4 +1,4 @@
-# Build one of the packages that come with idris
+# Build one of the packages that comes with idris
 # name: The name of the package
 # deps: The dependencies of the package
 { idris, build-idris-package, lib }: name: deps:
@@ -7,10 +7,7 @@ let
 in
 build-idris-package {
 
-
-  pkgName = name;
-  version = version;
-
+  inherit name version;
   inherit (idris) src;
 
   idrisDeps = deps;
@@ -18,8 +15,6 @@ build-idris-package {
   postUnpack = ''
     sourceRoot=$sourceRoot/libs/${name}
   '';
-
-
 
   meta = idris.meta // {
     description = "${name} builtin Idris library";

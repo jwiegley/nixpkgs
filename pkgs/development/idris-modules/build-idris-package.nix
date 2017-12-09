@@ -1,15 +1,11 @@
 # Build an idris package
-#
-# args: Additional arguments to pass to mkDerivation. Generally should include at least
-#       name and src.
 { stdenv, idrisPackages, gmp }:
   { idrisDeps ? []
-  , pkgName
+  , name
   , version
   , src
   , meta
   , extraBuildInputs ? []
-  , postPatch ? ""
   , postUnpack ? ""
   , doCheck ? true
   }:
@@ -18,9 +14,9 @@ let
 in
 stdenv.mkDerivation ({
 
-  name = "${pkgName}-${version}";
+  name = "${name}-${version}";
 
-  postUnpack = postUnpack;
+  inherit postUnpack src doCheck meta;
 
 
   # Some packages use the style
@@ -31,13 +27,9 @@ stdenv.mkDerivation ({
     cat *.ipkg
   '';
 
-  src = src;
-
   buildPhase = ''
     ${idris-with-packages}/bin/idris --build *.ipkg
   '';
-
-  doCheck = doCheck;
 
   checkPhase = ''
     if grep -q test *.ipkg; then
@@ -52,6 +44,4 @@ stdenv.mkDerivation ({
   buildInputs = [ gmp ] ++ extraBuildInputs;
 
   propagatedBuildInputs = idrisDeps;
-
-  meta = meta;
 })

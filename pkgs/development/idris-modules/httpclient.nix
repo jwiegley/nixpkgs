@@ -13,7 +13,7 @@
 let
 in
 build-idris-package {
-  pkgName = "httpclient";
+  name = "httpclient";
   version = "2016-12-20";
 
   src = fetchFromGitHub {

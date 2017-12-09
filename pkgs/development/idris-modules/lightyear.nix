@@ -11,7 +11,7 @@ let
   date = "2017-09-10";
 in
 build-idris-package  {
-  pkgName = "lightyear";
+  name = "lightyear";
   version = date;
 
   idrisDeps = [ prelude base effects ];
