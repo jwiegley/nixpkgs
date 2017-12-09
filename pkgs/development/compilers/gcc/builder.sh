@@ -24,8 +24,8 @@ if test "$noSysDirs" = "1"; then
 
         # Figure out what extra flags to pass to the gcc compilers
         # being generated to make sure that they use our glibc.
-        extraFlags="$(< $NIX_CC/nix-support/libc-cflags || true)"
-        extraLDFlags="$(< $NIX_BINTOOLS/nix-support/libc-ldflags || true) $(< $NIX_BINTOOLS/nix-support/libc-ldflags-before || true)"
+        extraFlags="$(cat $NIX_CC/nix-support/libc-cflags || true)"
+        extraLDFlags="$(cat $NIX_BINTOOLS/nix-support/libc-ldflags || true) $(cat $NIX_BINTOOLS/nix-support/libc-ldflags-before || true)"
 
         # Use *real* header files, otherwise a limits.h is generated
         # that does not include Glibc's limits.h (notably missing
@@ -33,9 +33,9 @@ if test "$noSysDirs" = "1"; then
         export NIX_FIXINC_DUMMY=$libc_dev/include
 
         # The path to the Glibc binaries such as `crti.o'.
-        glibc_dir="$(< $NIX_CC/nix-support/orig-libc || true)"
+        glibc_dir="$(cat $NIX_CC/nix-support/orig-libc || true)"
         glibc_libdir="$glibc_dir/lib"
-        glibc_devdir="$(< $NIX_CC/nix-support/orig-libc-dev || true)"
+        glibc_devdir="$(cat $NIX_CC/nix-support/orig-libc-dev || true)"
 
     else
         # Hack: support impure environments.
