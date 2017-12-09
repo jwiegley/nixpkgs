@@ -45,24 +45,6 @@ in {
 
     environment.systemPackages = [ pkgs.lirc ];
 
-    system.activationScripts.lirc = ''
-      if ! [ -d /run/lirc ]; then
-        umask 027
-        mkdir -p /run/lirc
-        chown lirc:lirc /run/lirc
-      fi
-    '';
-
-    systemd.sockets.lircd = {
-      description = "LIRC";
-      wantedBy = [ "sockets.target" ];
-      socketConfig = {
-        ListenStream = "/run/lirc/lircd";
-        SocketUser = "lirc";
-        SocketMode = "0660";
-      };
-    };
-
     systemd.services.lircd = let
       configFile = pkgs.writeText "lircd.conf" cfg.config;
     in {
@@ -72,12 +54,14 @@ in {
       unitConfig.Documentation = [ "man:lircd(8)" ];
 
       serviceConfig = {
+        ExecStartPre = "${pkgs.coreutils}/bin/install -o lirc -g lirc -m 750 -d /run/lirc";
         ExecStart = ''
           ${pkgs.lirc}/bin/lircd --nodaemon \
             ${escapeShellArgs cfg.extraArguments} \
             ${configFile}
         '';
         User = "lirc";
+        PermissionsStartOnly = true;
       };
     };
 
