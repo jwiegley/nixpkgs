@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
     sha256 = "1rqgp8xi1k4sjy9sngg1vw0v8q2mm46dhyya4d35n3k6yk7pk0qv";
   };
 
-  buildInputs = [ cmake ];
+  nativeBuildInputs = [ cmake ];
 
   # This breaks on Darwin because our cmake hook tries to make a build folder
   # and the wonderful bazel BUILD file is already there (yay case-insensitivity?)
