@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, gettext }:
+{ stdenv, buildPackages, fetchurl, gettext }:
 
 stdenv.mkDerivation rec {
   name = "libgpg-error-${version}";
@@ -9,13 +9,17 @@ stdenv.mkDerivation rec {
     sha256 = "1li95ni122fzinzlmxbln63nmgij63irxfvi52ws4zfbzv3am4sg";
   };
 
-  postPatch = "sed '/BUILD_TIMESTAMP=/s/=.*/=1970-01-01T00:01+0000/' -i ./configure";
+  postPatch = ''
+    sed '/BUILD_TIMESTAMP=/s/=.*/=1970-01-01T00:01+0000/' -i ./configure
+    cp src/syscfg/lock-obj-pub.arm-unknown-linux-gnueabi.h src/syscfg/lock-obj-pub.linux-gnueabihf.h
+  '';
 
   outputs = [ "out" "dev" "info" ];
   outputBin = "dev"; # deps want just the lib, most likely
 
   # If architecture-dependent MO files aren't available, they're generated
   # during build, so we need gettext for cross-builds.
+  crossAttrs.nativeBuildInputs = [ gettext buildPackages.stdenv.cc ];
   crossAttrs.buildInputs = [ gettext ];
 
   postConfigure =
@@ -27,7 +31,7 @@ stdenv.mkDerivation rec {
     # Thus, re-run it with Bash.
       "${stdenv.shell} config.status";
 
-  doCheck = true;
+  doCheck = stdenv.hostPlatform == stdenv.buildPlatform;
 
   meta = with stdenv.lib; {
     homepage = https://www.gnupg.org/related_software/libgpg-error/index.html;
@@ -45,4 +49,3 @@ stdenv.mkDerivation rec {
     maintainers = [ maintainers.fuuzetsu maintainers.vrthra ];
   };
 }
-

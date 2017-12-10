@@ -184,7 +184,8 @@ with pkgs;
 
   # `fetchurl' downloads a file from the network.
   fetchurl = import ../build-support/fetchurl {
-    inherit curl stdenv;
+    inherit stdenv;
+    curl = buildPackages.curl;
   };
 
   fetchRepoProject = callPackage ../build-support/fetchrepoproject { };
@@ -5477,7 +5478,9 @@ with pkgs;
 
   clang-sierraHack = clang.override {
     name = "clang-wrapper-with-reexport-hack";
-    useMacosReexportHack = true;
+    bintools = clang.bintools.override {
+      useMacosReexportHack = true;
+    };
   };
 
   clang_5  = llvmPackages_5.clang;
@@ -5506,7 +5509,7 @@ with pkgs;
     cc = build;
     isClang = true;
     inherit stdenvNoCC;
-    libc = glibc;
+    inherit (targetPackages.stdenv.cc) bintools libc;
     extraPackages = [ libcxx libcxxabi ];
     nativeTools = false;
     nativeLibc = false;
@@ -5578,18 +5581,23 @@ with pkgs;
   };
 
   wrapCCMulti = cc:
-    if system == "x86_64-linux" then lowPrio (wrapCCWith {
+    if system == "x86_64-linux" then let
+      # Binutils with glibc multi
+      bintools = cc.bintools.override {
+        libc = glibc_multi;
+      };
+    in lowPrio (wrapCCWith {
       cc = cc.cc.override {
         stdenv = overrideCC stdenv (wrapCCWith {
           cc = cc.cc;
+          inherit bintools;
           libc = glibc_multi;
         });
         profiledCompiler = false;
         enableMultilib = true;
       };
-
       libc = glibc_multi;
-
+      inherit bintools;
       extraBuildCommands = ''
         echo "dontMoveLib64=1" >> $out/nix-support/setup-hook
       '';
@@ -5622,6 +5630,10 @@ with pkgs;
       if targetPlatform.libc == "msvcrt" then targetPackages.windows.mingw_w64_headers
       else if targetPlatform.libc == "libSystem" then darwin.xcode
       else null;
+    binutils1 = wrapBintoolsWith {
+      bintools = binutils-unwrapped;
+      libc = libcCross1;
+    };
     in wrapCCWith {
       name = "gcc-cross-wrapper";
       cc = gccFun {
@@ -5635,8 +5647,10 @@ with pkgs;
         crossStageStatic = true;
         langCC = false;
         libcCross = libcCross1;
+        targetPackages.stdenv.cc.bintools = binutils1;
         enableShared = false;
       };
+      bintools = binutils1;
       libc = libcCross1;
   };
 
@@ -5645,6 +5659,7 @@ with pkgs;
     name = "gcc-cross-wrapper";
     cc = gccCrossStageStatic.gcc;
     libc = windows.mingw_headers2;
+    inherit binutils;
   };
 
   gcc45 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/4.5 {
@@ -6410,7 +6425,8 @@ with pkgs;
 
   wla-dx = callPackage ../development/compilers/wla-dx { };
 
-  wrapCCWith = { name ? "", cc, libc, extraBuildCommands ? "" }: ccWrapperFun rec {
+  wrapCCWith = { name ? "", cc, bintools, libc, extraBuildCommands ? "" }:
+      ccWrapperFun rec {
     nativeTools = targetPlatform == hostPlatform && stdenv.cc.nativeTools or false;
     nativeLibc = targetPlatform == hostPlatform && stdenv.cc.nativeLibc or false;
     nativePrefix = stdenv.cc.nativePrefix or "";
@@ -6419,14 +6435,20 @@ with pkgs;
     isGNU = cc.isGNU or false;
     isClang = cc.isClang or false;
 
-    inherit name cc libc extraBuildCommands;
+    inherit name cc bintools libc extraBuildCommands;
   };
 
   ccWrapperFun = callPackage ../build-support/cc-wrapper;
+  bintoolsWrapperFun = callPackage ../build-support/bintools-wrapper;
 
   wrapCC = cc: wrapCCWith {
     name = lib.optionalString (targetPlatform != hostPlatform) "gcc-cross-wrapper";
     inherit cc;
+    # This should be the only bintools runtime dep with this sort of logic. The
+    # Others should instead delegate to the next stage's choice with
+    # `targetPackages.stdenv.cc.bintools`. This one is different just to
+    # provide the default choice, avoiding infinite recursion.
+    bintools = if targetPlatform.isDarwin then darwin.binutils else binutils;
     libc = if targetPlatform != hostPlatform then libcCross else stdenv.cc.libc;
   };
   # legacy version, used for gnat bootstrapping
@@ -6436,6 +6458,17 @@ with pkgs;
     nativePrefix = stdenv.cc.nativePrefix or "";
     gcc = baseGCC;
     libc = glibc;
+  };
+
+  wrapBintoolsWith = { bintools, libc }: bintoolsWrapperFun {
+    nativeTools = targetPlatform == hostPlatform && stdenv.cc.nativeTools or false;
+    nativeLibc = targetPlatform == hostPlatform && stdenv.cc.nativeLibc or false;
+    nativePrefix = stdenv.cc.nativePrefix or "";
+
+    noLibc = (libc == null);
+
+    inherit bintools libc;
+    extraBuildCommands = "";
   };
 
   # prolog
@@ -6636,7 +6669,11 @@ with pkgs;
 
   ocropus = callPackage ../applications/misc/ocropus { };
 
-  inherit (callPackages ../development/interpreters/perl {}) perl perl522 perl524;
+  inherit (
+    if stdenv.buildPlatform == stdenv.hostPlatform
+    then (callPackages ../development/interpreters/perl {})
+    else (callPackages ../development/interpreters/perl-cross {})
+  ) perl perl522 perl524;
 
   pachyderm = callPackage ../applications/networking/cluster/pachyderm { };
 
@@ -7019,13 +7056,21 @@ with pkgs;
     then darwin.binutils
     else binutils-raw;
 
-  binutils-raw = callPackage ../development/tools/misc/binutils {
+  binutils-unwrapped = callPackage ../development/tools/misc/binutils {
     # FHS sys dirs presumably only have stuff for the build platform
     noSysDirs = (targetPlatform != buildPlatform) || noSysDirs;
+    defaultLd = config.defaultLd or null;
+  };
+  binutils-raw = wrapBintoolsWith {
+    libc = if targetPlatform != hostPlatform then libcCross else stdenv.cc.libc;
+    bintools = binutils-unwrapped;
   };
 
   binutils_nogold = lowPrio (binutils-raw.override {
-    gold = false;
+    bintools = binutils-raw.bintools.override {
+      gold = false;
+      defaultLd = "bfd";
+    };
   });
 
   bison2 = callPackage ../development/tools/parsing/bison/2.x.nix { };
@@ -7823,7 +7868,8 @@ with pkgs;
 
   accountsservice = callPackage ../development/libraries/accountsservice { };
 
-  acl = callPackage ../development/libraries/acl { };
+  # There is a circular dependency between acl and gettext
+  acl = callPackage ../development/libraries/acl { gettext = gettext-boot; };
 
   activemq = callPackage ../development/libraries/apache-activemq { };
 
@@ -8363,6 +8409,9 @@ with pkgs;
   getdata = callPackage ../development/libraries/getdata { };
 
   gettext = callPackage ../development/libraries/gettext { };
+
+  # There is a circular dependency between acl and gettext
+  gettext-boot = callPackage ../development/libraries/gettext { acl = null; };
 
   gf2x = callPackage ../development/libraries/gf2x {};
 
@@ -12159,11 +12208,12 @@ with pkgs;
   };
 
   xorg = recurseIntoAttrs (lib.callPackagesWith pkgs ../servers/x11/xorg/default.nix {
-    inherit clangStdenv fetchurl fetchgit fetchpatch stdenv pkgconfig intltool freetype fontconfig
+    inherit clangStdenv fetchurl fetchgit fetchpatch stdenv intltool freetype fontconfig
       libxslt expat libpng zlib perl mesa_drivers spice_protocol libunwind
       dbus libuuid openssl gperf m4 libevdev tradcpp libinput mcpp makeWrapper autoreconfHook
-      autoconf automake libtool xmlto asciidoc flex bison mtdev pixman
+      autoconf automake libtool mtdev pixman
       cairo epoxy;
+    inherit (buildPackages) pkgconfig xmlto asciidoc flex bison;
     inherit (darwin) apple_sdk cf-private libobjc;
     bootstrap_cmds = if stdenv.isDarwin then darwin.bootstrap_cmds else null;
     mesa = mesa_noglu;
@@ -13164,6 +13214,7 @@ with pkgs;
     ubootRaspberryPi3_64bit
     ubootUtilite
     ubootWandboard
+    ubootMicrozed
     ;
 
   # Non-upstream U-Boots:

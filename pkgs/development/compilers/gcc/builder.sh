@@ -20,20 +20,25 @@ echo "\$LIBRARY_PATH is \`$LIBRARY_PATH'"
 
 if test "$noSysDirs" = "1"; then
 
-    if test -e $NIX_CC/nix-support/orig-libc; then
+    if test -e $NIX_BUILD_CC/nix-support/orig-libc; then
 
         # Figure out what extra flags to pass to the gcc compilers
         # being generated to make sure that they use our glibc.
-        extraFlags="$(cat $NIX_CC/nix-support/libc-cflags)"
-        extraLDFlags="$(cat $NIX_CC/nix-support/libc-ldflags) $(cat $NIX_CC/nix-support/libc-ldflags-before || true)"
+        extraFlags="$(cat $NIX_BUILD_CC/nix-support/libc-cflags || true)"
+        extraLDFlags="$(cat $NIX_BUILD_BINTOOLS/nix-support/libc-ldflags || true) $(cat $NIX_BUILD_BINTOOLS/nix-support/libc-ldflags-before || true)"
 
         # Use *real* header files, otherwise a limits.h is generated
         # that does not include Glibc's limits.h (notably missing
         # SSIZE_MAX, which breaks the build).
-        export NIX_FIXINC_DUMMY=$libc_dev/include
+        export NIX_FIXINC_DUMMY=$build_libc_dev/include
 
-        # The path to the Glibc binaries such as `crti.o'.
-        glibc_libdir="$(cat $NIX_CC/nix-support/orig-libc)/lib"
+        # The path to the Glibc binaries of the build machine such as `crti.o'.
+        glibc_dir="$(cat $NIX_BUILD_CC/nix-support/orig-libc || true)"
+        glibc_libdir="$glibc_dir/lib"
+        glibc_devdir="$(cat $NIX_BUILD_CC/nix-support/orig-libc-dev || true)"
+        echo "BEN: glibc_dir = $glibc_dir"
+        echo "BEN: NIX_BUILD_CC = $NIX_BUILD_CC"
+        echo "BEN: NIX_CC = $NIX_CC"
 
     else
         # Hack: support impure environments.
@@ -45,6 +50,7 @@ if test "$noSysDirs" = "1"; then
 
     extraFlags="-I$NIX_FIXINC_DUMMY $extraFlags"
     extraLDFlags="-L$glibc_libdir -rpath $glibc_libdir $extraLDFlags"
+    echo "BEN: extraLDFlags = $extraLDFlags"
 
     # BOOT_CFLAGS defaults to `-g -O2'; since we override it below,
     # make sure to explictly add them so that files compiled with the
@@ -57,10 +63,13 @@ if test "$noSysDirs" = "1"; then
         extraFlags="-O2 $extraFlags"
     fi
 
+    # These are flags for the build machine compiler
     EXTRA_FLAGS="$extraFlags"
     for i in $extraLDFlags; do
         EXTRA_LDFLAGS="$EXTRA_LDFLAGS -Wl,$i"
     done
+    unset extraFlags
+    unset extraLDFlags
 
     if test -n "$targetConfig"; then
         # Cross-compiling, we need gcc not to read ./specs in order to build
@@ -71,25 +80,23 @@ if test "$noSysDirs" = "1"; then
         unset LIBRARY_PATH
         unset CPATH
     else
-        if test -z "$NIX_CC_CROSS"; then
+        if test -z "$crossConfig"; then
             EXTRA_TARGET_CFLAGS="$EXTRA_FLAGS"
             EXTRA_TARGET_CXXFLAGS="$EXTRA_FLAGS"
             EXTRA_TARGET_LDFLAGS="$EXTRA_LDFLAGS"
+            echo "BEN: crossConfig"
         else
             # This the case of cross-building the gcc.
             # We need special flags for the target, different than those of the build
             # Assertion:
-            test -e $NIX_CC_CROSS/nix-support/orig-libc
+            test -e $NIX_CC/nix-support/orig-libc
 
-            # Figure out what extra flags to pass to the gcc compilers
-            # being generated to make sure that they use our glibc.
-            extraFlags="$(cat $NIX_CC_CROSS/nix-support/libc-cflags)"
-            extraLDFlags="$(cat $NIX_CC_CROSS/nix-support/libc-ldflags) $(cat $NIX_CC_CROSS/nix-support/libc-ldflags-before)"
+            # The path to the Glibc binaries of the target machine such as `crti.o'.
+            glibc_dir="$(cat $NIX_CC/nix-support/orig-libc || true)"
+            glibc_libdir="$glibc_dir/lib"
+            glibc_devdir="$(cat $NIX_CC/nix-support/orig-libc-dev || true)"
 
             # The path to the Glibc binaries such as `crti.o'.
-            glibc_dir="$(cat $NIX_CC_CROSS/nix-support/orig-libc)"
-            glibc_libdir="$glibc_dir/lib"
-            glibc_devdir="$(cat $NIX_CC_CROSS/nix-support/orig-libc-dev)"
             configureFlags="$configureFlags --with-native-system-header-dir=$glibc_devdir/include"
 
             # Use *real* header files, otherwise a limits.h is generated
@@ -105,6 +112,7 @@ if test "$noSysDirs" = "1"; then
                 EXTRA_TARGET_LDFLAGS="$EXTRA_TARGET_LDFLAGS -Wl,$i"
             done
         fi
+        echo "BEN: EXTRA_TARGET_LDFLAGS = $EXTRA_TARGET_LDFLAGS"
     fi
 
     # CFLAGS_FOR_TARGET are needed for the libstdc++ configure script to find
@@ -120,7 +128,7 @@ if test "$noSysDirs" = "1"; then
         CXXFLAGS_FOR_TARGET="$EXTRA_TARGET_CFLAGS $EXTRA_TARGET_LDFLAGS" \
         FLAGS_FOR_TARGET="$EXTRA_TARGET_CFLAGS $EXTRA_TARGET_LDFLAGS" \
         LDFLAGS_FOR_BUILD="$EXTRA_FLAGS $EXTRA_LDFLAGS" \
-        LDFLAGS_FOR_TARGET="$EXTRA_TARGET_LDFLAGS $EXTRA_TARGET_LDFLAGS" \
+        LDFLAGS_FOR_TARGET="$EXTRA_TARGET_FLAGS $EXTRA_TARGET_LDFLAGS" \
         )
 
     if test -z "$targetConfig"; then
@@ -141,6 +149,8 @@ if test "$noSysDirs" = "1"; then
             LIMITS_H_TEST=true \
             )
     fi
+
+    printf 'BEN: makeFlagsArray = %s\n' "${makeFlagsArray[@]}"
 fi
 
 if test -n "$targetConfig"; then
@@ -170,7 +180,7 @@ preConfigure() {
         # important for example in order not to get libssp built,
         # because its functionality is in glibc already.
         sed -i \
-            -e "s,glibc_header_dir=/usr/include,glibc_header_dir=$libc_dev/include", \
+            -e "s,glibc_header_dir=/usr/include,glibc_header_dir=$target_libc_dev/include", \
             gcc/configure
     fi
 

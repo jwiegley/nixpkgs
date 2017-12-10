@@ -1,15 +1,16 @@
-{ stdenv, fetchurl, fetchpatch, bc, dtc, python2
+{ stdenv, buildPackages, fetchurl, fetchpatch, bc, dtc, python2
 , hostPlatform
 }:
 
 let
   buildUBoot = { targetPlatforms
-            , filesToInstall
-            , installDir ? "$out"
-            , defconfig
-            , extraMeta ? {}
-            , ... } @ args:
-           stdenv.mkDerivation (rec {
+               , filesToInstall
+               , installDir ? "$out"
+               , defconfig
+               , extraMeta ? {}
+               , otherConfig ? ""
+               , ... } @ args:
+            stdenv.mkDerivation (rec {
 
     name = "uboot-${defconfig}-${version}";
     version = "2017.11";
@@ -38,14 +39,15 @@ let
       patchShebangs tools
     '';
 
-    nativeBuildInputs = [ bc dtc python2 ];
+    nativeBuildInputs = [ bc dtc python2 buildPackages.stdenv.cc ];
 
     hardeningDisable = [ "all" ];
 
-    makeFlags = [ "DTC=dtc" ];
-
     configurePhase = ''
-      make ${defconfig}
+      make $makeFlags ${defconfig}
+      # Apply otherConfig
+      echo "${otherConfig}" >> .config
+      make $makeFlags oldconfig
     '';
 
     installPhase = ''
@@ -60,12 +62,14 @@ let
     enableParallelBuilding = true;
     dontStrip = true;
 
-    crossAttrs = {
-      makeFlags = [
-        "ARCH=${hostPlatform.platform.kernelArch}"
+    makeFlags = stdenv.lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform)
+      [
+        "DTC=dtc"
         "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
+        "HOSTCC=${buildPackages.stdenv.cc.targetPrefix}gcc"
+        "HOSTCFLAGS+=-I${stdenv.lib.getDev buildPackages.openssl}/include"
+        "HOSTLDFLAGS+=-L${stdenv.lib.getLib buildPackages.openssl}/lib"
       ];
-    };
 
     meta = with stdenv.lib; {
       homepage = http://www.denx.de/wiki/U-Boot/;
@@ -81,6 +85,16 @@ in rec {
 
   ubootTools = buildUBoot rec {
     defconfig = "allnoconfig";
+    # This is necessary otherwise the build fails with undefined symbols at link-time.
+    # This is likely a bug in u-boot.
+    otherConfig = ''
+      CONFIG_FIT=y
+      CONFIG_FIT_SIGNATURE=y
+      CONFIG_FIT_ENABLE_SHA256_SUPPORT=y
+      CONFIG_FIT_VERBOSE=y
+      CONFIG_FIT_BEST_MATCH=y
+      CONFIG_SPL_RSA=y
+    '';
     installDir = "$out/bin";
     buildFlags = "tools NO_SDL=1";
     dontStrip = false;
@@ -166,5 +180,11 @@ in rec {
     defconfig = "wandboard_defconfig";
     targetPlatforms = ["armv7l-linux"];
     filesToInstall = ["u-boot.img" "SPL"];
+  };
+
+  ubootMicrozed = buildUBoot rec {
+    defconfig = "zynq_microzed_defconfig";
+    targetPlatforms = ["armv7l-linux"];
+    filesToInstall = ["u-boot.bin"];
   };
 }

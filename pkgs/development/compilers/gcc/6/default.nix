@@ -1,4 +1,4 @@
-{ stdenv, targetPackages, fetchurl, noSysDirs
+{ stdenv, buildPackages, targetPackages, fetchurl, noSysDirs
 , langC ? true, langCC ? true, langFortran ? false
 , langObjC ? targetPlatform.isDarwin
 , langObjCpp ? targetPlatform.isDarwin
@@ -47,9 +47,6 @@ assert libelf != null -> zlib != null;
 
 # Make sure we get GNU sed.
 assert hostPlatform.isDarwin -> gnused != null;
-
-# Need c++filt on darwin
-assert hostPlatform.isDarwin -> targetPackages.stdenv.cc.bintools or null != null;
 
 # The go frontend is written in c++
 assert langGo -> langCC;
@@ -179,7 +176,7 @@ let version = "6.4.0";
     stageNameAddon = if crossStageStatic then "-stage-static" else "-stage-final";
     crossNameAddon = if targetPlatform != hostPlatform then "-${targetPlatform.config}" + stageNameAddon else "";
 
-    bootstrap = targetPlatform == hostPlatform;
+    bootstrap = targetPlatform == hostPlatform && buildPlatform == hostPlatform;
 
 in
 
@@ -203,7 +200,8 @@ stdenv.mkDerivation ({
   setOutputFlags = false;
   NIX_NO_SELF_RPATH = true;
 
-  libc_dev = stdenv.cc.libc_dev;
+  build_libc_dev = buildPackages.stdenv.cc.libc_dev;
+  target_libc_dev = stdenv.cc.libc_dev;
 
   hardeningDisable = [ "format" ];
 
@@ -279,12 +277,23 @@ stdenv.mkDerivation ({
   inherit noSysDirs staticCompiler langJava
     libcCross crossMingw;
 
+  depsBuildBuild = [ buildPackages.stdenv.cc ];
   nativeBuildInputs = [ texinfo which gettext ]
     ++ (optional (perl != null) perl)
     ++ (optional javaAwtGtk pkgconfig);
 
-  buildInputs = [ gmp mpfr libmpc libelf ]
-    ++ (optional (isl != null) isl)
+  # For building runtime libs
+  depsBuildTarget =
+    if hostPlatform == buildPlatform then [
+      targetPackages.stdenv.cc.bintools # newly-built gcc will be used
+    ] else assert targetPlatform == hostPlatform; [ # build != host == target
+      stdenv.cc
+    ];
+
+  buildInputs = [
+    gmp mpfr libmpc libelf
+    targetPackages.stdenv.cc.bintools # For linking code at run-time
+  ] ++ (optional (isl != null) isl)
     ++ (optional (zlib != null) zlib)
     ++ (optionals langJava [ boehmgc zip unzip ])
     ++ (optionals javaAwtGtk ([ gtk2 libart_lgpl ] ++ xlibs))
@@ -309,16 +318,49 @@ stdenv.mkDerivation ({
   + stdenv.lib.optionalString (langJava || langGo) ''
     export lib=$out;
   ''
-  ;
+  + stdenv.lib.optionalString (buildPlatform != hostPlatform)
+  (let yesFuncs = [
+        "asprintf" "atexit"
+        "basename" "bcmp" "bcopy" "bsearch" "bzero"
+        "calloc" "canonicalize_file_name" "clock"
+        "dup3"
+        "ffs" "fork" "__fsetlocking"
+        "getcwd" "getpagesize" "getrlimit" "getrusage" "gettimeofday"
+        "index" "insque"
+        "memchr" "memcmp" "mempcpy" "memcpy" "memmem" "memmove" "memset" "mkstemps"
+        "on_exit"
+        "psignal" "putenv"
+        "random" "realpath" "rename" "rindex"
+        "sbrk" "setenv" "setrlimit" "sigsetmask" "snprintf"
+        "stpcpy" "stpncpy" "strcasecmp" "strchr" "strdup"
+        "strerror" "strncasecmp" "strndup" "strnlen" "strrchr" "strsignal" "strstr"
+        "strtod" "strtol" "strtoul" "strtoll" "strtoull" "strverscmp"
+        "sysconf" "sysctl"
+        "times" "tmpnam"
+        "vfork" "vasprintf" "vfprintf" "vprintf" "vsprintf" "vsnprintf"
+        "wait3" "wait4" "waitpid"
+      ];
+      noFuncs = [
+        "_doprnt"
+        "getsysinfo"
+        "pstat_getdynamic" "pstat_getstatic"
+        "setproctitle" "spawnvpe" "spawnve" "sysmp"
+        "table"
+      ];
+   in stdenv.lib.concatStringsSep "\n"
+        ([ ''
+           export ac_cv_search_strerror=""
+           export libiberty_cv_var_sys_errlist=yes
+           export libiberty_cv_var_sys_nerr=yes
+           export libiberty_cv_var_sys_siglist=yes
+         ''] ++ map (func: "export ac_cv_func_${func}=yes") yesFuncs
+         ++ map (func: "export ac_cv_func_${func}=no") noFuncs)
+  );
 
   dontDisableStatic = true;
 
   # TODO(@Ericson2314): Always pass "--target" and always prefix.
-  configurePlatforms =
-    # TODO(@Ericson2314): Figure out what's going wrong with Arm
-    if hostPlatform == targetPlatform && targetPlatform.isArm
-    then []
-    else [ "build" "host" ] ++ stdenv.lib.optional (targetPlatform != hostPlatform) "target";
+  configurePlatforms = [ "build" "host" "target" ];
 
   configureFlags =
     # Basic dependencies
@@ -392,6 +434,11 @@ stdenv.mkDerivation ({
     platformFlags ++
     optional (targetPlatform != hostPlatform) crossConfigureFlags ++
     optional (!bootstrap) "--disable-bootstrap" ++
+    optionals (targetPlatform == hostPlatform) platformFlags ++
+    [
+      "CC_FOR_BUILD=${buildPackages.stdenv.cc.targetPrefix}gcc"
+      "CXX_FOR_BUILD=${buildPackages.stdenv.cc.targetPrefix}g++"
+    ] ++
 
     # Platform-specific flags
     optional (targetPlatform == hostPlatform && targetPlatform.isi686) "--with-arch=i686" ++
@@ -412,58 +459,8 @@ stdenv.mkDerivation ({
     then "install-strip"
     else "install";
 
-  /* For cross-built gcc (build != host == target) */
-  crossAttrs = {
-    AR_FOR_BUILD = "ar";
-    AS_FOR_BUILD = "as";
-    LD_FOR_BUILD = "ld";
-    NM_FOR_BUILD = "nm";
-    OBJCOPY_FOR_BUILD = "objcopy";
-    OBJDUMP_FOR_BUILD = "objdump";
-    RANLIB_FOR_BUILD = "ranlib";
-    SIZE_FOR_BUILD = "size";
-    STRINGS_FOR_BUILD = "strings";
-    STRIP_FOR_BUILD = "strip";
-    CC_FOR_BUILD = "gcc";
-    CXX_FOR_BUILD = "g++";
-
-    AR = "${targetPlatform.config}-ar";
-    AS = "${targetPlatform.config}-as";
-    LD = "${targetPlatform.config}-ld";
-    NM = "${targetPlatform.config}-nm";
-    OBJCOPY = "${targetPlatform.config}-objcopy";
-    OBJDUMP = "${targetPlatform.config}-objdump";
-    RANLIB = "${targetPlatform.config}-ranlib";
-    SIZE = "${targetPlatform.config}-size";
-    STRINGS = "${targetPlatform.config}-strings";
-    STRIP = "${targetPlatform.config}-strip";
-    CC = "${targetPlatform.config}-gcc";
-    CXX = "${targetPlatform.config}-g++";
-
-    AR_FOR_TARGET = "${targetPlatform.config}-ar";
-    AS_FOR_TARGET = "${targetPlatform.config}-as";
-    LD_FOR_TARGET = "${targetPlatform.config}-ld";
-    NM_FOR_TARGET = "${targetPlatform.config}-nm";
-    OBJCOPY_FOR_TARGET = "${targetPlatform.config}-objcopy";
-    OBJDUMP_FOR_TARGET = "${targetPlatform.config}-objdump";
-    RANLIB_FOR_TARGET = "${targetPlatform.config}-ranlib";
-    SIZE_FOR_TARGET = "${targetPlatform.config}-size";
-    STRINGS_FOR_TARGET = "${targetPlatform.config}-strings";
-    STRIP_FOR_TARGET = "${targetPlatform.config}-strip";
-    CC_FOR_TARGET = "${targetPlatform.config}-gcc";
-    CXX_FOR_TARGET = "${targetPlatform.config}-g++";
-    # If we are making a cross compiler, targetPlatform != hostPlatform
-    NIX_CC_CROSS = optionalString (targetPlatform == hostPlatform) builtins.toString stdenv.cc;
-    dontStrip = true;
-    buildFlags = "";
-  };
-
-
-  # Needed for the cross compilation to work
-  AR = "ar";
-  LD = "ld";
   # http://gcc.gnu.org/install/specific.html#x86-64-x-solaris210
-  CC = if stdenv.system == "x86_64-solaris" then "gcc -m64" else "gcc";
+  ${if hostPlatform.system == "x86_64-solaris" then "CC" else null} = "gcc -m64";
 
   # Setting $CPATH and $LIBRARY_PATH to make sure both `gcc' and `xgcc' find
   # the library headers and binaries, regarless of the language being

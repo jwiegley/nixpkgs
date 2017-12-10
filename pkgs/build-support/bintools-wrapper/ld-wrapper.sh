@@ -14,11 +14,11 @@ if [ -n "@coreutils_bin@" ]; then
     PATH="@coreutils_bin@/bin"
 fi
 
-if [ -z "${NIX_CC_WRAPPER_@infixSalt@_FLAGS_SET:-}" ]; then
+source @out@/nix-support/utils.sh
+
+if [ -z "${NIX_BINTOOLS_WRAPPER_@infixSalt@_FLAGS_SET:-}" ]; then
     source @out@/nix-support/add-flags.sh
 fi
-
-source @out@/nix-support/utils.sh
 
 
 # Optionally filter out paths not refering to the store.
@@ -66,6 +66,11 @@ if [ -z "${NIX_@infixSalt@_LDFLAGS_SET:-}" ]; then
 fi
 
 extraAfter+=($NIX_@infixSalt@_LDFLAGS_AFTER)
+
+# Specify the target emulation if nothing is passed in ("-m" overrides this
+# environment variable). Ensures we never blindly fallback on targeting the host
+# platform.
+: ${LDEMULATION:=@emulation@}
 
 # Three tasks:
 #
@@ -115,7 +120,11 @@ then
                     -l?*)
                         libs["lib${p:2}.so"]=1
                         ;;
-                    "${NIX_STORE:-}"/*.so | "${NIX_STORE:-}"/*.so.*)
+                    # Note that we used to only look at shared libraries in /nix/store.
+                    # However, some packages (libssh2) build non-installed executables
+                    # in their build trees which link against shared libraries
+                    # in their tree. Linking these breaks if we are so restrictive.
+                    */*.so | */*.so.*)
                         # This is a direct reference to a shared library.
                         libDirs+=("${p%/*}")
                         libs["${p##*/}"]=1
@@ -165,7 +174,7 @@ if [ "$NIX_@infixSalt@_DONT_SET_RPATH" != 1 ]; then
                 # should be found in a later directory, so we add all
                 # directories that contain any of the libraries to rpath.
                 rpaths["$dir"]=1
-                extraAfter+=(-rpath "$dir")
+                extraAfter+=(-rpath "$dir" -rpath-link "$dir")
                 break
             fi
         done

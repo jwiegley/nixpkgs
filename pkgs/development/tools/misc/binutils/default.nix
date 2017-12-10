@@ -2,7 +2,12 @@
 , fetchurl, zlib
 , buildPlatform, hostPlatform, targetPlatform
 , noSysDirs, gold ? true, bison ? null
+  # Which ld implementation to use by default?
+, defaultLd ? null
 }:
+
+assert (builtins.elem defaultLd ["bfd" "gold" null]);
+assert defaultLd == "gold" -> gold;
 
 let
   # Note to whoever is upgrading this: 2.29 is broken.
@@ -53,11 +58,20 @@ stdenv.mkDerivation rec {
     # elf32-littlearm-vxworks in favor of the first.
     # https://github.com/NixOS/nixpkgs/pull/30484#issuecomment-345472766
     ./disambiguate-arm-targets.patch
+
+    # For some reason bfd ld doesn't search DT_RPATH when cross-compiling. It's
+    # not clear why this behavior was decided upon but it has the unfortunate
+    # consequence that the linker will fail to find transitive dependencies of
+    # shared objects when cross-compiling. Consequently, we are forced to
+    # override this behavior, forcing ld to search DT_RPATH even when
+    # cross-compiling.
+    ./always-search-rpath.patch
   ];
 
-  outputs = [ "out" "info" ];
+  outputs = [ "out" "info" "man" ];
 
-  nativeBuildInputs = [ bison buildPackages.stdenv.cc ];
+  depsBuildBuild = [ buildPackages.stdenv.cc ];
+  nativeBuildInputs = [ bison ];
   buildInputs = [ zlib ];
 
   inherit noSysDirs;
@@ -82,11 +96,7 @@ stdenv.mkDerivation rec {
     else "-static-libgcc";
 
   # TODO(@Ericson2314): Always pass "--target" and always targetPrefix.
-  configurePlatforms =
-    # TODO(@Ericson2314): Figure out what's going wrong with Arm
-    if hostPlatform == targetPlatform && targetPlatform.isArm
-    then []
-    else [ "build" "host" ] ++ stdenv.lib.optional (targetPlatform != hostPlatform) "target";
+  configurePlatforms = [ "build" "host" ] ++ stdenv.lib.optional (targetPlatform != hostPlatform) "target";
 
   configureFlags = [
     "--enable-targets=all" "--enable-64-bit-bfd"
@@ -97,7 +107,8 @@ stdenv.mkDerivation rec {
     "--enable-deterministic-archives"
     "--disable-werror"
     "--enable-fix-loongson2f-nop"
-  ] ++ optionals gold [ "--enable-gold" "--enable-plugins" ];
+  ] ++ optionals gold [ "--enable-gold" "--enable-plugins" ]
+  ++ optional (defaultLd == "gold") "--enable-gold=default";
 
   enableParallelBuilding = true;
 

@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, autoconf, automake, libtool, bison, pcre }:
+{ lib, stdenv, fetchFromGitHub, autoreconfHook, bison, pcre }:
 
 stdenv.mkDerivation rec {
   name = "swig-${version}";
@@ -11,19 +11,18 @@ stdenv.mkDerivation rec {
     sha256 = "0khm9gh5pczfcihr0pbicaicc4v9kjm5ip2alvkhmbb3ga6njkcm";
   };
 
-  nativeBuildInputs = [ autoconf automake libtool bison ];
-  buildInputs = [ pcre ];
+  # Configure needs to the pcre-config script
+  nativeBuildInputs = [ autoreconfHook bison pcre.crossDrv.dev ];
+  buildInputs = [ pcre.crossDrv ];
 
-  configureFlags = "--without-tcl";
+  configureFlags = "--without-tcl --with-pcre=${lib.getLib pcre}";
 
   postPatch = ''
     # Disable ccache documentation as it need yodl
     sed -i '/man1/d' CCache/Makefile.in
   '';
 
-  preConfigure = ''
-    ./autogen.sh
-  '';
+  autoreconfPhase = '' ./autogen.sh '';
 
   meta = {
     description = "SWIG, an interface compiler that connects C/C++ code to higher-level languages";
