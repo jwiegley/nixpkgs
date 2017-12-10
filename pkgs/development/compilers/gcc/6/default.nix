@@ -200,7 +200,8 @@ stdenv.mkDerivation ({
   setOutputFlags = false;
   NIX_NO_SELF_RPATH = true;
 
-  libc_dev = stdenv.cc.libc_dev;
+  build_libc_dev = buildPackages.stdenv.cc.libc_dev;
+  target_libc_dev = stdenv.cc.libc_dev;
 
   hardeningDisable = [ "format" ];
 
