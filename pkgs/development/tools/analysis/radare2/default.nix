@@ -1,4 +1,4 @@
-{stdenv, fetchFromGitHub, fetchurl, pkgconfig, libusb, readline, libewf, perl, zlib, openssl,
+{stdenv, fetchFromGitHub, fetchurl, fetchpatch, pkgconfig, libusb, readline, libewf, perl, zlib, openssl,
 gtk2 ? null, vte ? null, gtkdialog ? null,
 python ? null,
 ruby ? null,
@@ -13,14 +13,14 @@ let
   inherit (stdenv.lib) optional;
 in
 stdenv.mkDerivation rec {
-  version = "2.0.0";
+  version = "2.1.0";
   name = "radare2-${version}";
 
   src = fetchFromGitHub {
     owner = "radare";
     repo = "radare2";
     rev = version;
-    sha256 = "1ahai9x6jc15wjzdbdkri3rc88ark2i5s8nv2pxcp0wwldvawlzi";
+    sha256 = "1mny0iw2dgszvvx0yb0z5vlygz4f3jblzi9byybczm8wdqs1vhb1";
   };
 
   postPatch = let
@@ -42,13 +42,6 @@ stdenv.mkDerivation rec {
     ++ optional rubyBindings [ruby]
     ++ optional pythonBindings [python]
     ++ optional luaBindings [lua];
-
-  postInstall = ''
-    # replace symlinks pointing into the build directory with the files they point to
-    rm $out/bin/{r2-docker,r2-indent}
-    cp sys/r2-docker.sh $out/bin/r2-docker
-    cp sys/indent.sh    $out/bin/r2-indent
-  '';
 
   meta = {
     description = "unix-like reverse engineering framework and commandline tools";

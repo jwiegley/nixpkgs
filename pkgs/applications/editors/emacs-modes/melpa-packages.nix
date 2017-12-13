@@ -51,9 +51,6 @@ self:
       cmake-mode = markBroken (dontConfigure super.cmake-mode);
 
       # upstream issue: missing file header
-      cn-outline = markBroken super.cn-outline;
-
-      # upstream issue: missing file header
       connection = markBroken super.connection;
 
       # upstream issue: missing file header
@@ -69,6 +66,9 @@ self:
       # upstream issue: missing file header
       elmine = markBroken super.elmine;
 
+      # upstream issue: missing dependency redshank
+      emr = markBroken super.emr;
+
       ess-R-data-view = super.ess-R-data-view.override {
         inherit (self.melpaPackages) ess ctable popup;
       };
@@ -76,6 +76,12 @@ self:
       ess-R-object-popup = super.ess-R-object-popup.override {
         inherit (self.melpaPackages) ess popup;
       };
+
+      # upstream issue: missing dependency highlight
+      evil-search-highlight-persist = markBroken super.evil-search-highlight-persist;
+
+      # upstream issue: missing dependency highlight
+      floobits  = markBroken super.floobits;
 
       # missing OCaml
       flycheck-ocaml = markBroken super.flycheck-ocaml;
@@ -149,6 +155,9 @@ self:
 
       # upstream issue: missing file footer
       seoul256-theme = markBroken super.seoul256-theme;
+
+      # upstream issue: missing dependency highlight
+      sonic-pi  = markBroken super.sonic-pi;
 
       spaceline = super.spaceline.override {
         inherit (self.melpaPackages) powerline;
