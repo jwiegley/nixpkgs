@@ -12,10 +12,12 @@ stdenv.mkDerivation rec {
     sha256 = "10yp0b4pwrw5mcd81yn3d0d87fnqpp4si5d25dfhl6n2640dnnw0";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [
+    pkgconfig
+    asciidoc xmlto docbook_xml_dtd_45 docbook_xsl libxslt
+  ];
   buildInputs = [
     attr acl zlib libuuid e2fsprogs lzo
-    asciidoc xmlto docbook_xml_dtd_45 docbook_xsl libxslt
   ];
 
   # gcc bug with -O1 on ARM with gcc 4.8
