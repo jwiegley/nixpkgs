@@ -39,7 +39,7 @@ let
       patchShebangs tools
     '';
 
-    nativeBuildInputs = [ bc dtc python2 buildPackages.stdenv.cc ];
+    nativeBuildInputs = [ bc dtc python2 buildPackages.stdenv.cc buildPackages.openssl ];
 
     hardeningDisable = [ "all" ];
 
@@ -66,6 +66,7 @@ let
       [
         "DTC=dtc"
         "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
+      ] ++ [
         "HOSTCC=${buildPackages.stdenv.cc.targetPrefix}gcc"
         "HOSTCFLAGS+=-I${stdenv.lib.getDev buildPackages.openssl}/include"
         "HOSTLDFLAGS+=-L${stdenv.lib.getLib buildPackages.openssl}/lib"
