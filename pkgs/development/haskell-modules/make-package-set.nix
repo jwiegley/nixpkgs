@@ -36,8 +36,8 @@ let
     inherit stdenv;
     inherit (pkgs) fetchurl pkgconfig glibcLocales coreutils gnugrep gnused;
     nodejs = pkgs.nodejs-slim;
-    jailbreak-cabal = if (self.ghc.cross or null) != null
-      then self.ghc.bootPkgs.jailbreak-cabal
+    jailbreak-cabal = if stdenv.buildPlatform != stdenv.hostPlatform
+      then pkgs.buildPackages.haskellPackages.jailbreak-cabal
       else self.jailbreak-cabal;
     inherit (self) ghc;
     hscolour = overrideCabal self.hscolour (drv: {
