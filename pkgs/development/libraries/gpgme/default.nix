@@ -4,7 +4,8 @@
 let inherit (stdenv) lib system; in
 
 stdenv.mkDerivation rec {
-  name = "gpgme-1.10.0";
+  name = "gpgme-${version}";
+  version="1.10.0";
 
   src = fetchurl {
     url = "mirror://gnupg/gpgme/${name}.tar.bz2";

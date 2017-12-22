@@ -1,4 +1,4 @@
-{ stdenv, buildPythonPackage
+{ stdenv, buildPythonPackage, python
 , fetchPypi, libgpgerror, swig2
 , gpgme
 , withManpage ? true }:
@@ -10,8 +10,23 @@ buildPythonPackage rec {
   src = gpgme.src;
 
   # it could also run --cflags instead
+  # LDFLAGS="-L${python}/lib";
+  # now fails with
+#checking consistency of all components of python development environment... no
+#configure: WARNING:
+#  Could not link test program to Python. Maybe the main Python library has been
+#  installed in some non-standard library path. If so, pass it to configure,
+#  via the LDFLAGS environment variable.
+#  Example: ./configure LDFLAGS="-L/usr/non-standard-path/python/lib"
+#  ============================================================================
+#   You probably have to install the development version of the Python package
+#   for your distribution.  The exact name of this package varies among them.
+#  ============================================================================
+
+#  #
+
   preConfigure = ''
-    ./configure --enable-languages=python
+    ./configure --enable-languages=python LDFLAGS="-L${python}/lib"
     cd ${gpgme}/lang/python
     substituteInPlace setup.py \
       --replace \
