@@ -91,10 +91,17 @@ stdenv.mkDerivation rec {
   configureFlags = [
     "--datadir=$doc/share/doc/ghc"
     "--with-curses-includes=${ncurses.dev}/include" "--with-curses-libraries=${ncurses.out}/lib"
+    "CC=${targetPackages.stdenv.cc}/bin/${targetPackages.stdenv.cc.targetPrefix}cc"
+    "AS=${targetPackages.stdenv.cc.bintools}/bin/${targetPackages.stdenv.cc.bintools.targetPrefix}as"
+    "LD=${targetPackages.stdenv.cc.bintools}/bin/${targetPackages.stdenv.cc.bintools.targetPrefix}ld.gold"
+    "AR=${targetPackages.stdenv.cc.bintools}/bin/${targetPackages.stdenv.cc.bintools.targetPrefix}ar"
+    "NM=${targetPackages.stdenv.cc.bintools}/bin/${targetPackages.stdenv.cc.bintools.targetPrefix}nm"
   ] ++ stdenv.lib.optional (targetPlatform == hostPlatform && ! enableIntegerSimple) [
     "--with-gmp-includes=${gmp.dev}/include" "--with-gmp-libraries=${gmp.out}/lib"
   ] ++ stdenv.lib.optional (targetPlatform == hostPlatform && hostPlatform.libc != "glibc") [
     "--with-iconv-includes=${libiconv}/include" "--with-iconv-libraries=${libiconv}/lib"
+  ] ++ stdenv.lib.optionals (buildPlatform != targetPlatform) [
+    "ac_cv_c_bigendian=no"
   ] ++ stdenv.lib.optionals (targetPlatform != hostPlatform) [
     "--enable-bootstrap-with-devel-snapshot"
   ] ++ stdenv.lib.optionals (targetPlatform.isDarwin && targetPlatform.isAarch64) [
