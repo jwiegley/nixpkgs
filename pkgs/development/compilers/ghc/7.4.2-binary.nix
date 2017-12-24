@@ -132,6 +132,11 @@ stdenv.mkDerivation rec {
     [ $(./main) == "yes" ]
   '';
 
+  passthru = {
+    # Our Cabal compiler name
+    haskellCompilerName = "ghc";
+  };
+
   meta.license = stdenv.lib.licenses.bsd3;
   meta.platforms = ["x86_64-linux" "i686-linux" "x86_64-darwin"];
 }

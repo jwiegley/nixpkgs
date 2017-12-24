@@ -72,6 +72,9 @@ in stdenv.mkDerivation (rec {
 
   passthru = {
     inherit bootPkgs;
+
+    # Our Cabal compiler name
+    haskellCompilerName = "ghc";
   } // stdenv.lib.optionalAttrs (targetPlatform != buildPlatform) {
     crossCompiler = selfPkgs.ghc.override {
       cross = targetPlatform;

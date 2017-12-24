@@ -84,6 +84,11 @@ stdenv.mkDerivation rec {
     [ $(./main) == "yes" ]
   '';
 
+  passthru = {
+    # Our Cabal compiler name
+    haskellCompilerName = "ghc";
+  };
+
   meta = {
     homepage = http://haskell.org/ghc;
     description = "The Glasgow Haskell Compiler";
