@@ -1,4 +1,4 @@
-import os
+import argparse
 import re
 import requests
 import sys
@@ -6,7 +6,8 @@ import sys
 def version_to_list(version):
 	return list(map(int, version.split('.')))
 
-def odd_unstable(version, selected):
+def odd_unstable(version_str, selected):
+	version = version_to_list(version_str)
 	if len(version) < 2:
 		return True
 
@@ -30,39 +31,33 @@ def make_version_policy(version_predicate, selected):
 version_pattern = re.compile(r'(?<=<a href=")\d+(?:\.\d+)*(?=/"><img)')
 latest_pattern = re.compile(r'(?<=<a href="LATEST-IS-)\d+(?:\.\d+)*(?="><img)')
 
-def value_in(value, allowed_values, label):
-	if value not in allowed_values:
-		options = ', '.join(allowed_values)
-		print('{} must be one of {}; it is {} instead.'.format(label, options, value), file=sys.stderr)
+parser = argparse.ArgumentParser(description='Find latest version for a GNOME package.')
+parser.add_argument('package-name', help='name of the package')
+parser.add_argument('version-policy', help='version selection policy', choices=version_policies.keys(), default='odd-unstable')
+parser.add_argument('requested-release', help='requested release', choices=['stable', 'unstable'], default='stable')
+
+
+if __name__ == '__main__':
+	args = parser.parse_args()
+
+	package_name = getattr(args, 'package-name')
+	requested_release = getattr(args, 'requested-release')
+	version_predicate = version_policies[getattr(args, 'version-policy')]
+	version_policy = make_version_policy(version_predicate, requested_release)
+
+	versions = [ version.group(0) for version in version_pattern.finditer(requests.get('https://ftp.gnome.org/pub/GNOME/sources/{}/'.format(package_name)).text) ]
+
+	versions = sorted(filter(version_policy, versions), key=version_to_list)
+
+	if len(versions) == 0:
+		print('No versions matched.', file=sys.stderr)
 		sys.exit(1)
 
-if 'packageName' not in os.environ:
-	print('Missing packageName environment variable.', file=sys.stderr)
-	sys.exit(1)
-package_name = os.environ['packageName']
+	version_branch = versions[-1]
+	latest_version = latest_pattern.search(requests.get('https://ftp.gnome.org/pub/GNOME/sources/{}/{}/'.format(package_name, version_branch)).text)
 
-requested_release = os.environ.get('requestedRelease', 'stable')
-value_in(requested_release, ['stable', 'unstable'], 'Requested release')
+	if not latest_version:
+		print('Missing LATEST-IS file.', file=sys.stderr)
+		sys.exit(1)
 
-version_policy_name = os.environ.get('versionPolicy', 'odd-unstable')
-value_in(version_policy_name, version_policies.keys(), 'Version policy')
-version_predicate = version_policies[version_policy_name]
-version_policy = make_version_policy(version_predicate, requested_release)
-
-
-versions = [ version.group(0) for version in version_pattern.finditer(requests.get('https://ftp.gnome.org/pub/GNOME/sources/{}/'.format(package_name)).text) ]
-
-versions = sorted(filter(version_policy, versions), key=version_to_list)
-
-if len(versions) == 0:
-	print('No versions matched.', file=sys.stderr)
-	sys.exit(1)
-
-version_branch = versions[-1]
-latest_version = latest_pattern.search(requests.get('https://ftp.gnome.org/pub/GNOME/sources/{}/{}/'.format(package_name, version_branch)).text)
-
-if not latest_version:
-	print('Missing LATEST-IS file.', file=sys.stderr)
-	sys.exit(1)
-
-print(latest_version.group(0))
+	print(latest_version.group(0))

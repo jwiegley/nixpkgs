@@ -1,9 +1,10 @@
-{ runCommand, python3, common-updater-scripts }:
-{ packageName, versionPolicy ? "odd-unstable" }:
+{ lib, writeScript, python3, common-updater-scripts, coreutils, gnugrep, gnused }:
+{ packageName, attrPath ? packageName, versionPolicy ? "odd-unstable" }:
 
 let
   python = python3.withPackages (p: [ p.requests ]);
-in runCommand "update-gnome-pkg" { buildInputs = [ common-updater-scripts python ]; inherit packageName versionPolicy; }''
-latest_tag=$(python "${./find-latest-version.py}")
-update-source-version "$packageName" "$latest_tag"
+in writeScript "update-${packageName}" ''
+PATH=${lib.makeBinPath [ common-updater-scripts coreutils gnugrep gnused python ]}
+latest_tag=$(python "${./find-latest-version.py}" "${packageName}" "${versionPolicy}" "stable")
+update-source-version "${attrPath}" "$latest_tag"
 ''
