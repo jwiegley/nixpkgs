@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 import sys
@@ -18,45 +19,35 @@ def odd_unstable(version, selected):
 def any_version(version, selected):
 	return True
 
+version_policies = {
+	'odd-unstable': odd_unstable,
+	'any': any_version,
+}
+
 def make_version_policy(version_predicate, selected):
 	return lambda version: version_predicate(version, selected)
 
 version_pattern = re.compile(r'(?<=<a href=")\d+(?:\.\d+)*(?=/"><img)')
 latest_pattern = re.compile(r'(?<=<a href="LATEST-IS-)\d+(?:\.\d+)*(?="><img)')
 
-if len(sys.argv) < 2:
-	print('No arguments passed.', file=sys.stderr)
+def value_in(value, allowed_values, label):
+	if value not in allowed_values:
+		options = ', '.join(allowed_values)
+		print('{} must be one of {}; it is {} instead.'.format(label, options, value), file=sys.stderr)
+		sys.exit(1)
+
+if 'packageName' not in os.environ:
+	print('Missing packageName environment variable.', file=sys.stderr)
 	sys.exit(1)
-elif len(sys.argv) == 2:
-	version_policy = make_version_policy(odd_unstable, 'stable')
-	package_name = sys.argv[1]
-elif len(sys.argv) == 3:
-	package_name = sys.argv[1]
+package_name = os.environ['packageName']
 
-	if sys.argv[2] not in ['stable', 'unstable']:
-		print('Requsted release must be either stable or unstable.', file=sys.stderr)
-		sys.exit(1)
+requested_release = os.environ.get('requestedRelease', 'stable')
+value_in(requested_release, ['stable', 'unstable'], 'Requested release')
 
-	version_policy = make_version_policy(odd_unstable, sys.argv[2])
-elif len(sys.argv) == 4:
-	package_name = sys.argv[1]
-
-	if sys.argv[2] not in ['stable', 'unstable']:
-		print('Requsted release must be either stable or unstable.', file=sys.stderr)
-		sys.exit(1)
-
-	if sys.argv[3] == 'odd-unstable':
-		version_predicate = odd_unstable
-	elif sys.argv[3] == 'any':
-		version_predicate = any_version
-	else:
-		print('Requsted version policy must be one of odd-unstable or any.', file=sys.stderr)
-		sys.exit(1)
-
-	version_policy = make_version_policy(version_predicate, sys.argv[2])
-else:
-	print('Too many arguments passed.', file=sys.stderr)
-	sys.exit(1)
+version_policy_name = os.environ.get('versionPolicy', 'odd-unstable')
+value_in(version_policy_name, version_policies.keys(), 'Version policy')
+version_predicate = version_policies[version_policy_name]
+version_policy = make_version_policy(version_predicate, requested_release)
 
 
 versions = [ version.group(0) for version in version_pattern.finditer(requests.get('https://ftp.gnome.org/pub/GNOME/sources/{}/'.format(package_name)).text) ]
