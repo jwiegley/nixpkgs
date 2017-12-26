@@ -17,12 +17,12 @@ def odd_unstable(version_str, selected):
 	else:
 		return not even
 
-def any_version(version, selected):
+def no_policy(version, selected):
 	return True
 
 version_policies = {
 	'odd-unstable': odd_unstable,
-	'any': any_version,
+	'none': no_policy,
 }
 
 def make_version_policy(version_predicate, selected):
@@ -31,10 +31,10 @@ def make_version_policy(version_predicate, selected):
 version_pattern = re.compile(r'(?<=<a href=")\d+(?:\.\d+)*(?=/"><img)')
 latest_pattern = re.compile(r'(?<=<a href="LATEST-IS-)\d+(?:\.\d+)*(?="><img)')
 
-parser = argparse.ArgumentParser(description='Find latest version for a GNOME package.')
-parser.add_argument('package-name', help='name of the package')
-parser.add_argument('version-policy', help='version selection policy', choices=version_policies.keys(), default='odd-unstable')
-parser.add_argument('requested-release', help='requested release', choices=['stable', 'unstable'], default='stable')
+parser = argparse.ArgumentParser(description='Find latest version for a GNOME package by crawling their release server.')
+parser.add_argument('package-name', help='Name of the directory in https://ftp.gnome.org/pub/GNOME/sources/ containing the package.')
+parser.add_argument('version-policy', help='Policy determining which versions are considered stable. For most GNOME packages, odd minor versions are unstable but there are exceptions.', choices=version_policies.keys(), nargs='?', default='odd-unstable')
+parser.add_argument('requested-release', help='Most of the time, we will want to update to stable version but sometimes it is useful to test.', choices=['stable', 'unstable'], nargs='?', default='stable')
 
 
 if __name__ == '__main__':

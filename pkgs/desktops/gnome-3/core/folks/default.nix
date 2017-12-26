@@ -33,7 +33,7 @@ in stdenv.mkDerivation rec {
     updateScript = gnome3.updateScript {
       packageName = "folks";
       attrPath = "gnome3.folks";
-      versionPolicy = "any";
+      versionPolicy = "none";
     };
   };
 
