@@ -5185,6 +5185,9 @@ with pkgs;
   transfig = callPackage ../tools/graphics/transfig {
     libpng = libpng12;
   };
+  fig2dev = callPackage ../tools/graphics/fig2dev {
+    libpng = libpng12;
+  };
 
   truecrypt = callPackage ../applications/misc/truecrypt {
     stdenv = overrideInStdenv stdenv [ useOldCXXAbi ];
