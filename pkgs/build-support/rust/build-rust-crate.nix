@@ -146,7 +146,7 @@ let buildCrate = { crateName, crateVersion, crateAuthors, buildDependencies,
       export CARGO_PKG_VERSION=${crateVersion}
       export CARGO_PKG_AUTHORS="${authors}"
       export CARGO_CFG_TARGET_ARCH=${buildPlatform.parsed.cpu.name}
-      export CARGO_CFG_TARGET_OS=${buildPlatform.parsed.kernel.name}
+      export CARGO_CFG_TARGET_OS=${if stdenv.hostPlatform.isDarwin then "macos" else buildPlatform.parsed.kernel.name}
 
       export CARGO_CFG_TARGET_ENV="gnu"
       export CARGO_MANIFEST_DIR="."
