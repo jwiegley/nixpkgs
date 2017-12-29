@@ -11,6 +11,7 @@ assertExecutable() {
 # makeWrapper EXECUTABLE ARGS
 
 # ARGS:
+# --no-assert-exec  : skip assertion that the file is readable/exists/is executable
 # --argv0 NAME      : set name of executed process to NAME
 #                     (otherwise it’s called …-wrapped)
 # --set   VAR VAL   : add VAR with value VAL to the executable’s environment
@@ -32,8 +33,8 @@ makeWrapper() {
     local wrapper="$2"
     local params varName value command separator n fileNames
     local argv0 flagsBefore flags
-
-    assertExecutable "$original"
+    local noAssertExec=0
+    local noAssertExecInFlags=0
 
     mkdir -p "$(dirname "$wrapper")"
 
@@ -98,13 +99,22 @@ makeWrapper() {
             flags="${params[$((n + 1))]}"
             n=$((n + 1))
             flagsBefore="$flagsBefore $flags"
+            if [[ "${params[$((n + 1))]}" == *"--no-assert-exec"* ]]; then
+              noAssertExecInFlags=1
+            fi
         elif [[ "$p" == "--argv0" ]]; then
             argv0="${params[$((n + 1))]}"
             n=$((n + 1))
+        elif [[ "$p" == "--no-assert" ]]; then
+            noAssertExec=1
         else
             die "makeWrapper doesn't understand the arg $p"
         fi
     done
+
+    if [[ $noAssertExec -ne 1 || $noAssertExecInFlags -eq 1 ]]; then
+      assertExecutable "$original"
+    fi
 
     # Note: extraFlagsArray is an array containing additional flags
     # that may be set by --run actions.
@@ -136,8 +146,6 @@ filterExisting() {
 wrapProgram() {
     local prog="$1"
     local hidden
-
-    assertExecutable "$prog"
 
     hidden="$(dirname "$prog")/.$(basename "$prog")"-wrapped
     while [ -e "$hidden" ]; do
