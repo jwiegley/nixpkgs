@@ -20025,6 +20025,8 @@ with pkgs;
 
   aucdtect = callPackage ../tools/audio/aucdtect { };
 
+  toggl = libsForQt5.callPackage ../misc/toggl { };
+
   togglesg-download = callPackage ../tools/misc/togglesg-download { };
 
   discord = callPackage ../applications/networking/instant-messengers/discord { };
