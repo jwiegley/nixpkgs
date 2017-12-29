@@ -12614,6 +12614,8 @@ in {
 
   pecan = callPackage ../development/python-modules/pecan { };
 
+  lightgbm = callPackage ../development/python-modules/lightgbm { };
+
   kaitaistruct = callPackage ../development/python-modules/kaitaistruct { };
 
   Kajiki = buildPythonPackage rec {
