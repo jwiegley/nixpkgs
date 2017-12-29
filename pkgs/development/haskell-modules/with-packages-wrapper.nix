@@ -3,6 +3,7 @@
 , postBuild ? ""
 , haskellPackages
 , ghcLibdir ? null # only used by ghcjs, when resolving plugins
+, extraOutputsToInstall ? [ "out" "doc" "lib" "bin" ]
 }:
 
 assert ghcLibdir != null -> (ghc.isGhcjs or false);
@@ -43,7 +44,7 @@ let
   libDir        = if isHaLVM then "$out/lib/HaLVM-${ghc.version}" else "$out/lib/${ghcCommand}-${ghc.version}";
   docDir        = "$out/share/doc/ghc/html";
   packageCfgDir = "${libDir}/package.conf.d";
-  paths         = lib.filter (x: x ? isHaskellLibrary) (lib.closePropagation packages);
+  paths         = map lib.getLib (lib.filter (x: x ? isHaskellLibrary) (lib.closePropagation packages));
   hasLibraries  = lib.any (x: x.isHaskellLibrary) paths;
   # CLang is needed on Darwin for -fllvm to work:
   # https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/code-generators.html
@@ -58,8 +59,7 @@ symlinkJoin {
   # as a dedicated drv attribute, like `compiler-name`
   name = ghc.name + "-with-packages";
   paths = paths ++ [ghc];
-  extraOutputsToInstall = [ "out" "doc" ];
-  inherit ignoreCollisions;
+  inherit extraOutputsToInstall ignoreCollisions;
   postBuild = ''
     . ${makeWrapper}/nix-support/setup-hook
 

@@ -58,7 +58,7 @@ let
               postInstall =
                 let bins = lib.makeBinPath [ nodejs self.elm-make ];
                 in ''
-                  wrapProgram $out/bin/elm-repl \
+                  wrapProgram $bin/bin/elm-repl \
                     --prefix PATH ':' ${bins}
                 '';
             });
@@ -93,6 +93,10 @@ let
           version = "0.3.3";
           sha256 = "16lz21bp9j14xilnq8yym22p3saxvc9fsgfcf5awn2a6i6n527xn";
           libraryHaskellDepends = drv.libraryHaskellDepends ++ [super.concatenative];
+        });
+        mkDerivation = args: super.mkDerivation (args // {
+          # reduce closure size for bin outputs
+          enableSharedExecutables = false;
         });
       };
   };
