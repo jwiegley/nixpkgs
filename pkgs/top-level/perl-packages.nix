@@ -12285,6 +12285,32 @@ let self = _self // overrides; _self = with self; {
     };
   };
 
+  SpreadsheetRead = buildPerlPackage rec {
+    name = "Spreadsheet-Read-0.74";
+    src = fetchFromGitHub {
+      owner = "Tux";
+      repo = "Spreadsheet-Read";
+      rev = "0.74";
+      sha256 = "0bx03r4yliv1vgmcxw21v900xxhcj0sqqj3cx28g8rfsb82jf9iz";
+    };
+    propagatedBuildInputs = [ TestNoWarnings ];
+    meta = {
+      description = "Read the data from a spreadsheet";
+    };
+  };
+
+  SpreadsheetReadSXC = buildPerlPackage rec {
+    name = "Spreadsheet-ReadSXC-0.20";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/T/TE/TERHECHTE/${name}.tar.gz";
+      sha256 = "1dimnb1a1jjkrfbvy63qxa13i3b8x9ly1j2bpr23hfs58qfdvr5j";
+    };
+    propagatedBuildInputs = [ TestMore XMLParser ArchiveZip ];
+    meta = {
+      description = "Extract OpenOffice 1.x spreadsheet data";
+    };
+  };
+
   SQLAbstract = buildPerlPackage rec {
     name = "SQL-Abstract-1.81";
     src = fetchurl {
