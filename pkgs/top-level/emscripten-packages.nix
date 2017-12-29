@@ -84,15 +84,6 @@ with pkgs; rec {
     stdenv = emscriptenStdenv;
   }).overrideDerivation
     (old: { 
-      configurePhase = ''
-        # FIXME: Some tests require writing at $HOME
-        HOME=$TMPDIR
-        runHook preConfigure
-
-        emconfigure ./configure --prefix=$out
-
-        runHook postConfigure
-      '';
       postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
         substituteInPlace configure \
           --replace '/usr/bin/libtool' 'ar' \
