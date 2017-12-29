@@ -9704,6 +9704,8 @@ with pkgs;
 
   libpgf = callPackage ../development/libraries/libpgf { };
 
+  libpg_query = callPackage ../development/libraries/libpg_query { };
+
   libpng = callPackage ../development/libraries/libpng { };
   libpng_apng = libpng.override { apngSupport = true; };
   libpng12 = callPackage ../development/libraries/libpng/12.nix { };
@@ -10921,6 +10923,8 @@ with pkgs;
   };
 
   stxxl = callPackage ../development/libraries/stxxl { parallel = true; };
+
+  sqlint = callPackage ../development/tools/sqlint { };
 
   sqlite = lowPrio (callPackage ../development/libraries/sqlite { });
 
