@@ -19186,6 +19186,8 @@ with pkgs;
   cytoscape = callPackage ../applications/science/misc/cytoscape { };
 
   fityk = callPackage ../applications/science/misc/fityk { };
+  
+  gildas = callPackage ../applications/science/astronomy/gildas { };
 
   gplates = callPackage ../applications/science/misc/gplates {
     boost = boost160;
