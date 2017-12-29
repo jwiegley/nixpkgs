@@ -1624,6 +1624,8 @@ with pkgs;
 
   ckb = libsForQt5.callPackage ../tools/misc/ckb { };
 
+  cocoapods = callPackage ../development/mobile/cocoapods { };
+
   compass = callPackage ../development/tools/compass { };
 
   convmv = callPackage ../tools/misc/convmv { };
