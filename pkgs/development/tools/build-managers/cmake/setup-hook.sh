@@ -1,5 +1,5 @@
 addCMakeParams() {
-    addToSearchPath CMAKE_PREFIX_PATH $1
+    prependToSearchPath CMAKE_PREFIX_PATH $1
 }
 
 fixCmakeFiles() {

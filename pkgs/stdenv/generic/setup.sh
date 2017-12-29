@@ -173,7 +173,18 @@ trap "exitHandler" EXIT
 # Helper functions.
 
 
-addToSearchPathWithCustomDelimiter() {
+prependToSearchPathWithCustomDelimiter() {
+    (( "$#" == 3 ))
+    local delimiter="$1"
+    local varName="$2"
+    local dir="$3"
+    if [ -d "$dir" ]; then
+        export "${varName}=${dir}${!varName:+${delimiter}${!varName}}"
+    fi
+}
+
+appendToSearchPathWithCustomDelimiter() {
+    (( "$#" == 3 ))
     local delimiter="$1"
     local varName="$2"
     local dir="$3"
@@ -184,8 +195,12 @@ addToSearchPathWithCustomDelimiter() {
 
 PATH_DELIMITER=':'
 
-addToSearchPath() {
-    addToSearchPathWithCustomDelimiter "${PATH_DELIMITER}" "$@"
+prependToSearchPath() {
+    prependToSearchPathWithCustomDelimiter "${PATH_DELIMITER}" "$@"
+}
+
+appendToSearchPath() {
+    appendToSearchPathWithCustomDelimiter "${PATH_DELIMITER}" "$@"
 }
 
 
@@ -270,7 +285,7 @@ shopt -s nullglob
 PATH=
 for i in $initialPath; do
     if [ "$i" = / ]; then i=; fi
-    addToSearchPath PATH "$i/bin"
+    appendToSearchPath PATH "$i/bin"
 done
 
 if (( "${NIX_DEBUG:-0}" >= 1 )); then
@@ -300,7 +315,10 @@ runHook preHook
 runHook addInputsHook
 
 
-# Recursively find all build inputs.
+# Recursively find all build inputs, accumulating them with a
+# topological sort (i.e. total order respecting dependency partial
+# order).
+declare -a inProgressStack
 findInputs() {
     local pkg="$1"; shift
     local var="$1"; shift
@@ -310,14 +328,25 @@ findInputs() {
     # nix-shell doesn't use impure bash. This should replace the O(n)
     # case with an O(1) hash map lookup, assuming bash is implemented
     # well :D.
-    local varSlice="$var[*]"
+
     # ${..-} to hack around old bash empty array problem
+
+    local varSlice="$var[*]"
     case "${!varSlice-}" in
         *" $pkg "*) return 0 ;;
     esac
     unset -v varSlice
 
-    eval "$var"'+=("$pkg")'
+    case "${inProgressStack[@]-}" in
+        *" $pkg "*)
+            echo "(impure) cyclic dependency encountered: $pkg" >&2
+            exit 1
+            ;;
+    esac
+
+    # We are currently accumulating this package's deps, so push it to
+    # the stack.
+    inProgressStack+=("$pkg")
 
     if ! [ -e "$pkg" ]; then
         echo "build input $pkg does not exist" >&2
@@ -334,6 +363,17 @@ findInputs() {
             findInputs "$pkgNext" "$var" "${propagatedBuildInputsFiles[@]}"
         done
     done
+
+    # Mark it completely done
+    eval "$var"'+=("$pkg")'
+
+    # TODO(@Ericson2314): Use `${inProgressStack[-1]}` once Darwin nix-shell
+    # doesn't use impure bash.
+
+    # We are done processing this package's deps, so we can assert that it is
+    # top of the stack and pop it.
+    [[ "${inProgressStack[${#inProgressStack[@]} - 1]}" = "$pkg" ]]
+    unset "inProgressStack[${#inProgressStack[@]} - 1]"
 }
 
 # Add package to the future PATH and run setup hooks
@@ -348,7 +388,7 @@ activatePackage() {
     fi
 
     if [ -d "$pkg/bin" ]; then
-        addToSearchPath _PATH "$pkg/bin"
+        prependToSearchPath _PATH "$pkg/bin"
     fi
 
     if [ -f "$pkg/nix-support/setup-hook" ]; then
@@ -360,19 +400,27 @@ activatePackage() {
 }
 
 declare -a nativePkgs crossPkgs
+# N.B. In both cases, default dependencies must be processed first, so
+# they are overriden by explicit ones.
 if [ -z "${crossConfig:-}" ]; then
     # Not cross-compiling - both buildInputs (and variants like propagatedBuildInputs)
     # are handled identically to nativeBuildInputs
-    for i in ${nativeBuildInputs:-} ${buildInputs:-} \
-             ${defaultNativeBuildInputs:-} ${defaultBuildInputs:-} \
-             ${propagatedNativeBuildInputs:-} ${propagatedBuildInputs:-}; do
+    for i in \
+        ${defaultNativeBuildInputs:-} ${defaultBuildInputs:-} \
+        ${nativeBuildInputs:-} ${propagatedNativeBuildInputs:-} \
+        ${buildInputs:-} ${propagatedBuildInputs:-}
+    do
         findInputs "$i" nativePkgs propagated-native-build-inputs propagated-build-inputs
     done
 else
-    for i in ${nativeBuildInputs:-} ${defaultNativeBuildInputs:-} ${propagatedNativeBuildInputs:-}; do
+    for i in \
+        ${defaultNativeBuildInputs:-} ${nativeBuildInputs:-} ${propagatedNativeBuildInputs:-}
+    do
         findInputs "$i" nativePkgs propagated-native-build-inputs
     done
-    for i in ${buildInputs:-} ${defaultBuildInputs:-} ${propagatedBuildInputs:-}; do
+    for i in \
+        ${defaultBuildInputs:-} ${buildInputs:-} ${propagatedBuildInputs:-}
+    do
         findInputs "$i" crossPkgs propagated-build-inputs
     done
 fi

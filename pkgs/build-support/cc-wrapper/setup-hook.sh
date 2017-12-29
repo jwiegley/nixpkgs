@@ -71,11 +71,13 @@ ccWrapper_addCVars () {
     esac
 
     if [[ -d "$1/include" ]]; then
-        export NIX_${role}CFLAGS_COMPILE+=" ${ccIncludeFlag:--isystem} $1/include"
+        local var="NIX_${role}CFLAGS_COMPILE"
+        export ${var}="${ccIncludeFlag:--isystem} $1/include ${!var}"
     fi
 
     if [[ -d "$1/Library/Frameworks" ]]; then
-        export NIX_${role}CFLAGS_COMPILE+=" -F$1/Library/Frameworks"
+        local var="NIX_${role}CFLAGS_COMPILE"
+        export ${var}="-F$1/Library/Frameworks ${!var}"
     fi
 }
 
@@ -101,24 +103,6 @@ fi
 # is because based on what relative platform we are targeting, we use different
 # dependencies.
 envHooks+=(ccWrapper_addCVars)
-
-# Note 1: these come *after* $out in the PATH (see setup.sh).
-# Note 2: phase separation makes this look useless to shellcheck.
-
-# shellcheck disable=SC2157
-if [ -n "@cc@" ]; then
-    addToSearchPath _PATH @cc@/bin
-fi
-
-# shellcheck disable=SC2157
-if [ -n "@libc_bin@" ]; then
-    addToSearchPath _PATH @libc_bin@/bin
-fi
-
-# shellcheck disable=SC2157
-if [ -n "@coreutils_bin@" ]; then
-    addToSearchPath _PATH @coreutils_bin@/bin
-fi
 
 # Export tool environment variables so various build systems use the right ones.
 

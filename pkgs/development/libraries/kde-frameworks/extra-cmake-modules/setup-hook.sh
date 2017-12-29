@@ -1,6 +1,6 @@
 _ecmEnvHook() {
-    addToSearchPath XDG_DATA_DIRS "$1/share"
-    addToSearchPath XDG_CONFIG_DIRS "$1/etc/xdg"
+    prependToSearchPath XDG_DATA_DIRS "$1/share"
+    prependToSearchPath XDG_CONFIG_DIRS "$1/etc/xdg"
 }
 envHooks+=(_ecmEnvHook)
 
