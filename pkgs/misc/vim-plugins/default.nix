@@ -946,8 +946,8 @@ rec {
     name = "color_coded-2017-10-30";
     src = fetchgit {
       url = "https://github.com/jeaye/color_coded";
-      rev = "cb356b083362ea6f15bc690c5eb10b01326ad169";
-      sha256 = "0l46ar1b3vy7gbrq2ic734vvw7zcvw6ar78zyhwz55h2lxfh89aq";
+      rev = "b450a19bdaaced760ad4c78558043d77bf3ed902";
+      sha256 = "1sq68c2hx4q95ibdxkywbdksc6lcmmb206acy0704957m8sc8n1f";
     };
     dependencies = [];
     buildInputs = [
@@ -957,16 +957,19 @@ rec {
       ncurses
       zlib
       llvm_39
-      llvmPackages.clang.cc
     ];
     buildPhase = ''
       patchShebangs .
       sed -i "s/add_dependencies(\S\+ \S\+_track_api)//" CMakeLists.txt
 
-      clang_version=$(clang --version | head -1 | sed 's/clang version \(\S\+\).*/\1/')
+      clang_version=$(${llvmPackages.clang.cc}/bin/clang --version | head -1 | sed 's/clang version \(\S\+\).*/\1/')
       . ./lib/generate_sources ${llvm_39} $clang_version
 
-      cmake -DDOWNLOAD_CLANG=0 .
+      cmake -DDOWNLOAD_CLANG=0 \
+            -DLLVM_CONFIG=${llvm_39}/bin/llvm-config -DLLVM_ROOT_DIR=${llvm_39}\
+            -DCLANG_LIBRARY_DIRS=${llvmPackages.clang.cc}/lib \
+            -DCLANG_INCLUDE_DIRS=${llvmPackages.clang.cc}/include \
+            .
       make
     '';
   };
