@@ -8,9 +8,12 @@ let
 
     export HOME=/root
     export PATH=${pkgs.lib.makeBinPath [ config.nix.package pkgs.systemd pkgs.gnugrep pkgs.gnused config.system.build.nixos-rebuild]}:$PATH
-    export NIX_PATH=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/etc/nixos/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
+    export NIX_PATH=nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/etc/nixos/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
 
     userData=/etc/ec2-metadata/user-data
+
+    # set nameserver to anything, it will be later overwritten to correct entry
+    echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
     if [ -s "$userData" ]; then
       # If the user-data looks like it could be a nix expression,
