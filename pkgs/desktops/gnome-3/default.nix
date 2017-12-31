@@ -374,6 +374,8 @@ let
 
   libdazzle = callPackage ./misc/libdazzle { };
 
+  template_glib = callPackage ./misc/template-glib { };
+
   libgames-support = callPackage ./misc/libgames-support { };
 
   libgda = callPackage ./misc/libgda { };
