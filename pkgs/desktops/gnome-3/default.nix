@@ -372,6 +372,8 @@ let
 
   gspell = callPackage ./misc/gspell { };
 
+  libdazzle = callPackage ./misc/libdazzle { };
+
   libgames-support = callPackage ./misc/libgames-support { };
 
   libgda = callPackage ./misc/libgda { };
