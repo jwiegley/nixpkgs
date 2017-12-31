@@ -322,6 +322,8 @@ let
 
   nemiver = callPackage ./devtools/nemiver { };
 
+  gnome-builder = callPackage ./devtools/gnome-builder { };
+
 #### Games
 
   aisleriot = callPackage ./games/aisleriot { };
