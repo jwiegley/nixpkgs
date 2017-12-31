@@ -10,9 +10,6 @@
       patchShebangs .
       sed -i "s/add_dependencies(\S\+ \S\+_track_api)//" CMakeLists.txt
 
-      clang_version=$(${llvmPackages.clang.cc}/bin/clang --version | head -1 | sed 's/clang version \(\S\+\).*/\1/')
-      . ./lib/generate_sources ${llvm_39} $clang_version
-
       cmake -DDOWNLOAD_CLANG=0 \
             -DLLVM_CONFIG=${llvm_39}/bin/llvm-config -DLLVM_ROOT_DIR=${llvm_39}\
             -DCLANG_LIBRARY_DIRS=${llvmPackages.clang.cc}/lib \
