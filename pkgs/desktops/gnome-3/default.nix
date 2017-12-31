@@ -376,6 +376,8 @@ let
 
   template_glib = callPackage ./misc/template-glib { };
 
+  jsonrpc_glib = callPackage ./misc/jsonrpc-glib { };
+
   libgames-support = callPackage ./misc/libgames-support { };
 
   libgda = callPackage ./misc/libgda { };
