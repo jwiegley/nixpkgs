@@ -1,15 +1,23 @@
 {stdenv
+, autoconf
 , clang
+, clang-tools
+, cmake
 , ctags
+, substituteAll
 , defaultIconTheme
 , devhelp
 , fetchurl
 , gettext
+, gjs
+, glib
 , gnome_themes_standard
+, gnumake
 , gspell
 , gtk3
 , gtksourceview
 , hicolor_icon_theme
+, indent
 , json_glib
 , jsonrpc_glib
 , libdazzle
@@ -19,15 +27,18 @@
 , llvmPackages
 , meson
 , ninja
+, packagekit
 , pcre
 , pkgconfig
 , python3
 , python3Packages
 , sysprof
 , template_glib
+, unzip
 , vala
 , vte
 , webkitgtk
+, which
 , wrapGAppsHook
 , ...}:
 
@@ -52,7 +63,14 @@ in stdenv.mkDerivation rec {
 
   mesonFlags = "-D with_flatpak=false";
 
-  patches = [ ./patch_libide.patch ];
+  patches = [
+    ./patch_libide.patch
+    (substituteAll {
+      src = ./fix-paths.patch;
+      glibDev = glib.dev;
+      inherit autoconf clang clang-tools cmake gjs gnumake indent meson packagekit pkgconfig unzip which;
+    })
+  ];
 
   postPatch = ''
     patchShebangs build-aux/meson/post_install.py
