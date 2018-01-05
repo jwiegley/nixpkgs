@@ -4221,7 +4221,7 @@ with pkgs;
 
   qhull = callPackage ../development/libraries/qhull { };
 
-  qjoypad = callPackage ../tools/misc/qjoypad { };
+  qjoypad = libsForQt5.callPackage ../tools/misc/qjoypad { };
 
   qpdf = callPackage ../development/libraries/qpdf { };
 
@@ -7929,10 +7929,8 @@ with pkgs;
 
   xpwn = callPackage ../development/mobile/xpwn {};
 
-  xxdiff = callPackage ../development/tools/misc/xxdiff {
-    bison = bison2;
-  };
-  xxdiff-tip = qt56.callPackage ../development/tools/misc/xxdiff/tip.nix { };
+  xxdiff = libsForQt5.callPackage ../development/tools/misc/xxdiff { };
+  xxdiff-tip = xxdiff;
 
   yacc = bison;
 
@@ -10330,6 +10328,8 @@ with pkgs;
   opensaml-cpp = callPackage ../development/libraries/opensaml-cpp { };
 
   openscenegraph = callPackage ../development/libraries/openscenegraph { };
+
+  openscenegraph-qt5 = libsForQt5.callPackage ../development/libraries/openscenegraph { withQt = true; };
 
   openslp = callPackage ../development/libraries/openslp {};
 
@@ -15949,7 +15949,7 @@ with pkgs;
 
   mirage = callPackage ../applications/graphics/mirage { };
 
-  mixxx = callPackage ../applications/audio/mixxx {
+  mixxx = libsForQt5.callPackage ../applications/audio/mixxx {
     inherit (vamp) vampSDK;
   };
 
@@ -18274,7 +18274,7 @@ with pkgs;
 
   openjk = callPackage ../games/openjk { };
 
-  openmw = callPackage ../games/openmw { };
+  openmw = libsForQt5.callPackage ../games/openmw { };
 
   openmw-tes3mp = libsForQt5.callPackage ../games/openmw/tes3mp.nix {
     stdenv = overrideCC stdenv gcc7;
