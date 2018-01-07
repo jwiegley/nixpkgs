@@ -1,7 +1,7 @@
 # TODO check that no license information gets lost
 { fetchurl, stdenv, python, go, cmake, vim, vimUtils, perl, ruby, unzip
 , which, fetchgit, llvmPackages
-, xkb_switch, rustracerd, fzf
+, xkb_switch, rustracerd, fzf, skimPlugin
 , python3, boost, icu
 , ycmd, makeWrapper, rake
 , pythonPackages, python3Packages
@@ -122,6 +122,12 @@ rec {
   fzfWrapper = buildVimPluginFrom2Nix {
     name = fzf.name;
     src = fzf.src;
+    dependencies = [];
+  };
+
+  skim = buildVimPluginFrom2Nix {
+    name = skimPlugin.name;
+    src = skimPlugin;
     dependencies = [];
   };
 

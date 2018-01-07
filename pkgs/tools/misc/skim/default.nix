@@ -11,11 +11,18 @@ rustPlatform.buildRustPackage rec {
     sha256 = "1dvvrjvryzffqxqpg10ahg7rx9wkkav1q413bza3x3afb0jlsx15";
   };
 
+  outputs = [ "out" "vim" ];
+
   cargoSha256 = "0zf3y74382m4347yn1sygzd3g9b6vn5dmckj5nyll20azc6shyvc";
+
+  patchPhase = ''
+    sed -i -e "s|expand('<sfile>:h:h')|'$out'|" plugin/skim.vim
+  '';
 
   postInstall = ''
     install -D -m 555 bin/sk-tmux -t $out/bin
     install -D -m 444 shell/* -t $out/share/skim
+    install -D -m 444 plugin/skim.vim -t $vim/plugin
 
     cat <<SCRIPT > $out/bin/sk-share
     #!/bin/sh

@@ -19890,6 +19890,7 @@ with pkgs;
   vimPlugins = recurseIntoAttrs (callPackage ../misc/vim-plugins {
     inherit (darwin.apple_sdk.frameworks) Cocoa;
     llvmPackages = llvmPackages_39;
+    skimPlugin = skim.vim;
   });
 
   vimprobable2-unwrapped = callPackage ../applications/networking/browsers/vimprobable2 {
