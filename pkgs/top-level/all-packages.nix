@@ -4200,6 +4200,8 @@ with pkgs;
 
   radvd = callPackage ../tools/networking/radvd { };
 
+  raiblocks = callPackage ../applications/altcoins/raiblocks { };
+
   rainbowstream = pythonPackages.rainbowstream;
 
   rambox = callPackage ../applications/networking/instant-messengers/rambox { };
