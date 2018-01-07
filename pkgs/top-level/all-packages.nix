@@ -4227,6 +4227,8 @@ with pkgs;
 
   qjoypad = callPackage ../tools/misc/qjoypad { };
 
+  qownnotes = qt5.callPackage ../applications/misc/qownnotes { };
+
   qpdf = callPackage ../development/libraries/qpdf { };
 
   qprint = callPackage ../tools/text/qprint { };
