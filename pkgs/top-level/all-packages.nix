@@ -19975,6 +19975,10 @@ with pkgs;
 
   wine = winePackages.full;
 
+  wine-development = lowPrio (winePackages.full.override {
+    wineRelease = "unstable";
+  });
+
   wine-staging = lowPrio (winePackages.full.override {
     wineRelease = "staging";
   });
