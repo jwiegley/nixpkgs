@@ -14117,6 +14117,7 @@ with pkgs;
 
 
   go-ethereum = self.altcoins.go-ethereum;
+  go-ubiq = self.altcoins.go-ubiq;
   ethabi = self.altcoins.ethabi;
   ethrun = self.altcoins.ethrun;
   seth = self.altcoins.seth;
