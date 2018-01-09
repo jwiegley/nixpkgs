@@ -3,6 +3,7 @@
 , lockfile, pyserial, requests
 , semantic-version
 , isPy3k, isPyPy
+, git
 }:
 buildPythonPackage rec {
   disabled = isPy3k || isPyPy;
@@ -18,7 +19,7 @@ buildPythonPackage rec {
 
   propagatedBuildInputs =  [
     arrow bottle click_5 colorama
-    lockfile pyserial requests semantic-version
+    lockfile pyserial requests semantic-version git
   ];
 
   patches = [ ./fix-searchpath.patch ];
