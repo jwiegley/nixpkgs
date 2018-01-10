@@ -37,6 +37,15 @@ let
     }
   ''));
 
+  enablePagespeed = any (vhost: vhost.enablePagespeed) (attrValues virtualHosts);
+
+  package = cfg.package.override {
+    modules = []
+      ++ cfg.package.modules
+      ++ cfg.extraModulePackages
+      ++ optional enablePagespeed pkgs.nginxModules.pagespeed;
+  };
+
   configFile = pkgs.writeText "nginx.conf" ''
     user ${cfg.user} ${cfg.group};
     error_log stderr;
@@ -52,9 +61,9 @@ let
 
     ${optionalString (cfg.httpConfig == "" && cfg.config == "") ''
     http {
-      include ${cfg.package}/conf/mime.types;
-      include ${cfg.package}/conf/fastcgi.conf;
-      include ${cfg.package}/conf/uwsgi_params;
+      include ${package}/conf/mime.types;
+      include ${package}/conf/fastcgi.conf;
+      include ${package}/conf/uwsgi_params;
 
       ${optionalString (cfg.resolver.addresses != []) ''
         resolver ${toString cfg.resolver.addresses} ${optionalString (cfg.resolver.valid != "") "valid=${cfg.resolver.valid}"};
@@ -136,9 +145,9 @@ let
 
     ${optionalString (cfg.httpConfig != "") ''
     http {
-      include ${cfg.package}/conf/mime.types;
-      include ${cfg.package}/conf/fastcgi.conf;
-      include ${cfg.package}/conf/uwsgi_params;
+      include ${package}/conf/mime.types;
+      include ${package}/conf/fastcgi.conf;
+      include ${package}/conf/uwsgi_params;
       ${cfg.httpConfig}
     }''}
 
@@ -188,6 +197,15 @@ let
           ''}
         '';
 
+        pagespeedLocations = ''
+          # Ensure requests for pagespeed optimized resources go to the pagespeed handler
+          # and no extraneous headers get set.
+          location ~ "\.pagespeed\.([a-z]\.)?[a-z]{2}\.[^.]{10}\.[^.]+" {
+            add_header "" "";
+          }
+          location ~ "^/pagespeed_static/" { }
+          location ~ "^/ngx_pagespeed_beacon$" { }
+        '';
       in ''
         ${optionalString vhost.forceSSL ''
           server {
@@ -215,6 +233,15 @@ let
           ''}
 
           ${optionalString (vhost.basicAuth != {}) (mkBasicAuth vhostName vhost.basicAuth)}
+
+          ${optionalString enablePagespeed ''
+            pagespeed ${if vhost.enablePagespeed then "on" else "off"};
+
+            # Needs to exist and be writable by nginx.  Use tmpfs for best performance.
+            pagespeed FileCachePath ${vhost.pagespeedFileCachePath};
+
+            ${optionalString vhost.enablePagespeed pagespeedLocations}
+          ''}
 
           ${mkLocations vhost.locations}
 
@@ -518,6 +545,16 @@ in
         '';
         description = "Declarative vhost config";
       };
+
+      extraModulePackages = mkOption {
+        type = types.listOf types.unspecified;
+        default = [];
+        example = literalExample "with pkgs; [ nginxModules.brotli ]";
+        description = ''
+          Additional module packages to use, extending base package.
+          Note: Requires nginx rebuild when changed.
+        '';
+      };
     };
   };
 
@@ -569,7 +606,7 @@ in
         chown -R ${cfg.user}:${cfg.group} ${cfg.stateDir}
         '';
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/nginx -c ${configFile} -p ${cfg.stateDir}";
+        ExecStart = "${package}/bin/nginx -c ${configFile} -p ${cfg.stateDir}";
         ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
         Restart = "always";
         RestartSec = "10s";
