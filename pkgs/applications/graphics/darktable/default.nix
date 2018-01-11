@@ -1,11 +1,11 @@
-{ stdenv, fetchurl, libsoup, graphicsmagick, SDL, json_glib
-, GConf, atk, cairo, cmake, curl, dbus_glib, exiv2, glib
-, libgnome_keyring, gtk3, ilmbase, intltool, lcms, lcms2
-, lensfun, libXau, libXdmcp, libexif, libglade, libgphoto2, libjpeg
-, libpng, libpthreadstubs, librsvg, libtiff, libxcb
+{ stdenv, fetchurl, libsoup, graphicsmagick, json_glib
+, atk, cairo, cmake, curl, dbus_glib, exiv2, glib
+, gtk3, ilmbase, intltool, lcms2
+, lensfun, libX11, libexif, libgphoto2, libjpeg
+, libpng, librsvg, libtiff, libxcb
 , openexr, osm-gps-map, pixman, pkgconfig, sqlite, bash, libxslt, openjpeg
-, mesa, lua, pugixml, colord, colord-gtk, libxshmfence, libxkbcommon
-, epoxy, at_spi2_core, libwebp, libsecret, wrapGAppsHook, gnome3
+, lua, pugixml, colord, colord-gtk, libxshmfence, libxkbcommon
+, at_spi2_core, libwebp, libsecret, wrapGAppsHook, gnome3
 }:
 
 assert stdenv ? glibc;
@@ -20,12 +20,12 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs =
-    [ GConf atk cairo cmake curl dbus_glib exiv2 glib libgnome_keyring gtk3
-      ilmbase intltool lcms lcms2 lensfun libXau libXdmcp libexif
-      libglade libgphoto2 libjpeg libpng libpthreadstubs
+    [ atk cairo cmake curl dbus_glib exiv2 glib gtk3
+      ilmbase intltool lcms2 lensfun libX11 libexif
+      libgphoto2 libjpeg libpng
       librsvg libtiff libxcb openexr pixman pkgconfig sqlite libxslt
-      libsoup graphicsmagick SDL json_glib openjpeg mesa lua pugixml
-      colord colord-gtk libxshmfence libxkbcommon epoxy at_spi2_core
+      libsoup graphicsmagick json_glib openjpeg lua pugixml
+      colord colord-gtk libxshmfence libxkbcommon at_spi2_core
       libwebp libsecret wrapGAppsHook gnome3.adwaita-icon-theme
       osm-gps-map
     ];
