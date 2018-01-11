@@ -1519,6 +1519,8 @@ with pkgs;
 
   connman-gtk = callPackage ../tools/networking/connman-gtk { };
 
+  connman-ncurses = callPackage ../tools/networking/connman-ncurses { };
+
   connman-notify = callPackage ../tools/networking/connman-notify { };
 
   connmanui = callPackage ../tools/networking/connmanui { };
