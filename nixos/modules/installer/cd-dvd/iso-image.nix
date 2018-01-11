@@ -256,9 +256,10 @@ in
     };
 
     isoImage.splashImage = mkOption {
+      # FIXME : use upstream url, obviously.
       default = pkgs.fetchurl {
-          url = https://raw.githubusercontent.com/NixOS/nixos-artwork/5729ab16c6a5793c10a2913b5a1b3f59b91c36ee/ideas/grub-splash/grub-nixos-1.png;
-          sha256 = "43fd8ad5decf6c23c87e9026170a13588c2eba249d9013cb9f888da5e2002217";
+          url = https://raw.githubusercontent.com/samueldr/nixos-artwork/cb04dede82e941b74ea2e5189ef41cacdd41c11a/bootloader/isolinux/bios-boot.png;
+          sha256 = "1wp822zrhbg4fgfbwkr7cbkr4labx477209agzc0hr6k62fr6rxd";
         };
       description = ''
         The splash image to use in the bootloader.
