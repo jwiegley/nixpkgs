@@ -188,6 +188,7 @@ in {
     # Needed for themes and backgrounds
     environment.pathsToLink = [ "/share" ];
 
+    i18n.inputMethod.enabled = mkDefault "ibus";
   };
 
 
