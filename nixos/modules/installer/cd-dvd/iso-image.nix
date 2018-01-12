@@ -103,13 +103,6 @@ let
       ''
       # Adds rEFInd to the ISO.
       cp -v ${pkgs.refind}/share/refind/refind_x64.efi $out/EFI/boot/
-
-      # Makes it bootable through systemd-boot.
-      # It purposefully does not have a refind configuration file nor theme.
-      cat << EOF > $out/loader/entries/zz-rEFInd.conf
-      title rEFInd rescue bootloader
-      efi /EFI/boot/refind_x64.efi
-      EOF
       ''
     else
       "# No refind for ia32"
@@ -117,46 +110,49 @@ let
 
   # The EFI boot image.
   efiDir = pkgs.runCommand "efi-directory" {} ''
-    mkdir -p $out/EFI/boot
-    cp -v ${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${targetArch}.efi $out/EFI/boot/boot${targetArch}.efi
-    mkdir -p $out/loader/entries
+    mkdir -p $out/EFI/boot/
+    
+    MODULES="fat iso9660 part_gpt part_msdos \
+             normal boot linux configfile loopback chain halt \
+             efifwsetup efi_gop efi_uga \
+             ls search search_label search_fs_uuid search_fs_file \
+             gfxterm gfxterm_background gfxterm_menu test all_video loadenv \
+             exfat ext2 ntfs btrfs hfsplus udf \
+            "
+    # Make our own efi program, we can't rely on `grub-install` since it seems to
+    # probe for devices, even with --skip-fs-probe.
+    ${pkgs.grub2_efi}/bin/grub-mkimage -o $out/EFI/boot/bootx64.efi -p /EFI/boot -O x86_64-efi \
+      $MODULES
 
-    cat << EOF > $out/loader/entries/nixos-iso.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
-    EOF
+    cat <<EOF > $out/EFI/boot/grub.cfg
+    set timeout=10
+    set color_highlight=black/light-cyan
 
-    # A variant to boot with 'nomodeset'
-    cat << EOF > $out/loader/entries/nixos-iso-nomodeset.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}
-    version nomodeset
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} nomodeset
-    EOF
-
-    # A variant to boot with 'copytoram'
-    cat << EOF > $out/loader/entries/nixos-iso-copytoram.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}
-    version copytoram
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} copytoram
-    EOF
-
-    # A variant to boot with verbose logging to the console
-    cat << EOF > $out/loader/entries/nixos-iso-debug.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (debug)
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} loglevel=7
-    EOF
-
-    cat << EOF > $out/loader/loader.conf
-    default nixos-iso
-    timeout ${builtins.toString config.boot.loader.timeout}
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
+      initrd /boot/initrd
+    }
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (nomodeset)" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} nomodeset
+      initrd /boot/initrd
+    }
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (copytoram)" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} copytoram
+      initrd /boot/initrd
+    }
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (debug)" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} loglevel=7
+      initrd /boot/initrd
+    }
+    menuentry 'rEFInd' {
+      chainloader /EFI/boot/refind_x64.efi
+    }
+    menuentry 'Firmware Setup' {
+      fwsetup
+    }
+    menuentry 'Shutdown' {
+      halt
+    }
     EOF
 
     ${refind}
@@ -413,9 +409,6 @@ in
         }
         { source = "${efiDir}/EFI";
           target = "/EFI";
-        }
-        { source = "${efiDir}/loader";
-          target = "/loader";
         }
       ] ++ optionals config.boot.loader.grub.memtest86.enable [
         { source = "${pkgs.memtest86plus}/memtest.bin";
