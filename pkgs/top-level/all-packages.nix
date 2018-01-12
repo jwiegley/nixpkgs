@@ -6236,6 +6236,8 @@ with pkgs;
 
   julia = julia_06;
 
+  jwasm =  callPackage ../development/compilers/jwasm { };
+
   kotlin = callPackage ../development/compilers/kotlin { };
 
   lazarus = callPackage ../development/compilers/fpc/lazarus.nix {
