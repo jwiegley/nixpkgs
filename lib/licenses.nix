@@ -94,6 +94,16 @@ lib.mapAttrs (n: v: v // { shortName = n; }) rec {
     fullName = ''BSD 4-clause "Original" or "Old" License'';
   };
 
+  bsl10 = {
+    fullName = "Business Source License 1.0";
+    url = https://mariadb.com/bsl10;
+  };
+
+  bsl11 = {
+    fullName = "Business Source License 1.1";
+    url = https://mariadb.com/bsl11;
+  };
+
   cc0 = spdx {
     spdxId = "CC0-1.0";
     fullName = "Creative Commons Zero v1.0 Universal";
