@@ -1,14 +1,14 @@
 { stdenv, fetchFromGitHub, autoconf, automake, libtool, libjack2, alsaLib, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  version = "2.1.1";
+  version = "3.0.0";
   name = "rtmidi-${version}";
 
   src = fetchFromGitHub {
     owner = "thestk";
     repo = "rtmidi";
-    rev = "${version}";
-    sha256 = "11pl45lp8sq5xkpipwk622w508nw0qcxr03ibicqn1lsws0hva96";
+    rev = "v${version}";
+    sha256 = "1z4sj85vvnmvg4pjjs963ghi69srb63jp5xpck46dcb9wgypdviy";
   };
 
   nativeBuildInputs = [ pkgconfig ];
