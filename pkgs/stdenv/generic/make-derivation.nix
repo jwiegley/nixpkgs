@@ -71,6 +71,23 @@ rec {
 
     , ... } @ attrs:
 
+    let
+      fixedOutputDrv = attrs ? outputHash;
+      noNonNativeDeps = builtins.length (depsBuildTarget ++ depsBuildTargetPropagated
+                                      ++ depsHostHost ++ depsHostHostPropagated
+                                      ++ buildInputs ++ propagatedBuildInputs
+                                      ++ depsTargetTarget ++ depsTargetTargetPropagated) == 0;
+      wellFormedIfFixOutput = fixedOutputDrv -> noNonNativeDeps;
+    in assert wellFormedIfFixOutput || lib.warn
+      ("mkDerivation was called with a fixed output hash yet run-time dependencies: " + lib.generators.toPretty {} {
+        inherit (attrs) outputHash;
+        inherit
+          depsBuildTarget depsBuildTargetPropagated
+          depsHostHost depsHostHostPropagated
+          buildInputs propagatedBuildInputs
+          depsTargetTarget depsTargetTargetPropagated;
+      } + ". Fixed-output derivations should only have build-time dependencies.") true;
+
     # TODO(@Ericson2314): Make this more modular, and not O(n^2).
     let
       supportedHardeningFlags = [ "fortify" "stackprotector" "pie" "pic" "strictoverflow" "format" "relro" "bindnow" ];
@@ -141,7 +158,11 @@ rec {
         in
         {
           name = name + lib.optionalString
-            (stdenv.hostPlatform != stdenv.buildPlatform)
+            # Fixed-output derivations like source tarballs shouldn't get a host
+            # suffix. But we have some weird ones with run-time deps that are
+            # just used for their side-affects. Those might as well since the
+            # hash can't be the same. See #32986.
+            (stdenv.hostPlatform != stdenv.buildPlatform && !wellFormedIfFixOutput)
             ("-" + stdenv.hostPlatform.config);
           builder = attrs.realBuilder or stdenv.shell;
           args = attrs.args or ["-e" (attrs.builder or ./default-builder.sh)];
