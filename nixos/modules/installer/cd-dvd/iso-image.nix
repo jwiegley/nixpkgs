@@ -118,15 +118,31 @@ let
              ls search search_label search_fs_uuid search_fs_file \
              gfxterm gfxterm_background gfxterm_menu test all_video loadenv \
              exfat ext2 ntfs btrfs hfsplus udf \
+             videoinfo png \
             "
     # Make our own efi program, we can't rely on `grub-install` since it seems to
     # probe for devices, even with --skip-fs-probe.
     ${pkgs.grub2_efi}/bin/grub-mkimage -o $out/EFI/boot/bootx64.efi -p /EFI/boot -O x86_64-efi \
       $MODULES
+    cp ${pkgs.grub2_efi}/share/grub/unicode.pf2 $out/EFI/boot/
 
     cat <<EOF > $out/EFI/boot/grub.cfg
     set timeout=10
-    set color_highlight=black/light-cyan
+    insmod gfxterm
+    insmod png
+    set gfxpayload=keep
+    if loadfont /EFI/boot/unicode.pf2; then
+      terminal_output gfxterm
+    fi
+    if background_image /EFI/boot/efi-background.png; then
+      # Black background means transparent background when there
+      # is a background image set... This seems undocumented :(
+      set color_normal=black/black
+      set color_highlight=white/blue
+    else
+      set menu_color_normal=cyan/blue
+      set menu_color_highlight=white/blue
+    fi
 
     menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}" {
       linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
@@ -271,6 +287,17 @@ in
       '';
     };
 
+    isoImage.efiSplashImage = mkOption {
+      # FIXME : use upstream url, obviously.
+      default = pkgs.fetchurl {
+          url = https://raw.githubusercontent.com/samueldr/nixos-artwork/8c1017f59257386527c02485d48cdaf5d125911c/bootloader/efi-background.png;
+          sha256 = "18lfwmp8yq923322nlb9gxrh5qikj1wsk6g5qvdh31c4h5b1538x";
+        };
+      description = ''
+        The splash image to use in the EFI bootloader.
+      '';
+    };
+
     isoImage.splashImage = mkOption {
       # FIXME : use upstream url, obviously.
       default = pkgs.fetchurl {
@@ -278,7 +305,7 @@ in
           sha256 = "1wp822zrhbg4fgfbwkr7cbkr4labx477209agzc0hr6k62fr6rxd";
         };
       description = ''
-        The splash image to use in the bootloader.
+        The splash image to use in the legacy-boot bootloader.
       '';
     };
 
@@ -396,6 +423,9 @@ in
         }
         { source = "${pkgs.syslinux}/share/syslinux";
           target = "/isolinux";
+        }
+        { source = config.isoImage.efiSplashImage;
+          target = "/EFI/boot/efi-background.png";
         }
         { source = config.isoImage.splashImage;
           target = "/isolinux/background.png";
