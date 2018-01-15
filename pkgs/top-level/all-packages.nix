@@ -1464,7 +1464,7 @@ with pkgs;
   nrg2iso = callPackage ../tools/cd-dvd/nrg2iso { };
 
   libceph = ceph.lib;
-  ceph = callPackage ../tools/filesystems/ceph { boost = boost159; };
+  ceph = callPackage ../tools/filesystems/ceph { boost = boost159; snappy = snappyShared; };
   ceph-dev = ceph;
   #ceph-dev = lowPrio (callPackage ../tools/filesystems/ceph/dev.nix { });
 
@@ -10968,6 +10968,8 @@ with pkgs;
   };
 
   snappy = callPackage ../development/libraries/snappy { };
+
+  snappyShared = snappy.override { sharedLibrary = true; };
 
   socket_wrapper = callPackage ../development/libraries/socket_wrapper { };
 
