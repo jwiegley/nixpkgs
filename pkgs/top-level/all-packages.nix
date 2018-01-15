@@ -12731,6 +12731,8 @@ with pkgs;
 
   linuxConsoleTools = callPackage ../os-specific/linux/consoletools { };
 
+  nmon = callPackage ../os-specific/linux/nmon { };
+
   openelec-dvb-firmware = callPackage ../os-specific/linux/firmware/openelec-dvb-firmware { };
 
   openiscsi = callPackage ../os-specific/linux/open-iscsi { };
