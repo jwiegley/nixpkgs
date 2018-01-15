@@ -301,6 +301,7 @@
       pykms = 282;
       kodi = 283;
       restya-board = 284;
+      tuntox = 285;
 
       # When adding a uid, make sure it doesn't match an existing gid. And don't use uids above 399!
 
