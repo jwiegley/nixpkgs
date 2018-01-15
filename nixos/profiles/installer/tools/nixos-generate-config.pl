@@ -272,7 +272,7 @@ if ($virt eq "oracle") {
 
 # Likewise for QEMU.
 if ($virt eq "qemu" || $virt eq "kvm" || $virt eq "bochs") {
-    push @imports, "<nixpkgs/nixos/modules/profiles/qemu-guest.nix>";
+    push @imports, "<nixpkgs/nixos/profiles/qemu-guest.nix>";
 }
 
 # Also for Hyper-V.
@@ -290,7 +290,7 @@ if ($virt eq "systemd-nspawn") {
 
 # Provide firmware for devices that are not detected by this script,
 # unless we're in a VM/container.
-push @imports, "<nixpkgs/nixos/modules/installer/scan/not-detected.nix>"
+push @imports, "<nixpkgs/nixos/profiles/installer/scan/not-detected.nix>"
     if $virt eq "none";
 
 

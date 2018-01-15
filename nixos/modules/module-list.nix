@@ -53,8 +53,6 @@
   ./i18n/input-method/ibus.nix
   ./i18n/input-method/nabi.nix
   ./i18n/input-method/uim.nix
-  ./installer/tools/auto-upgrade.nix
-  ./installer/tools/tools.nix
   ./misc/assertions.nix
   ./misc/crashdump.nix
   ./misc/extra-arguments.nix
@@ -516,7 +514,6 @@
   ./services/networking/prayer.nix
   ./services/networking/privoxy.nix
   ./services/networking/prosody.nix
-  # ./services/networking/quagga.nix
   ./services/networking/quassel.nix
   ./services/networking/racoon.nix
   ./services/networking/radicale.nix
@@ -680,6 +677,8 @@
   ./services/x11/xserver.nix
   ./system/activation/activation-script.nix
   ./system/activation/top-level.nix
+  ./system/base/auto-upgrade.nix
+  ./system/base/tools.nix
   ./system/boot/coredump.nix
   ./system/boot/emergency-mode.nix
   ./system/boot/grow-partition.nix
