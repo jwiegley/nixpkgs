@@ -203,6 +203,9 @@ with pkgs;
 
   fetchCrate = callPackage ../build-support/rust/fetchcrate.nix { };
 
+  gitRepoToName = callPackage ../build-support/fetchgit/gitrepotoname.nix { };
+
+
   fetchFromGitHub = {
     owner, repo, rev, name ? "source",
     fetchSubmodules ? false, private ? false,
@@ -6748,11 +6751,14 @@ with pkgs;
   love = love_0_10;
 
   ### LUA MODULES
+  lua-setup-hook = callPackage ../development/interpreters/lua-5/setup-hook.nix { };
 
   lua4 = callPackage ../development/interpreters/lua-4 { };
   lua5_0 = callPackage ../development/interpreters/lua-5/5.0.3.nix { };
   lua5_1 = callPackage ../development/interpreters/lua-5/5.1.nix { };
-  lua5_2 = callPackage ../development/interpreters/lua-5/5.2.nix { };
+  lua5_2 = callPackage ../development/interpreters/lua-5/5.2.nix {
+    self = lua5_2;
+  };
   lua5_2_compat = callPackage ../development/interpreters/lua-5/5.2.nix {
     compat = true;
   };
@@ -6765,6 +6771,7 @@ with pkgs;
 
   lua51Packages = recurseIntoAttrs (callPackage ./lua-packages.nix { lua = lua5_1; });
   lua52Packages = recurseIntoAttrs (callPackage ./lua-packages.nix { lua = lua5_2; });
+  # lua52Packages = recurseIntoAttrs lua5_2.pkgs;
   luajitPackages = recurseIntoAttrs (callPackage ./lua-packages.nix { lua = luajit; });
 
   luaPackages = lua52Packages;
@@ -6773,6 +6780,20 @@ with pkgs;
     luajit luajit_2_0 luajit_2_1;
 
   luarocks = luaPackages.luarocks;
+
+  # TODO careful about cjson cycle + can't find lua
+  luarocks-nix = luaPackages.luarocks-cjson.overrideAttrs(old: {
+    # hoping that it will solve confusion in LUA_PATH
+    name="luarocks-nix";
+    src = /home/teto/luarocks;
+
+    # postBuild ?
+    # postBuild =''
+    #   export LUA_PATH="?.lua;''${LUA_PATH:-}"
+    #   export LUA_CPATH="?.so;''${LUA_CPATH:-}"
+    # '';
+  });
+
 
   toluapp = callPackage ../development/tools/toluapp {
     lua = lua5_1; # doesn't work with any other :(
@@ -17474,7 +17495,8 @@ with pkgs;
   wrapNeovim = callPackage ../applications/editors/neovim/wrapper.nix { };
 
   neovim-unwrapped = callPackage ../applications/editors/neovim {
-    luaPackages = luajitPackages;
+    # only lua52 was modified thus we need to test against it
+    luaPackages = lua52Packages;
   };
 
   neovim = wrapNeovim neovim-unwrapped { };
