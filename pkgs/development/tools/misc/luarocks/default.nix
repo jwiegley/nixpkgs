@@ -1,4 +1,9 @@
-{stdenv, fetchurl, lua, curl, makeWrapper, which, unzip}:
+{stdenv, fetchurl, lua, curl, makeWrapper, which, unzip
+# for 'luarocks pack'
+, zip
+# some packages need to be compiled with cmake
+, cmake
+}:
 let
   s = # Generated upstream information
   rec {
@@ -42,11 +47,20 @@ stdenv.mkDerivation {
 	}
     done
   '';
-  meta = {
+
+  propagatedBuildInputs = [ zip unzip cmake ];
+
+  # unpack hook
+  setupHook = ./setup-hook.sh;
+
+  # cmake is just to compile packages wit cmake types, not luarocks itself
+  dontUseCmakeConfigure = true;
+
+  meta = with stdenv.lib; {
     inherit (s) version;
     description = ''A package manager for Lua'';
-    license = stdenv.lib.licenses.mit ;
-    maintainers = [stdenv.lib.maintainers.raskin];
-    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    license = licenses.mit ;
+    maintainers = [maintainers.raskin];
+    platforms = platforms.linux ++ platforms.darwin;
   };
 }
