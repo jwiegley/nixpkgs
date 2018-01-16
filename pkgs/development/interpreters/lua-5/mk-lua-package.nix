@@ -83,7 +83,6 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
     name_only=(builtins.parseDrvName name).name;
     in ''
     folder=$(find . -mindepth 2 -maxdepth 2 -type d -path '*${name_only}*'|head -n1)
-    echo "folder found ='$folder'"
     sourceRoot=$folder
   '';
 
@@ -96,7 +95,6 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
     export LUAROCKS_CONFIG="$PWD/luarocks_cfg"
     echo "local_cache = '$PWD'" > "$LUAROCKS_CONFIG"
 
-
     # TODO record in nix package the type of luarocks package it is, if it's make based,
     # one might want to patch shebangs for instance
     patchShebangs .
@@ -104,20 +102,14 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
     runHook postBuild
   '';
 
-
   # even here we should export LUA_PATH ?
   postFixup = lib.optionalString (!dontWrapLuaPrograms) ''
     wrapLuaPrograms
   '' + attrs.postFixup or '''';
 
-
   # inspired from build-python-setup-tools
   shellHook = attrs.shellHook or ''
     ${preShellHook}
-      echo "SHELL HOOK from lua-mk-derivation"
-      export MATTATOR="HELLO WORLD"
-    # export LUA_PATH="from_hook_toto:$LUA_PATH"
-    # export LUA_CPATH="from_hook_tata:$LUA_CPATH"
     ${postShellHook}
   '';
 
@@ -129,7 +121,7 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
     # If no argument is given, it looks for a rockspec in the current directory
     # one problem here is that luarocks install packages in subfolders
     # so we patch luarocks !
-    luarocks make --deps-mode=none --verbose --tree $out
+    luarocks make --deps-mode=none --tree $out
 
     # to prevent collisions when creating environments
     # also added -f as it doesn't always exist
