@@ -60,7 +60,10 @@ let
       luaPackages.lua
       gperf
     ] ++ optional withJemalloc jemalloc
-      ++ lualibs;
+      ++ (with luaPackages; [ mpack lpeg luabitop ])
+      ++ optionals doCheck (with luaPackages;[ nvim-client luv lpeg coxpcall busted luafilesystem penlight  ]);
+
+    doCheck = true;
 
     nativeBuildInputs = [
       cmake
@@ -68,14 +71,14 @@ let
       pkgconfig
     ];
 
-    LUA_PATH = stdenv.lib.concatStringsSep ";" (map luaPackages.getLuaPath lualibs);
-    LUA_CPATH = stdenv.lib.concatStringsSep ";" (map luaPackages.getLuaCPath lualibs);
-
-    lualibs = [ luaPackages.mpack luaPackages.lpeg luaPackages.luabitop ];
-
+    # current luajit interpret was not updated in nixos
     cmakeFlags = [
+      "-DPREFER_LUA=ON"
       "-DLUA_PRG=${luaPackages.lua}/bin/lua"
-    ];
+    ]
+    ++ optionals doCheck (with luaPackages;[
+      "-DBUSTED_PRG=${luaPackages.busted}/bin/busted"
+    ]);
 
     # triggers on buffer overflow bug while running tests
     hardeningDisable = [ "fortify" ];
