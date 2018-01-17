@@ -62,7 +62,7 @@ let
   wrapLua = callPackage ../development/interpreters/lua-5/wrap-lua.nix {inherit lua; inherit (pkgs) makeSetupHook makeWrapper; };
 
   #define build lua package function
-  buildLuaPackage = with pkgs.lib; makeOverridable( callPackage ../development/interpreters/lua-5/mk-lua-package.nix {
+  buildLuaPackage = with pkgs.lib; makeOverridable( callPackage ../development/interpreters/lua-5/build-lua-package.nix {
     inherit lua;
     inherit wrapLua;
     inherit toLuaModule;

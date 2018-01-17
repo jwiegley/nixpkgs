@@ -1,7 +1,6 @@
 # Wrapper around wrapLuaProgramsIn, below. The $luaPath
 # variable is passed in from the buildLuaPackage function.
 wrapLuaPrograms() {
-    echo "wrap.sh : wrapLuaPrograms"
     wrapLuaProgramsIn "$out/bin" "$out $luaPath"
 }
 
@@ -11,8 +10,7 @@ buildLuaPath() {
     local luaPath="$1"
     local path
 
-    echo "buildLuaPath"
-    # Create an empty table of python paths (see doc on _addToLuaPath
+    # Create an empty table of paths (see doc on _addToLuaPath
     # for how this is used). Build up the program_PATH and program_LUA_PATH
     # variables.
     declare -A luaPathsSeen=()
@@ -20,7 +18,6 @@ buildLuaPath() {
     program_LUA_CPATH=
     program_PATH=
     luaPathsSeen["@lua@"]=1
-    #
     addToLuaSearchPath program_PATH @lua@/bin
     for path in $luaPath; do
         _addToLuaPath "$path"
@@ -39,12 +36,10 @@ wrapLuaProgramsIn() {
 
     buildLuaPath "$luaPath"
 
-    echo "wrapLuaProgram call with dir $dir"
     # Find all regular files in the output directory that are executable.
     if [ -d "$dir" ]; then
-        echo "$dir is a folder"
         find "$dir" -type f -perm -0100 -print0 | while read -d "" f; do
-            # Rewrite "#! .../env python" to "#! /nix/store/.../python".
+            # Rewrite "#! .../env lua" to "#! /nix/store/.../lua".
             # Strip suffix, like "3" or "2.7m" -- we don't have any choice on which
             # Lua to use besides one with this hook anyway.
             if head -n1 "$f" | grep -q '#!.*/env.*\(lua\)'; then
@@ -52,31 +47,24 @@ wrapLuaProgramsIn() {
                 sed -i "$f" -e "1 s^.*/env[ ]*\(lua\)[^ ]*^#! @executable@^"
             fi
 
-            # catch /python and /.python-wrapped
-            # if head -n1 "$f" | grep -q '/\.\?\(lua\|pypy\)'; then
-                # dont wrap EGG-INFO scripts since they are called from python
-                # if echo "$f" | grep -qv EGG-INFO/scripts; then
-                    # wrapProgram creates the executable shell script described
-                    # above. The script will set LUA_PATH and PATH variables.!
-                    # (see pkgs/build-support/setup-hooks/make-wrapper.sh)
-                    local -a wrap_args=("$f"
-                                    --prefix PATH ':' "$program_PATH"
-                                    --prefix LUA_PATH ';' "$program_LUA_PATH"
-                                    --prefix LUA_CPATH ';' "$program_LUA_CPATH"
-                                    )
+            # wrapProgram creates the executable shell script described
+            # above. The script will set LUA_PATH and PATH variables.!
+            # (see pkgs/build-support/setup-hooks/make-wrapper.sh)
+            local -a wrap_args=("$f"
+                            --prefix PATH ':' "$program_PATH"
+                            --prefix LUA_PATH ';' "$program_LUA_PATH"
+                            --prefix LUA_CPATH ';' "$program_LUA_CPATH"
+                            )
 
-                    # Add any additional arguments provided by makeWrapperArgs
-                    # argument to buildLuaPackage.
-                    # makeWrapperArgs
-                    local -a user_args="($makeWrapperArgs)"
-                    local -a wrapProgramArgs=("${wrap_args[@]}" "${user_args[@]}")
+            # Add any additional arguments provided by makeWrapperArgs
+            # argument to buildLuaPackage.
+            # makeWrapperArgs
+            local -a user_args="($makeWrapperArgs)"
+            local -a wrapProgramArgs=("${wrap_args[@]}" "${user_args[@]}")
 
-                    # see setup-hooks/make-wrapper.sh
-                    # makeWrapperArgs
-                    wrapProgram "${wrapProgramArgs[@]}"
+            # see setup-hooks/make-wrapper.sh
+            wrapProgram "${wrapProgramArgs[@]}"
 
-                # fi
-            # fi
         done
     fi
 }
@@ -86,13 +74,9 @@ addToLuaSearchPathWithCustomDelimiter() {
     local varName="$2"
     local dir="$3"
     local suffix="$4"
-    echo "=> checking dir $3"
+
     if  [ -d "$dir" ]; then
         export "${varName}=${!varName:+${!varName}${delimiter}}${dir}${suffix}"
-        echo "VALID entry; exporting $3"
-        echo "$varName=${!varName}"
-    else
-        echo "$3 not a directory; ignoring"
     fi
 }
 
@@ -108,9 +92,7 @@ addToLuaSearchPath() {
 _addToLuaPath() {
     local dir="$1"
     # Stop if we've already visited here.
-    echo "call to _addToLuaPath '$dir'"
     if [ -n "${luaPathsSeen[$dir]}" ]; then
-        echo "path $dir already visited"
         return;
     fi
     luaPathsSeen[$dir]=1
@@ -127,7 +109,5 @@ _addToLuaPath() {
             _addToLuaPath "$new_path"
         done
     fi
-	echo "we program_LUA_PATH=$program_LUA_PATH"
-	echo "we get program_LUA_CPATH=$program_LUA_CPATH"
 }
 
