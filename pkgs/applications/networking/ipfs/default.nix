@@ -1,4 +1,4 @@
-{ stdenv, buildGoPackage, fetchFromGitHub, fetchgx }:
+{ stdenv, buildGoPackage, fetchFromGitHub, fetchgx, fuse }:
 
 buildGoPackage rec {
   name = "ipfs-${version}";
@@ -20,6 +20,8 @@ buildGoPackage rec {
     inherit rev;
     sha256 = "103mlsnqfnnqxh4phr192haaiv98d1bwpvca1sqrxz1216r5x0ik";
   };
+
+  buildDepends = [ fuse ];
 
   meta = with stdenv.lib; {
     description = "A global, versioned, peer-to-peer filesystem";
