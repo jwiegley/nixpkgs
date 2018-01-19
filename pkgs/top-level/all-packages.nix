@@ -13221,6 +13221,8 @@ with pkgs;
 
   go-protobuf = callPackage ../development/tools/go-protobuf { };
 
+  go-outline = callPackage ../development/tools/go-outline { };
+
   gocode = callPackage ../development/tools/gocode { };
 
   goconvey = callPackage ../development/tools/goconvey { };
