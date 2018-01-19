@@ -1,16 +1,18 @@
-{ stdenv, fetchurl, gtk_doc, pkgconfig, gobjectIntrospection, intltool
+{ stdenv, fetchFromGitHub, gtk_doc, pkgconfig, gobjectIntrospection, intltool
 , libgudev, polkit, appstream-glib, gusb, sqlite, libarchive, glib_networking
 , libsoup, docbook2x, gpgme, libxslt, libelf, libsmbios, efivar, glibcLocales
 , fwupdate, libyaml, valgrind, meson, libuuid, pygobject3, colord
 , pillow, ninja, gcab, gnutls, python3Packages, wrapGAppsHook
 }:
 let
-  version = "1.0.1";
+  version = "1.0.3";
 in stdenv.mkDerivation {
   name = "fwupd-${version}";
-  src = fetchurl {
-    url = "https://people.freedesktop.org/~hughsient/releases/fwupd-${version}.tar.xz";
-    sha256 = "1k627rja7df51dkzqvkzgbwrrj4049k6408d01m34n66zwr2fp59";
+  src = fetchFromGitHub {
+    owner = "hughsie";
+    repo = "fwupd";
+    rev = version;
+    sha256 = "0vg9f1gzcvfd7jnfhvv0ylf04fy7cw31ykrim7qik6gbkhr4gr65";
   };
 
   nativeBuildInputs = [
@@ -19,16 +21,10 @@ in stdenv.mkDerivation {
   ];
   buildInputs = [
     polkit appstream-glib gusb sqlite libarchive libsoup libelf libsmbios fwupdate libyaml
-    libgudev colord gpgme libuuid pillow gnutls glib_networking
+    libgudev colord gpgme libuuid pillow gnutls glib_networking efivar
   ];
 
   LC_ALL = "en_US.UTF-8"; # For po/make-images
-
-  NIX_CFLAGS_COMPILE = [
-    "-I${efivar}/include/efivar"
-    # warning: "__LIBELF_INTERNAL__" is not defined
-    "-Wno-error=undef"
-  ];
 
   patches = [
     ./fix-missing-deps.patch
@@ -38,12 +34,12 @@ in stdenv.mkDerivation {
   '';
 
   mesonFlags = [
-    "-Denable-man=false"
-    "-Denable-tests=false"
-    "-Denable-doc=false"
-    "-Dwith-bootdir=/boot"
-    "-Dwith-udevdir=lib/udev"
-    "-Dwith-systemdunitdir=lib/systemd/system"
+    "-Dman=false"
+    "-Dtests=false"
+    "-Dgtkdoc=false"
+    "-Dbootdir=/boot"
+    "-Dudevdir=lib/udev"
+    "-Dsystemdunitdir=lib/systemd/system"
     "--localstatedir=/var"
   ];
 
