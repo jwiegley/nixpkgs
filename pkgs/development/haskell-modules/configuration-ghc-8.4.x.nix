@@ -41,4 +41,7 @@ self: super: {
   transformers = null;
   unix = null;
   xhtml = null;
+
+  # Undo the override in `configuration-common.nix`
+  jailbreak-cabal = super.jailbreak-cabal.override { Cabal = self.Cabal; }; #pkgs.haskell.packages.ghc822.jailbreak-cabal;
 }
