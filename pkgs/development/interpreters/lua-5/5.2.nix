@@ -16,6 +16,7 @@ let
 in
 stdenv.mkDerivation rec {
   name = "lua-${version}";
+  pname = "lua";
   majorVersion = "5.2";
   luaversion = "${majorVersion}";
 

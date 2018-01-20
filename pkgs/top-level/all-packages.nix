@@ -6782,17 +6782,11 @@ with pkgs;
   luarocks = luaPackages.luarocks;
 
   # TODO careful about cjson cycle + can't find lua
-  luarocks-nix = luaPackages.luarocks-cjson.overrideAttrs(old: {
-    # hoping that it will solve confusion in LUA_PATH
-    name="luarocks-nix";
-    src = /home/teto/luarocks;
 
-    # postBuild ?
-    # postBuild =''
-    #   export LUA_PATH="?.lua;''${LUA_PATH:-}"
-    #   export LUA_CPATH="?.so;''${LUA_CPATH:-}"
-    # '';
-  });
+  # fork that adds the convert2nix command to luarocks
+  # hopefully it can be installed as an addon once luarocks
+  # completes addon support
+  luarocks-nix = luaPackages.luarocks-nix;
 
 
   toluapp = callPackage ../development/tools/toluapp {

@@ -16,7 +16,7 @@ name ? "${attrs.pname}-${attrs.version}"
 , version
 
 # by default prefix `name` e.g. "lua5.2-${name}"
-, namePrefix ? lua.name + "-"
+, namePrefix ? lua.pname + lua.majorVersion + "-"
 
 # Dependencies for building the package
 , buildInputs ? []
@@ -92,11 +92,19 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
 
   buildPhase = ''
     runHook preBuild
+
+    LUAROCKS=luarocks
+    if (( "''${NIX_DEBUG:-0}" >= 1 )); then
+        set -x
+        LUAROCKS="$LUAROCKS --verbose"
+    fi
+
+    # setup a temp config to prevent luarocks from complaining
     export LUAROCKS_CONFIG="$PWD/luarocks_cfg"
     echo "local_cache = '$PWD'" > "$LUAROCKS_CONFIG"
 
-    # TODO record in nix package the type of luarocks package it is, if it's make based,
-    # one might want to patch shebangs for instance
+    # TODO record in nix package the type of luarocks package it is
+    # don't patch if it's builtin for instance
     patchShebangs .
 
     runHook postBuild
@@ -120,12 +128,12 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
     # After the build is complete, it also installs the rock.
     # If no argument is given, it looks for a rockspec in the current directory
     # one problem here is that luarocks install packages in subfolders
-    # so we patch luarocks !
-    luarocks make --deps-mode=none --tree $out
+    # maybe we could reestablish dependency checking via passing --rock-trees
+    $LUAROCKS make --deps-mode=none --tree $out
 
     # to prevent collisions when creating environments
     # also added -f as it doesn't always exist
-    rm -f $out/lib/luarocks/rocks-5.2/manifest
+    rm -rf $out/lib/luarocks
 
     runHook postInstall
   '';

@@ -24,6 +24,9 @@ let
   # Check whether a derivation provides a lua module.
   hasLuaModule = drv: drv? luaModule ;
 
+  # TODO test
+  # callPackage = pkgs.newScope self;
+
   requiredLuaModules = drvs: with stdenv.lib; let
     modules =  filter hasLuaModule drvs;
   in unique ([lua] ++ modules ++ concatLists (catAttrs "requiredLuaModules" modules));
@@ -73,6 +76,24 @@ let
   luarocks = callPackage ../development/tools/misc/luarocks {
     inherit lua;
   };
+  luarocks-nix = lua52Packages.luarocks.overrideAttrs(old: {
+    # src = fetchFromGitHub {
+    #   owner="teto";
+    #   repo="luarocks";
+    #   # rev=
+    #   branchName="nix";
+    #   sha256 = "0vpji9a7ab6g3k30hqc4pz8yr51zn455pyfppq9ywqkllmjq0ypw";
+    # };
+    src=/home/teto/luarocks;
+    propagatedBuildInputs=old.propagatedBuildInputs ++ [  ];
+    # inherit lua;
+    # src
+    shellHook=''
+      export PATH="src/bin:''${PATH:-}"
+      export LUA_PATH="?.lua;''${LUA_PATH:-}"
+      export LUA_CPATH="?.so;''${LUA_CPATH:-}"
+    '';
+  });
 
   cjson = callPackage ../development/lua-modules/cjson {
     inherit lua;

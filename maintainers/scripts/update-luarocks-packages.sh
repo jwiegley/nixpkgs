@@ -1,39 +1,39 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -p 'lua5_2.withPackages(ps: [ ps.cjson ps.luarocks ])' git nix-prefetch-scripts -I nixpkgs=/home/teto/nixpkgs -i sh
+#!nix-shell -p 'lua5_2.withPackages(ps: [ ps.cjson ps.luarocks ])' git nix-prefetch-scripts -i sh
 
 # You'll likely want to use
 # ``
-#   $ ./update-luarocks-packages.sh ../../pkgs/development/lua-
+#   $ ./update-luarocks-packages.sh ../../pkgs/top-level/lua-generated-packages.nix
 # ``
 # to update all libraries in that folder.
-
-
 
 #!  nix-shell -p lua -p lua52Packages.cjson -p git -p nix-prefetch-scripts -i sh -I nixpkgs=/home/teto/nixpkgs2
 # for now we need cjson in lua path
 # for now lua-cjson isn't properly exported
-# for now launch it from luarocks/src
 # set -eu -o pipefail
 
-# exit_trap()
-# {
-#   local lc="$BASH_COMMAND" rc=$?
-#   test $rc -eq 0 || echo "*** error $rc: $lc"
-# }
-
-# trap exit_trap EXIT
 
 # TODO we should be able to list manifests
+if [ $# -lt 2 ]; then
 
-NIXPKGS_FOLDER="$HOME/nixpkgs2"
-LUAROCKS_EXE="$HOME/luarocks/src/bin/luarocks"
-ROCKSPEC_FOLDER=$HOME/moonrocks-mirror
-GENERATED_NIXFILE="pkgs/development/lua-modules/luarocks-packages.nix"
-# GENERATED_NIXFILE="pkgs/development/lua-modules/luarocks-packages.nix"
-# cd "$(dirname "$0")"
-# cabal2nix=$(git describe --dirty)
+    echo "Usage: $0 GENERATED_FILENAME"
+    exit 1
+fi
 
-cd "$HOME/luarocks/src"
+# NIXPKGS_FOLDER="$HOME/nixpkgs2"
+# LUAROCKS_EXE="$HOME/luarocks/src/bin/luarocks"
+# ROCKSPEC_FOLDER=$HOME/moonrocks-mirror
+GENERATED_NIXFILE="$1"
+
+exit_trap()
+{
+  local lc="$BASH_COMMAND" rc=$?
+  test $rc -eq 0 || echo "*** error $rc: $lc"
+}
+
+trap exit_trap EXIT
+
+# cd "$HOME/luarocks/src"
 
 # cd $NIXPKGS_FOLDER
 # # TEMPORARY
@@ -68,22 +68,28 @@ cd "$HOME/luarocks/src"
 
 # cd $NIXPKGS_FOLDER
 
-# -d "#"
 read -d '' -r HEADER <<'EOM'
-/* ${GENERATED_NIXFILE} is an auto-generated file -- DO NOT EDIT! */
-{ self, stdenv
-# , buildLuaPackage
-# temporary as these get generated eventually
-# , luafilesystem, ansicolors
+/* ${GENERATED_NIXFILE} is an auto-generated file -- DO NOT EDIT!
+You can run ${0} ${GENERATED_NIXFILE}
+*/
+{
+# self has buildLuaPackage
+self
+, stdenv
 , fetchurl
 , fetchgit
-
 , toLuaModule
 , requiredLuaModules
 }:
 with self;
 rec {
 EOM
+
+read -d '' -r FOOTER <<'EOM'
+}
+/* GENERATED */
+EOM
+
 
 
 # passing arrays is not easy
@@ -112,6 +118,7 @@ function convert_pkgs () {
 # todo find difference
 declare -a pkg_list_main
 declare -a pkg_list_extra
+declare -a pkg_lists
 pkg_list_main=(
 ansicolors # -1.0.2-3
 busted # -2.0.rc9-0 # OK
@@ -135,19 +142,22 @@ pkg_list_extra=(
 mediator_lua
 mpack
 )
+pkg_lists=(
+pkg_list_main
+pkg_list_extra
+)
 
 
-export LUA_PATH="?.lua;${LUA_PATH:-}"
-export LUA_CPATH="?.so;${LUA_CPATH:-}"
-# luarocks/?.so"
-cd "$HOME/luarocks/src/"
 
 # to sort only the output
 # cat log|LANG=C sort -t $'\t' -k1,1 -u
 echo "$HEADER"
 # convert_pkgs $pkg_list_main
-convert_pkgs pkg_list_extra "http://luarocks.org/manifests/teto"
-echo "}" # close the set
+for $i in $pkg_list[@]; do
+    echo $i
+done
+# convert_pkgs pkg_list_extra "http://luarocks.org/manifests/teto"
+echo "$FOOTER" # close the set
 
 # >> $NIXPKGS_FOLDER/${GENERATED_NIXFILE}
 # cabal -v0 new-build hackage2nix
