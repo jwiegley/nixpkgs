@@ -120,7 +120,6 @@ in stdenv.mkDerivation rec {
   in rec {
     inherit zlibSupport libPrefix sitePackages;
     executable = "pypy3";
-    # FIXME: Which flags do we set here?
     isPypy = true;
     isPy3 = true;
     isPy35 = true;
