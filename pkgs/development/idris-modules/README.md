@@ -34,6 +34,12 @@ Mostly for internal use.
 with-packages
 -------------
 
-Bundle idris together with a list of packages. Because idris currently
-only supports a single directory in its library path, you must include
-all desired libraries here, including `prelude` and `base`.
+Bundle idris together with a list of packages. Example usage:
+
+    $ nix-shell -p "idrisPackages.with-packages [ idrisPackages.lightyear ]"
+
+Note that it's still necessary to explicitly make the packages available to
+idris when running the interpreter, i.e. to make lightyear accessible,
+start idris with the following command:
+
+    $ idris -p lightyear
