@@ -15,7 +15,7 @@ let
   minorVersionSuffix = "";
   pythonVersion = "3.5";
   version = "${majorVersion}.${minorVersion}${minorVersionSuffix}";
-  libPrefix = "pypy3-${majorVersion}";
+  libPrefix = "pypy${pythonVersion}";
   sitePackages = "site-packages";
 
   pythonForPypy = python.withPackages (ppkgs: [ ppkgs.pycparser ]);
