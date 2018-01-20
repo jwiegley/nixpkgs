@@ -15,7 +15,7 @@ let
   minorVersionSuffix = "";
   pythonVersion = "2.7";
   version = "${majorVersion}.${minorVersion}${minorVersionSuffix}";
-  libPrefix = "pypy${majorVersion}";
+  libPrefix = "pypy${pythonVersion}";
   sitePackages = "site-packages";
 
   pythonForPypy = python.withPackages (ppkgs: [ ppkgs.pycparser ]);
