@@ -3,8 +3,12 @@
 with lib;
 
 let
-
   prl-tools = config.boot.kernelPackages.prl-tools;
+  # TODO: set version/sha correctly...
+  /*prl-tools = config.boot.kernelPackages.prl-tools.override lib.mkIf (config.hardware.parallels.version != "") && (config.hardware.parallels.sha256 != "") {
+    prl_ver =  config.hardware.parallels.version;
+    prl_sha = config.hardware.parallels.sha256;
+  };*/
 
 in
 
@@ -30,6 +34,22 @@ in
           mounted through `mount -t prl_fs ...` as this service will remount and trample any set options.
           Recommended to enable for simple file sharing, but extended share use such as for code should
           disable this to manually mount shares.
+        '';
+      };
+      version = mkOption {
+        type = types.string;
+        default = "";
+        description = ''
+          Set Parallels version string.
+          example: "12.2.1-41615"
+        '';
+      };
+      sha256 = mkOption {
+        type = types.string;
+        default = "";
+        description = ''
+          Set Parallels dist sha.
+          example: "12.2.1-41615"
         '';
       };
     };
