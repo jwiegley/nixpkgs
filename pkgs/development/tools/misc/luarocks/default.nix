@@ -3,6 +3,8 @@
 , zip
 # some packages need to be compiled with cmake
 , cmake
+# to be able to bring
+, toLuaModule
 }:
 let
   s = # Generated upstream information
@@ -18,7 +20,7 @@ let
     lua curl makeWrapper which unzip
   ];
 in
-stdenv.mkDerivation {
+toLuaModule (stdenv.mkDerivation {
   inherit (s) name version;
   inherit buildInputs;
   src = fetchurl {
@@ -36,13 +38,18 @@ stdenv.mkDerivation {
         configureFlags="$configureFlags --with-lua-include=$lua_inc"
     fi
   '';
+
+  # TODO use luaVersion instead
+  # TODO maybe we don't need to wrap it after all
   postInstall = ''
     sed -e "1s@.*@#! ${lua}/bin/lua$LUA_SUFFIX@" -i "$out"/bin/*
     for i in "$out"/bin/*; do
         test -L "$i" || {
 	    wrapProgram "$i" \
-	      --prefix LUA_PATH ";" "$(echo "$out"/share/lua/*/)?.lua" \
-	      --prefix LUA_PATH ";" "$(echo "$out"/share/lua/*/)?/init.lua" \
+	      --suffix LUA_PATH ";" "$(echo "$out"/share/lua/*/)?.lua" \
+	      --suffix LUA_PATH ";" "$(echo "$out"/share/lua/*/)?/init.lua" \
+	      --suffix LUA_CPATH ";" "$(echo "$out"/lib/lua/*/)?.so" \
+	      --suffix LUA_CPATH ";" "$(echo "$out"/share/lua/*/)?/init.lua"
 
 	}
     done
@@ -63,4 +70,4 @@ stdenv.mkDerivation {
     maintainers = [maintainers.raskin];
     platforms = platforms.linux ++ platforms.darwin;
   };
-}
+})

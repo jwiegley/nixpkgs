@@ -24,6 +24,23 @@ buildLuaPath() {
     done
 }
 
+nix_print() {
+    if (( "${NIX_DEBUG:-0}" >= $1 )); then
+        echo "$2"
+    fi
+}
+
+nix_debug() {
+    nix_print 1 "$1"
+}
+
+nix_error() {
+    nix_print 2 "$1"
+}
+
+nix_warn() {
+    nix_print 3 "$1"
+}
 
 # with an executable shell script which will set some environment variables
 # and then call into the original binary (which has been given a .wrapped
@@ -38,6 +55,9 @@ wrapLuaProgramsIn() {
 
     # Find all regular files in the output directory that are executable.
     if [ -d "$dir" ]; then
+
+        nix_debug "wrapping programs in [$dir]"
+
         find "$dir" -type f -perm -0100 -print0 | while read -d "" f; do
             # Rewrite "#! .../env lua" to "#! /nix/store/.../lua".
             # Strip suffix, like "3" or "2.7m" -- we don't have any choice on which
@@ -51,10 +71,10 @@ wrapLuaProgramsIn() {
             # above. The script will set LUA_PATH and PATH variables.!
             # (see pkgs/build-support/setup-hooks/make-wrapper.sh)
             local -a wrap_args=("$f"
-                            --prefix PATH ':' "$program_PATH"
-                            --prefix LUA_PATH ';' "$program_LUA_PATH"
-                            --prefix LUA_CPATH ';' "$program_LUA_CPATH"
-                            )
+                --prefix PATH ':' "$program_PATH"
+                --prefix LUA_PATH ';' "$program_LUA_PATH"
+                --prefix LUA_CPATH ';' "$program_LUA_CPATH"
+            )
 
             # Add any additional arguments provided by makeWrapperArgs
             # argument to buildLuaPackage.

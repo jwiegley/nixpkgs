@@ -40,6 +40,7 @@ let
             if [ -f "$prg" ]; then
               rm -f "$out/bin/$prg"
               if [ -x "$prg" ]; then
+                echo "Making wrapper $prg"
                 makeWrapper "$path/bin/$prg" "$out/bin/$prg" --suffix LUA_PATH ';' "$LUA_PATH"   --suffix LUA_CPATH ';' "$LUA_CPATH"
               fi
             fi

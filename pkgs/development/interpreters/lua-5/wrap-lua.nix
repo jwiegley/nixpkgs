@@ -3,16 +3,13 @@
 , makeSetupHook
 , makeWrapper }:
 
+# is that used ?
 with lib;
 
-
-
 # defined in trivial-builders.nix
-# imported as wrapLua in lua-packages.nix and pased to mk-lua-derivation to be used as buildInput
+# imported as wrapLua in lua-packages.nix and pased to build-lua-derivation to be used as buildInput
 makeSetupHook {
       deps = makeWrapper;
-      # substitutions.libPrefix = lua.libPrefix;
-      # look for python it's the interpreter generated in the env
       # substitutions.executable = "${env}/bin/${lua}";
       substitutions.executable = lua.interpreter;
       substitutions.lua = lua;
@@ -41,11 +38,10 @@ makeSetupHook {
         # This preamble does two things:
         # * Sets argv[0] to the original application's name; otherwise it would be .foo-wrapped.
         # * Adds all required libraries to sys.path via `site.addsitedir`. It also handles *.pth files.
+          # export LUA_PATH="$program_LUA_PATH"
+          # export LUA_CPATH="$program_LUA_CPATH"
         preamble = ''
-          sys.argv[0] = '"'$(readlink -f "$f")'"'
-          export LUA_PATH="$program_LUA_PATH"
-          export LUA_CPATH="$program_LUA_CPATH"
-          functools.reduce(lambda k, p: site.addsitedir(p, k), ['"$([ -n "$program_PYTHONPATH" ] && (echo "'$program_PYTHONPATH'" | sed "s|:|','|g") || true)"'], site._init_pathinfo())
+          # sys.argv[0] = '"'$(readlink -f "$f")'"'
         '';
 
       in ''

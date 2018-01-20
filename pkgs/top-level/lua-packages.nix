@@ -55,6 +55,11 @@ let
     };
 
     self = _self;
+
+
+  /* list of packages
+   *
+   */
   _self = with self; generatedPackages //  rec {
     inherit lua;
     inherit requiredLuaModules;
@@ -62,7 +67,9 @@ let
     inherit generatedPackages;
     inherit (stdenv.lib) maintainers;
 
-  wrapLua = callPackage ../development/interpreters/lua-5/wrap-lua.nix {inherit lua; inherit (pkgs) makeSetupHook makeWrapper; };
+  wrapLua = callPackage ../development/interpreters/lua-5/wrap-lua.nix {
+    inherit lua; inherit (pkgs) makeSetupHook makeWrapper;
+  };
 
   #define build lua package function
   buildLuaPackage = with pkgs.lib; makeOverridable( callPackage ../development/interpreters/lua-5/build-lua-package.nix {
@@ -75,8 +82,10 @@ let
 
   luarocks = callPackage ../development/tools/misc/luarocks {
     inherit lua;
+    inherit toLuaModule;
   };
-  luarocks-nix = lua52Packages.luarocks.overrideAttrs(old: {
+
+  luarocks-nix = luarocks.overrideAttrs(old: {
     # src = fetchFromGitHub {
     #   owner="teto";
     #   repo="luarocks";
@@ -88,11 +97,11 @@ let
     propagatedBuildInputs=old.propagatedBuildInputs ++ [  ];
     # inherit lua;
     # src
-    shellHook=''
-      export PATH="src/bin:''${PATH:-}"
-      export LUA_PATH="?.lua;''${LUA_PATH:-}"
-      export LUA_CPATH="?.so;''${LUA_CPATH:-}"
-    '';
+    # shellHook=''
+    #   export PATH="src/bin:''${PATH:-}"
+    #   export LUA_PATH="?.lua;''${LUA_PATH:-}"
+    #   export LUA_CPATH="?.so;''${LUA_CPATH:-}"
+    # '';
   });
 
   cjson = callPackage ../development/lua-modules/cjson {

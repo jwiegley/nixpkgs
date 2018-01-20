@@ -118,6 +118,8 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
   # inspired from build-python-setup-tools
   shellHook = attrs.shellHook or ''
     ${preShellHook}
+    # TODO export LUA_PATH ?
+    echo "shellHook triggered"
     ${postShellHook}
   '';
 
