@@ -2,6 +2,9 @@
 , gawk, utillinux, xorg, glib, dbus_glib, zlib
 , kernel ? null, libsOnly ? false
 , undmg, fetchurl
+
+, prl_ver ? "12.2.1-41615"
+, prl_sha ? "1jwzwif69qlhmfky9kigjaxpxfj0lyrl1iyrpqy4iwqvajdgbbym"
 }:
 
 assert (!libsOnly) -> kernel != null;
@@ -11,17 +14,18 @@ let xorgFullVer = (builtins.parseDrvName xorg.xorgserver.name).version;
     x64 = if stdenv.system == "x86_64-linux" then true
           else if stdenv.system == "i686-linux" then false
           else throw "Parallels Tools for Linux only support {x86-64,i686}-linux targets";
+
+  prl_major = lib.head (lib.splitString "." prl_ver);
 in
 stdenv.mkDerivation rec {
-  version = "${prl_major}.2.1-41615";
-  prl_major = "12";
+  version = "${prl_major}abcd";
   name = "prl-tools-${version}";
 
   # We download the full distribution to extract prl-tools-lin.iso from
   # => ${dmg}/Parallels\ Desktop.app/Contents/Resources/Tools/prl-tools-lin.iso
   src = fetchurl {
-    url =  "https://download.parallels.com/desktop/v${prl_major}/${version}/ParallelsDesktop-${version}.dmg";
-    sha256 = "1jwzwif69qlhmfky9kigjaxpxfj0lyrl1iyrpqy4iwqvajdgbbym";
+    url =  "https://download.parallels.com/desktop/v${prl_major}/${prl_ver}/ParallelsDesktop-${prl_ver}.dmg";
+    sha256 = prl_sha;
   };
 
   hardeningDisable = [ "pic" "format" ];
