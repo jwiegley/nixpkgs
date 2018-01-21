@@ -38,7 +38,7 @@ in stdenv.mkDerivation rec {
     mv compiler-rt-* $sourceRoot/projects/compiler-rt
   '';
 
-  outputs = [ "out" ]
+  outputs = [ "out" "python" ]
     ++ stdenv.lib.optional enableSharedLibraries "lib"
     ++ stdenv.lib.optional enableManpages "man";
 
@@ -123,7 +123,11 @@ in stdenv.mkDerivation rec {
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
   '';
 
-  postInstall = stdenv.lib.optionalString enableManpages ''
+  postInstall = ''
+    mkdir -p $python/share
+    mv $out/share/opt-viewer $python/share/opt-viewer
+  ''
+  + stdenv.lib.optionalString enableManpages ''
     moveToOutput "share/man" "$man"
   ''
   + stdenv.lib.optionalString enableSharedLibraries ''
