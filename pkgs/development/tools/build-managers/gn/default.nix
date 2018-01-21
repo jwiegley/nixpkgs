@@ -1,16 +1,17 @@
-{ stdenv, lib, fetchgit, fetchurl, libevent, ninja, python }:
+{ stdenv, lib, fetchgit, fetchurl, libevent, libtool, ninja, python
+, AppKit, ApplicationServices, Cocoa, CoreBluetooth, Foundation, ImageCaptureCore }:
 
 let
   depsGit = {
     "tools/gn" = fetchgit {
       url = "https://chromium.googlesource.com/chromium/src/tools/gn";
-      rev = "d0c518db129975ce88ff1de26c857873b0619c4b";
-      sha256 = "0l15vzmjyx6bwlz1qhn3fy7yx3qzzxr3drnkj3l0p0fmyxza52vx";
+      rev = "858366e6b3803ff067862a9b994776fc11124ba2";
+      sha256 = "0nylfi9jnp8f8i1vr7jxdskvjr7hi1g9hg7qxxqcy4bdrfr2npra";
     };
     "base" = fetchgit {
       url = "https://chromium.googlesource.com/chromium/src/base";
-      rev = "bc6e3ce8ca01b894751e1f7b22b561e3ae2e7f17";
-      sha256 = "1yl49v6nxbrfms52xf7fiwh7d4301m2aj744pa3hzzh989c5j6g5";
+      rev = "d56f52a20c2ca2ab28579677d2ea5483401bd47e";
+      sha256 = "0b29bmi3qfnvxwcljzbzi6im49nd7j6pf9zb5c53zb9pilwpsrqq";
     };
     "build" = fetchgit {
       url = "https://chromium.googlesource.com/chromium/src/build";
@@ -29,10 +30,15 @@ let
     };
   };
 
+  appleApsl = fetchurl {
+    url = "https://chromium.googlesource.com/chromium/src/third_party/+archive/7b93eb6514e15b92eb8d8b1767b92612c12c3364/apple_apsl.tar.gz";
+    sha256 = "00s9nfgz30877h48jd1831l1fp05i33cpya7264scm9firw3r0id";
+  };
+
 in
   stdenv.mkDerivation rec {
     name = "gn";
-    version = "0.0.0.20170629";
+    version = "0.0.0.20171013";
     sourceRoot = ".";
 
     unpackPhase = ''
@@ -41,22 +47,42 @@ in
           mkdir -p $sourceRoot/${n}
           cp -r ${v}/* $sourceRoot/${n}
         '') depsGit)}
+    '' + stdenv.lib.strings.optionalString stdenv.isDarwin ''
+      mkdir -p third_party/apple_apsl
+      tar -C third_party/apple_apsl -xf ${appleApsl}
     '';
+
+    prePatch = ''
+      chmod u+w -R .
+    '';
+
+    patches = stdenv.lib.optionals stdenv.isDarwin [
+      # Remove NSPressureConfiguration stuff, which is only available on MacOS 10.11+ and not part
+      # of the platform libraries in nixpkgs
+      ./NSPressureConfiguration.patch
+
+      # also just remove GetModelIdentifier stuff from base library, which isn't used by GN itself
+      # yet cannot be linked because of old IOKit
+      ./RemoveGetModelIdentifier.patch
+
+      # fix bootstrap, compile in some files listed in BUILD.gn, yet missing from bootstrap script
+      ./bootstrap.patch
+    ];
 
     postPatch = ''
       # Patch shebands (for sandbox build)
-      chmod u+w -R build
       patchShebangs build
 
       # Patch out Chromium-bundled libevent
-      chmod u+w tools/gn/bootstrap tools/gn/bootstrap/bootstrap.py
       sed -i -e '/static_libraries.*libevent/,/^ *\]\?[})]$/d' \
           tools/gn/bootstrap/bootstrap.py
     '';
 
     NIX_LDFLAGS = "-levent";
 
-    nativeBuildInputs = [ ninja python ];
+    nativeBuildInputs = [ ninja python ] ++ stdenv.lib.optional stdenv.isDarwin [
+      libtool AppKit ApplicationServices Cocoa CoreBluetooth Foundation ImageCaptureCore
+    ];
     buildInputs = [ libevent ];
 
     buildPhase = ''
@@ -71,7 +97,7 @@ in
       description = "A meta-build system that generates NinjaBuild files";
       homepage = https://chromium.googlesource.com/chromium/src/tools/gn;
       license = licenses.bsd3;
-      platforms = platforms.linux;
+      platforms = platforms.linux ++ platforms.darwin;
       maintainers = [ maintainers.stesie ];
     };
   }

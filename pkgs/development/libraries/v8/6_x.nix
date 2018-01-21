@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchgit, fetchFromGitHub, gn, ninja, python, glib, pkgconfig
+{ stdenv, lib, fetchgit, fetchFromGitHub, gn, libtool, ninja, python, glib, pkgconfig
 , doCheck ? false
 , snapshot ? true
 }:
@@ -11,6 +11,9 @@ let
          else if stdenv.is64bit
               then"x64"
               else "ia32";
+
+  librarySuffix = stdenv.hostPlatform.extensions.sharedLibrary;
+
   git_url = "https://chromium.googlesource.com";
 
   deps = {
@@ -96,7 +99,7 @@ in
 
 stdenv.mkDerivation rec {
   name = "v8-${version}";
-  version = "6.2.414.27";
+  version = "6.2.414.30";
 
   inherit doCheck;
 
@@ -104,7 +107,7 @@ stdenv.mkDerivation rec {
     owner = "v8";
     repo = "v8";
     rev = version;
-    sha256 = "15zrb9bcpnhljhrilqnjaak3a4xnhj8li6ra12g3gkrw3fzir9a2";
+    sha256 = "0n9bpk8njm65sm8cvlmd8qha5q22d6vp10ykq1mzim4y64wipz84";
   };
 
   postUnpack = ''
@@ -116,6 +119,14 @@ stdenv.mkDerivation rec {
   '';
 
   prePatch = ''
+    chmod u+w -R .
+  '';
+
+  patches = stdenv.lib.optionals stdenv.isDarwin [
+    ./no-xcode-gn.patch
+  ];
+
+  postPatch = ''
     # use our gn, not the bundled one
     sed -i -e 's#gn_path = .*#gn_path = "${gn}/bin/gn"#' tools/mb/mb.py
 
@@ -123,7 +134,6 @@ stdenv.mkDerivation rec {
     if [ "$doCheck" = "" ]; then sed -i -e '/"test:gn_all",/d' BUILD.gn; fi
 
     # disable sysroot usage
-    chmod u+w build/config build/config/sysroot.gni
     sed -i build/config/sysroot.gni \
         -e '/use_sysroot =/ { s#\(use_sysroot =\).*#\1 false#; :a  n; /current_cpu/ { s/^/#/; ba };  }'
 
@@ -141,7 +151,7 @@ stdenv.mkDerivation rec {
   '';
 
   nativeBuildInputs = [ gn ninja pkgconfig ];
-  buildInputs = [ python glib ];
+  buildInputs = [ python glib ] ++ stdenv.lib.optionals stdenv.isDarwin [ libtool ];
 
   buildPhase = ''
     ninja -C out.gn/${arch}.release/
@@ -153,7 +163,8 @@ stdenv.mkDerivation rec {
     install -vD out.gn/${arch}.release/d8 "$out/bin/d8"
     install -vD out.gn/${arch}.release/mksnapshot "$out/bin/mksnapshot"
     mkdir -p "$out/lib"
-    for f in libicui18n.so libicuuc.so libv8_libbase.so libv8_libplatform.so libv8.so; do
+    for f in libicui18n${librarySuffix} libicuuc${librarySuffix} libv8_libbase${librarySuffix} \
+             libv8_libplatform${librarySuffix} libv8${librarySuffix}; do
         install -vD out.gn/${arch}.release/$f "$out/lib/$f"
     done
     install -vD out.gn/${arch}.release/icudtl.dat "$out/lib/icudtl.dat"
@@ -165,7 +176,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "Google's open source JavaScript engine";
     maintainers = with maintainers; [ cstrahan proglodyte ];
-    platforms = platforms.linux;
+    platforms = platforms.linux ++ platforms.darwin;
     license = licenses.bsd3;
   };
 }
