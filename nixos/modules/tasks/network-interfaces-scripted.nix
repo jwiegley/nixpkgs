@@ -104,6 +104,7 @@ let
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
+              StartLimitIntervalSec = 3;
             };
 
             unitConfig.DefaultDependencies = false;
