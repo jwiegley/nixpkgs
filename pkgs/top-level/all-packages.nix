@@ -974,6 +974,8 @@ with pkgs;
 
   clipster = callPackage ../tools/misc/clipster { };
 
+  cloudflare-warp = callPackage ../tools/networking/cloudflare-warp { };
+
   coprthr = callPackage ../development/libraries/coprthr {
     flex = flex_2_5_35;
   };
