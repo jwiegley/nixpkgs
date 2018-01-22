@@ -79,17 +79,10 @@ in releaseTools.nixBuild rec {
       guile # optional, for Guile + Guix support
       perlDeps perl nixUnstable
       postgresql # for running the tests
-      (lib.overrideDerivation (aws-sdk-cpp.override {
+      (aws-sdk-cpp.override {
         apis = ["s3"];
         customMemoryManagement = false;
-      }) (attrs: {
-        src = fetchFromGitHub {
-          owner = "edolstra";
-          repo = "aws-sdk-cpp";
-          rev = "local";
-          sha256 = "1vhgsxkhpai9a7dk38q4r239l6dsz2jvl8hii24c194lsga3g84h";
-        };
-      }))
+      })
     ];
 
   hydraPath = lib.makeBinPath (
@@ -101,6 +94,10 @@ in releaseTools.nixBuild rec {
     # Clean up when building from a working tree.
     (cd $sourceRoot && (git ls-files -o --directory | xargs -r rm -rfv)) || true
   '';
+
+  patches = lib.optional (stdenv.isDarwin) [
+    ./patches/darwin-missing-template-inst.patch
+  ];
 
   configureFlags = [ "--with-docbook-xsl=${docbook_xsl}/xml/xsl/docbook" ];
 
@@ -139,7 +136,7 @@ in releaseTools.nixBuild rec {
   meta = with stdenv.lib; {
     description = "Nix-based continuous build system";
     license = licenses.gpl3;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ domenkozar ];
+    platforms = with platforms; linux ++ darwin;
+    maintainers = with maintainers; [ domenkozar periklis ];
   };
  }

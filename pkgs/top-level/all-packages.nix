@@ -9005,7 +9005,12 @@ with pkgs;
     x11Support = false;
   };
 
-  hydra = callPackage ../development/tools/misc/hydra { };
+  hydra = callPackage ../development/tools/misc/hydra {
+    stdenv = if stdenv.cc.isClang
+      then llvmPackages_5.stdenv
+      else overrideCC stdenv gcc6;
+    libpqxx = libpqxx_6;
+  };
 
   hydraAntLogger = callPackage ../development/libraries/java/hydra-ant-logger { };
 
@@ -9840,6 +9845,8 @@ with pkgs;
   libpqxx = callPackage ../development/libraries/libpqxx {
     gnused = gnused_422;
   };
+
+  libpqxx_6 = callPackage ../development/libraries/libpqxx/v6.nix { };
 
   libproxy = callPackage ../development/libraries/libproxy {
     stdenv = if stdenv.isDarwin
