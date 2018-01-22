@@ -7177,7 +7177,7 @@ with pkgs;
 
   kt = callPackage ../tools/misc/kt {};
 
-  asn2quickder = callPackage ../development/tools/asn2quickder {};
+  asn2quickder = python2Packages.callPackage ../development/tools/asn2quickder {};
 
   astyle = callPackage ../development/tools/misc/astyle { };
 
