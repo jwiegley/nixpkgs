@@ -16355,6 +16355,8 @@ with pkgs;
 
   maxlib = callPackage ../applications/audio/pd-plugins/maxlib { };
 
+  maxscale = callPackage ../tools/networking/maxscale { };
+
   pdfdiff = callPackage ../applications/misc/pdfdiff { };
 
   mupdf = callPackage ../applications/misc/mupdf { };
