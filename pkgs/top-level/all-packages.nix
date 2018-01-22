@@ -203,9 +203,6 @@ with pkgs;
 
   fetchCrate = callPackage ../build-support/rust/fetchcrate.nix { };
 
-  gitRepoToName = callPackage ../build-support/fetchgit/gitrepotoname.nix { };
-
-
   fetchFromGitHub = {
     owner, repo, rev, name ? "source",
     fetchSubmodules ? false, private ? false,

@@ -1,6 +1,8 @@
 # look at python/wrapper.nix
 # look at setup hooks too
-{ stdenv, fetchurl, readline, compat ? false
+{ stdenv, fetchurl, readline
+# compiles compatibility layer with lua5.1
+, compat ? false
 , hostPlatform, makeWrapper
 , lua-setup-hook, callPackage
 , self
