@@ -7,13 +7,13 @@
 
 let drv = stdenv.mkDerivation rec {
   pname = "jetbrainsjdk";
-  version = "152b1036.1";
+  version = "152b1119.3";
   name = pname + "-" + version;
 
   src = if stdenv.system == "x86_64-linux" then
     fetchurl {
       url = "https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbsdk8u${version}_linux_x64.tar.gz";
-      sha256 = "1768f02i3dxdbxn8n29d522h8v0mkgnhpb8ixzq5p54vwjmfl6md";
+      sha256 = "0q9lsaxa49gj94l3ip1359d59f5pkczlxnfawjjbqaf3v4gvx0hq";
     }
   else
     throw "unsupported system: ${stdenv.system}";
