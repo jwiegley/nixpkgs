@@ -222,6 +222,7 @@ in
       sddm = {
         allowNullPassword = true;
         startSession = true;
+        isExposed = false;
       };
 
       sddm-greeter.text = ''

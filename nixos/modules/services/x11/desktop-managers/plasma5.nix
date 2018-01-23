@@ -195,7 +195,7 @@ in
         theme = mkDefault "breeze";
       };
 
-      security.pam.services.kde = { allowNullPassword = true; };
+      security.pam.services.kde = { allowNullPassword = true; isExposed = false; };
 
       # Doing these one by one seems silly, but we currently lack a better
       # construct for handling common pam configs.
