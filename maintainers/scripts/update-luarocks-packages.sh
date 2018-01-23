@@ -155,6 +155,8 @@ echo "$HEADER"
 # convert_pkgs $pkg_list_main
 for $i in $pkg_list[@]; do
     echo $i
+    # TODO run the conversion, in case of a certain failure, pack & publish the
+    # package
 done
 # convert_pkgs pkg_list_extra "http://luarocks.org/manifests/teto"
 echo "$FOOTER" # close the set
