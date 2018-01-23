@@ -48,9 +48,10 @@ in
       after = [ "display-manager.service" ];
       conflicts = [ "getty@tty7.service" ];
       path = [ pkgs.kmod ];
+      wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart = "${displaylink}/bin/DisplayLinkManager";
+        ExecStart = "${displaylink}/bin/displaylink-wrapper";
         Restart = "always";
         RestartSec = 5;
       };
