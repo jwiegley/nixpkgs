@@ -336,6 +336,8 @@ with pkgs;
 
   vmTools = callPackage ../build-support/vm/default.nix { };
 
+  linuxkit-builder = callPackage ../build-support/vm/linuxkit-builder { };
+
   releaseTools = callPackage ../build-support/release/default.nix { };
 
   composableDerivation = callPackage ../../lib/composable-derivation.nix { };
@@ -20184,6 +20186,16 @@ with pkgs;
     inherit (darwin.apple_sdk.libs) xpc;
     inherit (darwin) libobjc;
   };
+
+  hyperkit = callPackage ../applications/virtualization/hyperkit {
+    inherit (darwin.apple_sdk.frameworks) Hypervisor vmnet;
+    inherit (darwin.apple_sdk.libs) xpc;
+    inherit (darwin) libobjc;
+  };
+
+  vpnkit = callPackage ../applications/virtualization/vpnkit { };
+
+  go-vpnkit = callPackage ../applications/virtualization/go-vpnkit { };
 
   xinput_calibrator = callPackage ../tools/X11/xinput_calibrator { };
 
