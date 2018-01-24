@@ -958,5 +958,4 @@ self: super: {
 
   # https://github.com/yesodweb/Shelly.hs/issues/162
   shelly = dontCheck super.shelly;
-
 }
