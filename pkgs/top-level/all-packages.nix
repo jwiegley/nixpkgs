@@ -18978,6 +18978,10 @@ with pkgs;
 
   bwa = callPackage ../applications/science/biology/bwa/default.nix { };
 
+  ### SCIENCE/IMAGING
+
+  mrtrix3 = qt5.callPackage ../applications/science/imaging/mrtrix { };
+
   ### SCIENCE/MACHINE LEARNING
 
   sc2-headless = callPackage ../applications/science/machine-learning/sc2-headless {
