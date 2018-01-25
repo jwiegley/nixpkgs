@@ -9841,11 +9841,7 @@ with pkgs;
     gnused = gnused_422;
   };
 
-  libproxy = callPackage ../development/libraries/libproxy {
-    stdenv = if stdenv.isDarwin
-      then overrideCC stdenv gcc
-      else stdenv;
-  };
+  libproxy = callPackage ../development/libraries/libproxy { };
 
   libpseudo = callPackage ../development/libraries/libpseudo { };
 
