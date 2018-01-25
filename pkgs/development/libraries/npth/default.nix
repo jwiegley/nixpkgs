@@ -1,12 +1,14 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "npth-1.3";
+  name = "npth-1.5";
 
   src = fetchurl {
     url = "ftp://ftp.gnupg.org/gcrypt/npth/${name}.tar.bz2";
-    sha256 = "0am86vblapwz84254qpmhz0chk70g6qzh3wdxcs0gvba8d01ka5w";
+    sha256 = "1hmkkp6vzyrh8v01c2ynzf9vwikyagp7p1lxhbnr4ysk3w66jji9";
   };
+
+  doCheck = true;
 
   meta = with stdenv.lib; {
     description = "The New GNU Portable Threads Library";
@@ -20,7 +22,7 @@ stdenv.mkDerivation rec {
       that this is a solid way to provide a co-routine based framework.
     '';
     homepage = http://www.gnupg.org;
-    license = licenses.lgpl3;
+    license = licenses.lgpl2Plus;
     platforms = platforms.all;
   };
 }
