@@ -218,6 +218,9 @@ with stdenv.lib;
     DRM_AMDGPU_SI y # (experimental) amdgpu support for verde and newer chipsets
     DRM_AMDGPU_CIK y # (stable) amdgpu support for bonaire and newer chipsets
   ''}
+  ${optionalString (versionAtLeast version "4.6") ''
+    DRM_DP_AUX_CHARDEV y # allows device firmware updates
+  ''}
 
   # Sound.
   SND_DYNAMIC_MINORS y
