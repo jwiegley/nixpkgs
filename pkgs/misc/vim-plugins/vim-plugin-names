@@ -253,6 +253,7 @@
 "github:kannokanno/previm"
 "github:osyo-manga/vim-textobj-multiblock"
 "github:cespare/vim-toml"
+"github:t9md/vim-smalls"
 "github:ehamberg/vim-cute-python.git"
 "github:shougo/neoinclude.vim"
 "github:rhysd/committia.vim.git"
