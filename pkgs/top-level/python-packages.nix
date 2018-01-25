@@ -20352,6 +20352,8 @@ EOF
     propagatedBuildInputs = with self; [];
   };
 
+  pygccxml = callPackage ../development/python-modules/pygccxml {};
+
   pymacaroons-pynacl = buildPythonPackage rec {
     name = "pymacaroons-pynacl-${version}";
     version = "0.9.3";
