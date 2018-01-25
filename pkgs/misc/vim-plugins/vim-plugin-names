@@ -245,6 +245,7 @@
 "github:kana/vim-operator-replace"
 "github:rhysd/vim-operator-surround"
 "github:chikatoike/concealedyank.vim"
+"github:kannokanno/previm"
 "github:osyo-manga/vim-textobj-multiblock"
 "github:cespare/vim-toml"
 "github:ehamberg/vim-cute-python.git"

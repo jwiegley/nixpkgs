@@ -1299,6 +1299,17 @@ rec {
 
   };
 
+  previm = buildVimPluginFrom2Nix { # created by nix#NixDerivation
+    name = "previm-2018-01-13";
+    src = fetchgit {
+      url = "https://github.com/kannokanno/previm";
+      rev = "5d780c0d21996709f7ca89a13b2606f6f802c83b";
+      sha256 = "0v9s9c2vbxk8zjggwiy3cgl0amgfd7mmws26ilrmg8zc7fayaq0g";
+    };
+    dependencies = [];
+
+  };
+
   latex-box = buildVimPluginFrom2Nix { # created by nix#NixDerivation
     name = "latex-box-2015-06-01";
     src = fetchgit {
