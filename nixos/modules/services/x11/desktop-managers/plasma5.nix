@@ -192,6 +192,7 @@ in
       ];
 
       services.xserver.displayManager.sddm = {
+        enable = mkDefault true;
         theme = mkDefault "breeze";
       };
 

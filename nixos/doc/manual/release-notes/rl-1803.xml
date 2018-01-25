@@ -160,7 +160,13 @@ following incompatible changes:</para>
 
 <title>Other Notable Changes</title>
 
-<itemizedlist>
+  <itemizedlist>
+    <listitem>
+    <para>The default display manager is now LightDM.
+    To use SLiM set <literal>services.xserver.displayManager.slim.enable</literal>
+    to <literal>true</literal>.
+  </listitem>
+
   <listitem>
     <para>
       ZNC option <option>services.znc.mutable</option> now defaults to

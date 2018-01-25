@@ -169,6 +169,8 @@ in {
         '';
       };
 
+    services.xserver.displayManager.gdm.enable = mkDefault true;
+
     services.xserver.updateDbusEnvironment = true;
 
     environment.variables.GIO_EXTRA_MODULES = [ "${lib.getLib pkgs.gnome3.dconf}/lib/gio/modules"
