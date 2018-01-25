@@ -36,6 +36,28 @@ let
     UI vesamenu.c32
     MENU TITLE NixOS
     MENU BACKGROUND /isolinux/background.png
+    MENU RESOLUTION 800 600
+    MENU CLEAR
+    MENU ROWS 6
+    MENU CMDLINEROW -4
+    MENU TIMEOUTROW -3
+    MENU TABMSGROW  -2
+    MENU HELPMSGROW -1
+    MENU HELPMSGENDROW -1
+    MENU MARGIN 0
+
+    #                                FG:AARRGGBB  BG:AARRGGBB   shadow
+    MENU COLOR BORDER       30;44      #00000000    #00000000   none
+    MENU COLOR SCREEN       37;40      #FF000000    #00E2E8FF   none
+    MENU COLOR TABMSG       31;40      #80000000    #00000000   none
+    MENU COLOR TIMEOUT      1;37;40    #FF000000    #00000000   none
+    MENU COLOR TIMEOUT_MSG  37;40      #FF000000    #00000000   none
+    MENU COLOR CMDMARK      1;36;40    #FF000000    #00000000   none
+    MENU COLOR CMDLINE      37;40      #FF000000    #00000000   none
+    MENU COLOR TITLE        1;36;44    #00000000    #00000000   none
+    MENU COLOR UNSEL        37;44      #FF000000    #00000000   none
+    MENU COLOR SEL          7;37;40    #FFFFFFFF    #FF5277C3   std
+
     DEFAULT boot
 
     LABEL boot
@@ -75,49 +97,81 @@ let
 
   isolinuxCfg = baseIsolinuxCfg + (optionalString config.boot.loader.grub.memtest86.enable isolinuxMemtest86Entry);
 
+  # Setup instructions for rEFInd.
+  refind =
+    if targetArch == "x64" then
+      ''
+      # Adds rEFInd to the ISO.
+      cp -v ${pkgs.refind}/share/refind/refind_x64.efi $out/EFI/boot/
+      ''
+    else
+      "# No refind for ia32"
+  ;
+
   # The EFI boot image.
   efiDir = pkgs.runCommand "efi-directory" {} ''
-    mkdir -p $out/EFI/boot
-    cp -v ${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${targetArch}.efi $out/EFI/boot/boot${targetArch}.efi
-    mkdir -p $out/loader/entries
+    mkdir -p $out/EFI/boot/
+    
+    MODULES="fat iso9660 part_gpt part_msdos \
+             normal boot linux configfile loopback chain halt \
+             efifwsetup efi_gop efi_uga \
+             ls search search_label search_fs_uuid search_fs_file \
+             gfxterm gfxterm_background gfxterm_menu test all_video loadenv \
+             exfat ext2 ntfs btrfs hfsplus udf \
+             videoinfo png \
+            "
+    # Make our own efi program, we can't rely on `grub-install` since it seems to
+    # probe for devices, even with --skip-fs-probe.
+    ${pkgs.grub2_efi}/bin/grub-mkimage -o $out/EFI/boot/bootx64.efi -p /EFI/boot -O x86_64-efi \
+      $MODULES
+    cp ${pkgs.grub2_efi}/share/grub/unicode.pf2 $out/EFI/boot/
 
-    cat << EOF > $out/loader/entries/nixos-iso.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
+    cat <<EOF > $out/EFI/boot/grub.cfg
+    set timeout=10
+    insmod gfxterm
+    insmod png
+    set gfxpayload=keep
+    if loadfont /EFI/boot/unicode.pf2; then
+      terminal_output gfxterm
+    fi
+    if background_image /EFI/boot/efi-background.png; then
+      # Black background means transparent background when there
+      # is a background image set... This seems undocumented :(
+      set color_normal=black/black
+      set color_highlight=white/blue
+    else
+      set menu_color_normal=cyan/blue
+      set menu_color_highlight=white/blue
+    fi
+
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
+      initrd /boot/initrd
+    }
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (nomodeset)" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} nomodeset
+      initrd /boot/initrd
+    }
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (copytoram)" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} copytoram
+      initrd /boot/initrd
+    }
+    menuentry "NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (debug)" {
+      linux /boot/bzImage init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} loglevel=7
+      initrd /boot/initrd
+    }
+    menuentry 'rEFInd' {
+      chainloader /EFI/boot/refind_x64.efi
+    }
+    menuentry 'Firmware Setup' {
+      fwsetup
+    }
+    menuentry 'Shutdown' {
+      halt
+    }
     EOF
 
-    # A variant to boot with 'nomodeset'
-    cat << EOF > $out/loader/entries/nixos-iso-nomodeset.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}
-    version nomodeset
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} nomodeset
-    EOF
-
-    # A variant to boot with 'copytoram'
-    cat << EOF > $out/loader/entries/nixos-iso-copytoram.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel}
-    version copytoram
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} copytoram
-    EOF
-
-    # A variant to boot with verbose logging to the console
-    cat << EOF > $out/loader/entries/nixos-iso-debug.conf
-    title NixOS ${config.system.nixosVersion}${config.isoImage.appendToMenuLabel} (debug)
-    linux /boot/bzImage
-    initrd /boot/initrd
-    options init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} loglevel=7
-    EOF
-
-    cat << EOF > $out/loader/loader.conf
-    default nixos-iso
-    timeout ${builtins.toString config.boot.loader.timeout}
-    EOF
+    ${refind}
   '';
 
   efiImg = pkgs.runCommand "efi-image_eltorito" { buildInputs = [ pkgs.mtools pkgs.libfaketime ]; }
@@ -233,13 +287,25 @@ in
       '';
     };
 
-    isoImage.splashImage = mkOption {
+    isoImage.efiSplashImage = mkOption {
+      # FIXME : use upstream url, obviously.
       default = pkgs.fetchurl {
-          url = https://raw.githubusercontent.com/NixOS/nixos-artwork/5729ab16c6a5793c10a2913b5a1b3f59b91c36ee/ideas/grub-splash/grub-nixos-1.png;
-          sha256 = "43fd8ad5decf6c23c87e9026170a13588c2eba249d9013cb9f888da5e2002217";
+          url = https://raw.githubusercontent.com/samueldr/nixos-artwork/8c1017f59257386527c02485d48cdaf5d125911c/bootloader/efi-background.png;
+          sha256 = "18lfwmp8yq923322nlb9gxrh5qikj1wsk6g5qvdh31c4h5b1538x";
         };
       description = ''
-        The splash image to use in the bootloader.
+        The splash image to use in the EFI bootloader.
+      '';
+    };
+
+    isoImage.splashImage = mkOption {
+      # FIXME : use upstream url, obviously.
+      default = pkgs.fetchurl {
+          url = https://raw.githubusercontent.com/samueldr/nixos-artwork/cb04dede82e941b74ea2e5189ef41cacdd41c11a/bootloader/isolinux/bios-boot.png;
+          sha256 = "1wp822zrhbg4fgfbwkr7cbkr4labx477209agzc0hr6k62fr6rxd";
+        };
+      description = ''
+        The splash image to use in the legacy-boot bootloader.
       '';
     };
 
@@ -358,6 +424,9 @@ in
         { source = "${pkgs.syslinux}/share/syslinux";
           target = "/isolinux";
         }
+        { source = config.isoImage.efiSplashImage;
+          target = "/EFI/boot/efi-background.png";
+        }
         { source = config.isoImage.splashImage;
           target = "/isolinux/background.png";
         }
@@ -370,9 +439,6 @@ in
         }
         { source = "${efiDir}/EFI";
           target = "/EFI";
-        }
-        { source = "${efiDir}/loader";
-          target = "/loader";
         }
       ] ++ optionals config.boot.loader.grub.memtest86.enable [
         { source = "${pkgs.memtest86plus}/memtest.bin";
