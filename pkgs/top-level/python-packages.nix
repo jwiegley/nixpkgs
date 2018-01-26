@@ -5295,6 +5295,25 @@ in {
     };
   };
 
+  isso = buildPythonPackage rec {
+    name = "isso-${version}";
+    version = "0.10.6";
+
+    src = pkgs.fetchurl {
+      url = "mirror://pypi/i/isso/${name}.tar.gz";
+      sha256 = "0b53zjq0aabyhbgan3fvvshbbinfx6mcmwa179mj1n9n0840hdyz";
+    };
+
+    propagatedBuildInputs = with self; [ misaka_1 werkzeug ipaddr configparser html5lib_0_9999999 ];
+
+    meta = {
+      description = "A commenting server similar to Disqus";
+      homepage = "https://posativ.org/isso/";
+      license = licenses.mit;
+      maintainers = with maintainers; [ fgaz ];
+    };
+  };
+
   itsdangerous = buildPythonPackage rec {
     name = "itsdangerous-0.24";
 
