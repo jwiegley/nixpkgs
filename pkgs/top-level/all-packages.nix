@@ -16464,6 +16464,8 @@ with pkgs;
 
   openscad = callPackage ../applications/graphics/openscad {};
 
+  opentx = callPackage ../applications/misc/opentx { };
+
   opera = callPackage ../applications/networking/browsers/opera {};
 
   orca = python3Packages.callPackage ../applications/misc/orca {
