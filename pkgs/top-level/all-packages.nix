@@ -18403,7 +18403,9 @@ with pkgs;
     libpng = libpng12;
   };
 
-  mnemosyne = callPackage ../games/mnemosyne { };
+  mnemosyne = libsForQt5.callPackage ../games/mnemosyne {
+    inherit (python3Packages) buildPythonApplication pyqt5 matplotlib cherrypy cheroot webob pillow;
+  };
 
   mrrescue = callPackage ../games/mrrescue { };
 
