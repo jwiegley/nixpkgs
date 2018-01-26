@@ -2,7 +2,7 @@
 , zlib, xz, pam, acl, cryptsetup, libuuid, m4, utillinux, libffi
 , glib, kbd, libxslt, coreutils, libgcrypt, libgpgerror, libapparmor, audit, lz4
 , kexectools, libmicrohttpd, linuxHeaders ? stdenv.cc.libc.linuxHeaders, libseccomp
-, iptables, gnu-efi
+, iptables, gnu-efi, bashInteractive
 , autoreconfHook, gettext, docbook_xsl, docbook_xml_dtd_42, docbook_xml_dtd_45
 }:
 
@@ -42,6 +42,7 @@ stdenv.mkDerivation rec {
       "--with-kbd-loadkeys=${kbd}/bin/loadkeys"
       "--with-kbd-setfont=${kbd}/bin/setfont"
       "--with-rootprefix=$(out)"
+      "--with-debug-shell=${bashInteractive}/bin/bash"
       "--with-dbuspolicydir=$(out)/etc/dbus-1/system.d"
       "--with-dbussystemservicedir=$(out)/share/dbus-1/system-services"
       "--with-dbussessionservicedir=$(out)/share/dbus-1/services"
@@ -54,6 +55,7 @@ stdenv.mkDerivation rec {
       "--disable-sysusers"
       "--enable-timedated"
       "--enable-timesyncd"
+      "--enable-tpm"
       "--disable-firstboot"
       "--enable-localed"
       "--enable-resolved"
