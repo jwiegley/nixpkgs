@@ -10298,10 +10298,10 @@ let self = _self // overrides; _self = with self; {
   };
 
   NetDNS = buildPerlPackage rec {
-    name = "Net-DNS-1.05";
+    name = "Net-DNS-1.12";
     src = fetchurl {
       url = "mirror://cpan/authors/id/N/NL/NLNETLABS/${name}.tar.gz";
-      sha256 = "900198014110af96ebac34af019612dd2ddd6af30178600028c3c940d089d5c8";
+      sha256 = "1zy16idzc96n20fm9976qapz89n3f44xpylhs5cvfgyyg7z03zr5";
     };
     propagatedBuildInputs = [ DigestHMAC ];
     makeMakerFlags = "--noonline-tests";
@@ -10381,6 +10381,14 @@ let self = _self // overrides; _self = with self; {
     src = fetchurl {
       url = mirror://cpan/authors/id/G/GB/GBARR/perl-ldap-0.4001.tar.gz;
       sha256 = "0spwid70yxkh5zbad3ldw8yb2m5shkm59a7f0kllw8bb7ccczqps";
+    };
+  };
+
+  NetNetmask = buildPerlPackage rec {
+    name = "Net-Netmask-1.9022";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/M/MU/MUIR/modules/${name}.tar.gz";
+      sha256 = "0cqmlcxifh5phb3m6bi5pddv0f235vhjvcr0aipjwxfyyhgrq287";
     };
   };
 
@@ -10553,6 +10561,22 @@ let self = _self // overrides; _self = with self; {
       description = "A perl interface to the Twitter API";
       license = with stdenv.lib.licenses; [ artistic1 gpl1Plus ];
     };
+  };
+
+  NetWhoisIP = buildPerlPackage rec {
+    name = "Net-Whois-IP-1.19";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/B/BS/BSCHMITZ/${name}.tar.gz";
+      sha256 = "08kj2h9qiyfvv3jfz619xl796j93cslg7d96919mnrnjy6hdz6zh";
+    };
+
+    propagatedBuildInputs = [ RegexpIPv6 LWPProtocolhttps ];
+    doCheck = false;
+
+    # https://rt.cpan.org/Public/Bug/Display.html?id=99377
+    postPatch = ''
+      substituteInPlace IP.pm --replace " AutoLoader" ""
+    '';
   };
 
   NumberCompare = buildPerlPackage rec {
@@ -12602,6 +12626,14 @@ let self = _self // overrides; _self = with self; {
     src = fetchurl {
       url = mirror://cpan/authors/id/C/CG/CGRAU/String-MkPasswd-0.05.tar.gz;
       sha256 = "15lvcc8c9hp6mg3jx02wd3b85aphn8yl5db62q3pam04c0sgh42k";
+    };
+  };
+
+  StringRandom = buildPerlModule rec {
+    name = "String-Random-0.29";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/S/SH/SHLOMIF/${name}.tar.gz";
+      sha256 = "0p2sa5ah10hjf9jyqgfp9p4nkkwpnmaq60faxlzv47dbcrgad90x";
     };
   };
 

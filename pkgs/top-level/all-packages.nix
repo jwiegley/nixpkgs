@@ -1857,6 +1857,10 @@ with pkgs;
 
   dmg2img = callPackage ../tools/misc/dmg2img { };
 
+  dnsenum = callPackage ../tools/security/dnsenum { };
+
+  dnsrecon = callPackage ../tools/security/dnsrecon { };
+
   docbook2odf = callPackage ../tools/typesetting/docbook2odf {
     inherit (perlPackages) PerlMagick;
   };
@@ -2129,6 +2133,8 @@ with pkgs;
   flannel = callPackage ../tools/networking/flannel { };
 
   flashbench = callPackage ../os-specific/linux/flashbench { };
+
+  fierce = callPackage ../tools/security/fierce { };
 
   figlet = callPackage ../tools/misc/figlet { };
 
@@ -4844,6 +4850,8 @@ with pkgs;
   thc-hydra = callPackage ../tools/security/thc-hydra { };
 
   thefuck = python3Packages.callPackage ../tools/misc/thefuck { };
+
+  theharvester = callPackage ../tools/security/theharvester { };
 
   thin-provisioning-tools = callPackage ../tools/misc/thin-provisioning-tools {  };
 
