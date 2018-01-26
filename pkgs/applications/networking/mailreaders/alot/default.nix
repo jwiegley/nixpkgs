@@ -5,8 +5,8 @@
 with pythonPackages;
 
 buildPythonApplication rec {
+  pname = "alot";
   version = "0.6";
-  name = "alot-${version}";
   outputs = [ "out" "man" ];
 
   disabled = isPy3k;
@@ -28,14 +28,14 @@ buildPythonApplication rec {
   nativeBuildInputs = stdenv.lib.optionals withManpage [ sphinx ];
 
   propagatedBuildInputs = [
-      notmuch
-      urwid
-      urwidtrees
-      twisted
-      python_magic
-      configobj
-      gpg
-    ];
+    notmuch
+    urwid
+    urwidtrees
+    twisted
+    python_magic
+    configobj
+    gpg
+  ];
 
   # 3 tests fail, some unicode
   doCheck = false;

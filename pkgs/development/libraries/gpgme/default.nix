@@ -1,4 +1,8 @@
 { stdenv, fetchurl, fetchpatch, libgpgerror, gnupg, pkgconfig, glib, pth, libassuan
+, autoreconfHook
+# git can apparently be removed when setting some envvar
+, git
+, texinfo5
 , qtbase ? null }:
 
 let inherit (stdenv) lib system; in
@@ -7,10 +11,11 @@ stdenv.mkDerivation rec {
   name = "gpgme-${version}";
   version="1.10.0";
 
-  src = fetchurl {
-    url = "mirror://gnupg/gpgme/${name}.tar.bz2";
-    sha256 = "14q619lxbk64vz7lih5gjb928qm28jrnn1h3yhsrrff3jw8yv3qs";
-  };
+  src = /home/teto/gpgme;
+  # src = fetchurl {
+  #   url = "mirror://gnupg/gpgme/${name}.tar.bz2";
+  #   sha256 = "14q619lxbk64vz7lih5gjb928qm28jrnn1h3yhsrrff3jw8yv3qs";
+  # };
 
   outputs = [ "out" "dev" "info" ];
   outputBin = "dev"; # gpgme-config; not so sure about gpgme-tool
@@ -19,10 +24,15 @@ stdenv.mkDerivation rec {
     [ libgpgerror glib libassuan pth ]
     ++ lib.optional (qtbase != null) qtbase;
 
-  nativeBuildInputs = [ pkgconfig gnupg ];
+  nativeBuildInputs = [ pkgconfig gnupg autoreconfHook git texinfo5 ];
+
+  preConfigure = ''
+    ./autogen.sh
+  '';
 
   configureFlags = [
     "--enable-fixed-path=${gnupg}/bin"
+    "--with-libgpg-error-prefix=${libgpgerror.dev}"
   ];
 
   NIX_CFLAGS_COMPILE =

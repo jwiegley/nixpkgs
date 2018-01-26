@@ -1,13 +1,12 @@
 { stdenv, buildPythonPackage, python
 , fetchPypi, libgpgerror, swig2
 , gpgme
-, withManpage ? true }:
+}:
 
 buildPythonPackage rec {
-  name = "gpg-${gpgme.version}";
   pname = "gpg";
 
-  src = gpgme.src;
+  inherit (gpgme) src version;
 
   # it could also run --cflags instead
   # LDFLAGS="-L${python}/lib";
@@ -23,11 +22,11 @@ buildPythonPackage rec {
 #   for your distribution.  The exact name of this package varies among them.
 #  ============================================================================
 
-#  #
 
+# cd ${gpgme}/lang/python
   preConfigure = ''
     ./configure --enable-languages=python LDFLAGS="-L${python}/lib"
-    cd ${gpgme}/lang/python
+    cd lang/python
     substituteInPlace setup.py \
       --replace \
       'gpg_error_prefix = getconfig("prefix", config=gpg_error_config)[0]' \
@@ -38,12 +37,13 @@ buildPythonPackage rec {
   '';
 
   buildInputs = [
-    gpgme
     libgpgerror
     libgpgerror.dev
     gpgme
     swig2
   ];
+
+  doCheck=false;
 
   meta = with stdenv.lib; {
     homepage = https://www.gnupg.org;
