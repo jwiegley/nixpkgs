@@ -1725,7 +1725,7 @@ in {
 
   blaze = callPackage ../development/python-modules/blaze { };
 
-  # Needed for bleach 1.5.0
+  # Needed for bleach 1.5.0 and isso 0.10.6
   html5lib_0_9999999 = self.html5lib.overridePythonAttrs rec {
     name = "html5lib-${version}";
     disabled = isPy3k && pythonAtLeast "3.6";
