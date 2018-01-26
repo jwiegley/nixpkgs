@@ -5667,6 +5667,24 @@ in {
     };
   };
 
+  # needed for isso 0.10.6
+  misaka_1 = buildPythonPackage rec {
+    name = "misaka-${version}";
+    version = "1.0.2";
+
+    src = pkgs.fetchurl {
+      url = "mirror://pypi/m/misaka/${name}.tar.gz";
+      sha256 = "05rmjxlfhghj90m1kc55lx3z8igabw5y8wmly66p3hphdy4f95v1";
+    };
+
+    meta = {
+      description = "A CFFI binding for Hoedown, a markdown parsing library";
+      homepage = "http://misaka.61924.nl/";
+      license = licenses.mit;
+      maintainers = with maintainers; [ fgaz ];
+    };
+  };
+
   mwlib = let
     pyparsing = buildPythonPackage rec {
       name = "pyparsing-1.5.7";
