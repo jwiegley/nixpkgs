@@ -1711,6 +1711,7 @@ with pkgs;
   cudnn = cudnn_cudatoolkit9;
 
   curlFull = curl.override {
+    http2Support = true;
     idnSupport = true;
     ldapSupport = true;
     gssSupport = true;
@@ -1719,6 +1720,10 @@ with pkgs;
 
   curl = callPackage ../tools/networking/curl rec {
     fetchurl = fetchurlBoot;
+    # http2Support works on darwin, but due to a bootstrapping
+    # issue involving xz it cannot currently be enabled by default.
+    # Darwin users can use curlFull if http2 support is required.
+    # https://github.com/NixOS/nixpkgs/issues/7825
     http2Support = !stdenv.isDarwin;
     zlibSupport = true;
     sslSupport = zlibSupport;
