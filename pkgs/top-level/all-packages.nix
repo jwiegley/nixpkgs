@@ -3226,6 +3226,10 @@ with pkgs;
 
   lftp = callPackage ../tools/networking/lftp { };
 
+  libcef = callPackage ../development/libraries/libcef {
+    inherit (gnome2) gtkglext;
+  };
+
   libconfig = callPackage ../development/libraries/libconfig { };
 
   libcmis = callPackage ../development/libraries/libcmis { };
