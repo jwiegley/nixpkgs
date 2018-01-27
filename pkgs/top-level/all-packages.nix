@@ -328,6 +328,8 @@ with pkgs;
 
   substituteAllFiles = callPackage ../build-support/substitute-files/substitute-all-files.nix { };
 
+  substitute-paths = callPackage ../build-support/substitute-paths { };
+
   replaceDependency = callPackage ../build-support/replace-dependency.nix { };
 
   nukeReferences = callPackage ../build-support/nuke-references/default.nix { };
@@ -18976,6 +18978,8 @@ with pkgs;
   mrbayes = callPackage ../applications/science/biology/mrbayes { };
 
   minc-tools = callPackage ../applications/science/biology/minc-tools { };
+
+  ncbi-blast = callPackage ../applications/science/biology/ncbi-blast { };
 
   ncbi_tools = callPackage ../applications/science/biology/ncbi-tools { };
 
