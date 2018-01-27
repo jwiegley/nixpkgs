@@ -11,6 +11,7 @@ buildPythonPackage rec {
     inherit pname version;
     sha256 = "c3fd7a7d41976d9f44db327260e263132466836cef6f91512889ed60ad26557c";
   };
+  patches = [ ./0001-Check-wrapped-path-when-reloading-scripts.patch ];
 
   propagatedBuildInputs = [ itsdangerous ];
   checkInputs = [ pytest requests glibcLocales hypothesis ];
