@@ -1022,4 +1022,6 @@ let self = dotnetPackages // overrides; dotnetPackages = with self; {
     };
   };
 
+  Paket2Nix = import ../development/tools/dotnet/paket2nix/default.nix; 
+
 }; in self
