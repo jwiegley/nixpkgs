@@ -86,22 +86,14 @@ let
   };
 
   luarocks-nix = luarocks.overrideAttrs(old: {
-    # src = fetchFromGitHub {
-    #   owner="teto";
-    #   repo="luarocks";
-    #   # rev=
-    #   branchName="nix";
-    #   sha256 = "0vpji9a7ab6g3k30hqc4pz8yr51zn455pyfppq9ywqkllmjq0ypw";
-    # };
-    src=/home/teto/luarocks;
+    src = fetchFromGitHub {
+      owner="teto";
+      repo="luarocks";
+      rev="a0a90e19d6989981a6a58c2faaf2bbcfb90e3b00";
+      sha256 = "0vpji9a7ab6g3k30hqc4pz8yr51zn455pyfppq9ywqkllmjq0ypw";
+    };
+    # src=/home/teto/luarocks;
     propagatedBuildInputs=old.propagatedBuildInputs ++ [  ];
-    # inherit lua;
-    # src
-    # shellHook=''
-    #   export PATH="src/bin:''${PATH:-}"
-    #   export LUA_PATH="?.lua;''${LUA_PATH:-}"
-    #   export LUA_CPATH="?.so;''${LUA_CPATH:-}"
-    # '';
   });
 
   cjson = callPackage ../development/lua-modules/cjson {
