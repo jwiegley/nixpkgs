@@ -111,7 +111,7 @@ let
 
   luabitop = buildLuaPackage rec {
     version = "1.0.2";
-    name = "bitop-${version}";
+    pname = "bitop";
 
     src = fetchurl {
       url = "https://luarocks.org/manifests/luarocks/luabitop-1.0.2-1.src.rock";
@@ -666,6 +666,26 @@ let
       platforms   = platforms.unix;
     };
   };
+
+coxpcall = buildLuaPackage rec {
+src= fetchurl {
+
+# url=http://luarocks.org/manifests/teto/coxpcall-scm-1.src.rock;
+# sha256="0cz1m32kxi5zx6s69vxdldaafmzqj5wwr69i93abmlz15nx2bqpf";
+
+url=https://luarocks.org/manifests/hisham/coxpcall-1.15.0-1.src.rock;
+sha256="0x8hzly5vjmj8xbhg6l2hxhj57ysgrz7afb7wss4pmkc187d74zz";
+}
+;
+version="1.15.0-1";
+pname="coxpcall";
+propagatedBuildInputs=[];
+meta={
+license=stdenv.lib.licenses.mit;
+description="Coroutine safe xpcall and pcall";
+homepage=http://keplerproject.github.io/coxpcall; }
+; }
+;
 
   vicious = stdenv.mkDerivation rec {
     name = "vicious-${version}";

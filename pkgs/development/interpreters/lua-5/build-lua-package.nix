@@ -135,7 +135,8 @@ builtins.removeAttrs attrs ["disabled" "checkInputs"] // {
 
     # to prevent collisions when creating environments
     # also added -f as it doesn't always exist
-    rm -rf $out/lib/luarocks
+    # don't remove the whole directory as
+    rm -rf $out/lib/luarocks/rocks/manifest
 
     runHook postInstall
   '';

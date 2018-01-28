@@ -17485,9 +17485,17 @@ with pkgs;
 
   wrapNeovim = callPackage ../applications/editors/neovim/wrapper.nix { };
 
-  neovim-unwrapped = callPackage ../applications/editors/neovim {
+  neovim-unwrapped =
+  let
+    neovimLuaPackages = lua52Packages;
+    # does not work :/
+    # neovimLuaPackages = recurseIntoAttrs (callPackage ./lua-packages.nix { lua = lua5_2.override({ compat = true;}) ; });
+  in
+  callPackage ../applications/editors/neovim {
     # only lua52 was modified thus we need to test against it
-    luaPackages = lua52Packages;
+    # we need compat = true else we have
+    # attempt to call global 'unpack' (a nil value)
+    luaPackages = neovimLuaPackages;
   };
 
   neovim = wrapNeovim neovim-unwrapped { };

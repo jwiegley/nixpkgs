@@ -2,7 +2,9 @@
 # look at setup hooks too
 { stdenv, fetchurl, readline
 # compiles compatibility layer with lua5.1
-, compat ? false
+# fix the override problem then set it back to false
+# set to true because of neovim
+, compat ? true
 , hostPlatform, makeWrapper
 , lua-setup-hook, callPackage
 , self

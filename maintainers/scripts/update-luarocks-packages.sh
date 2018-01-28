@@ -3,7 +3,7 @@
 
 # You'll likely want to use
 # ``
-# nixpkgs $ maintainers/scripts/update-luarocks-packages.sh pkgs/top-level/lua-generated-packages.nix
+# nixpkgs $ maintainers/scripts/update-luarocks-packages.sh > pkgs/top-level/lua-generated-packages.nix
 # ``
 # to update all libraries in that folder.
 
@@ -16,11 +16,11 @@
 
 # set -eu -o pipefail
 
-if [ $# -lt 1 ]; then
+# if [ $# -lt 1 ]; then
 
-    echo "Usage: $0 GENERATED_FILENAME"
-    exit 1
-fi
+#     echo "Usage: $0 GENERATED_FILENAME"
+#     exit 1
+# fi
 
 GENERATED_NIXFILE="$1"
 
@@ -85,14 +85,13 @@ function convert_pkgs () {
 
 
 declare -a pkg_list_main
-declare -a pkg_list_extra
+declare -a pkg_list_teto
+declare -a pkg_list_hisham
 pkg_list_main=(
 ansicolors # -1.0.2-3
-busted # -2.0.rc9-0 # OK
 dkjson # -2.5-2 # looks ok
 lua-cmsgpack # -0.4.0-0 # looks OK
 lua_cliargs # -1.1-1 # OK
-luassert # -1.7.9-0 # OK
 lua-term # -0.7-1 #
 luasocket # -2.0.2-6
 ltermbox # -0.2-1 # ok
@@ -100,17 +99,26 @@ ltermbox # -0.2-1 # ok
 luafilesystem # required by penlight
 penlight
 say # -1.3-1 # builtin type, check how luarocks handles modules
+luv
+luasystem
 )
 # ~/busted-2.0.rc12-1.rockspec
 
 # basically don't have a src.pack version in
-pkg_list_extra=(
+pkg_list_teto=(
 mediator_lua
 mpack
+nvim-client
+busted # rc-3 won't work
+luassert # cos wed need -1.7.10
 )
 
+pkg_list_hisham=(
+coxpcall
+)
 
 echo "$HEADER"
 convert_pkgs pkg_list_main
-convert_pkgs pkg_list_extra "http://luarocks.org/manifests/teto"
+convert_pkgs pkg_list_teto "http://luarocks.org/manifests/teto"
+convert_pkgs pkg_list_hisham "https://luarocks.org/manifests/hisham"
 echo "$FOOTER" # close the set
