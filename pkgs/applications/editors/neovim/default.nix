@@ -1,7 +1,8 @@
 { stdenv, fetchFromGitHub, cmake, gettext, libmsgpack, libtermkey
-, libtool, libuv, luaPackages, ncurses, perl, pkgconfig
+, libtool, libuv, ncurses, perl, pkgconfig
 , unibilium, vimUtils, xsel, gperf, callPackage
 , withJemalloc ? true, jemalloc
+, luaPackages
 }:
 
 with stdenv.lib;
@@ -37,9 +38,24 @@ let
     };
   };
 
-  neovim = stdenv.mkDerivation rec {
-    name = "neovim-unwrapped-${version}";
+
+  # neovim doesn't take into account lua5.2 move of `unpack` to `table.unpack`
+  # so we need to compile lua5.2 with the compatibility flags
+  # doesn't work
+  # neovimLua = luaPackages.lua.override( { compat = true; });
+  neovimLua = luaPackages.lua;
+  # neovimLuaEnv = enableTests:
+  neovimLuaEnv =
+    neovimLua.withPackages(ps:
+    (with ps;
+    [ mpack lpeg luabitop ]
+      ++ optionals true [ nvim-client luv lpeg coxpcall busted luafilesystem penlight  ]));
+in
+  stdenv.mkDerivation rec {
+    name = "${pname}-${version}";
+    pname = "neovim-unwrapped";
     version = "0.2.2";
+
 
     src = fetchFromGitHub {
       owner = "neovim";
@@ -57,10 +73,14 @@ let
       ncurses
       neovimLibvterm
       unibilium
-      luaPackages.lua
+      neovimLua
       gperf
     ] ++ optional withJemalloc jemalloc
-      ++ lualibs;
+    # todo creer un environnement
+    ++ [ (neovimLuaEnv) ]
+    ;
+
+    doCheck = true;
 
     nativeBuildInputs = [
       cmake
@@ -68,14 +88,14 @@ let
       pkgconfig
     ];
 
-    LUA_PATH = stdenv.lib.concatStringsSep ";" (map luaPackages.getLuaPath lualibs);
-    LUA_CPATH = stdenv.lib.concatStringsSep ";" (map luaPackages.getLuaCPath lualibs);
-
-    lualibs = [ luaPackages.mpack luaPackages.lpeg luaPackages.luabitop ];
-
+    # current luajit interpret was not updated in nixos
     cmakeFlags = [
-      "-DLUA_PRG=${luaPackages.lua}/bin/lua"
-    ];
+      "-DPREFER_LUA=ON"
+      "-DLUA_PRG=${neovimLuaEnv}/bin/lua"
+    ]
+    ++ optionals doCheck (with luaPackages;[
+      "-DBUSTED_PRG=${neovimLuaEnv}/bin/busted"
+    ]);
 
     # triggers on buffer overflow bug while running tests
     hardeningDisable = [ "fortify" ];
@@ -113,7 +133,4 @@ let
       maintainers = with maintainers; [ manveru garbas rvolosatovs ];
       platforms   = platforms.unix;
     };
-  };
-
-in
-  neovim
+  }

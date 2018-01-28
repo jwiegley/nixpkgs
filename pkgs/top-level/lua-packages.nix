@@ -10,12 +10,37 @@
 , perl, gtk2, python, glib, gobjectIntrospection, libevent, zlib, autoreconfHook
 , mysql, postgresql, cyrus_sasl
 , fetchFromGitHub, libmpack, which
+, pkgs
+, recurseIntoAttrs
+, fetchgit
+, overrides ? (self: super: {})
 }:
 
 let
   isLua51 = lua.luaversion == "5.1";
   isLua52 = lua.luaversion == "5.2";
   isLuaJIT = (builtins.parseDrvName lua.name).name == "luajit";
+
+  # Check whether a derivation provides a lua module.
+  hasLuaModule = drv: drv? luaModule ;
+
+  # TODO test
+  # callPackage = pkgs.newScope self;
+
+  requiredLuaModules = drvs: with stdenv.lib; let
+    modules =  filter hasLuaModule drvs;
+  in unique ([lua] ++ modules ++ concatLists (catAttrs "requiredLuaModules" modules));
+
+  # Convert derivation to a lua module.
+  toLuaModule = drv:
+    drv.overrideAttrs( oldAttrs: {
+      # Use passthru in order to prevent rebuilds when possible.
+      passthru = (oldAttrs.passthru or {})// {
+        luaModule = lua;
+        requiredLuaModules = requiredLuaModules drv.propagatedBuildInputs;
+      };
+    });
+
 
   platformString =
     if stdenv.isDarwin then "macosx"
@@ -24,48 +49,71 @@ let
     else if stdenv.isSunOS then "solaris"
     else throw "unsupported platform";
 
-  self = _self;
-  _self = with self; {
-  inherit lua;
-  inherit (stdenv.lib) maintainers;
 
-  # helper functions for dealing with LUA_PATH and LUA_CPATH
-  getPath       = lib : type : "${lib}/lib/lua/${lua.luaversion}/?.${type};${lib}/share/lua/${lua.luaversion}/?.${type}";
-  getLuaPath    = lib : getPath lib "lua";
-  getLuaCPath   = lib : getPath lib "so";
+    generatedPackages = callPackage ./lua-generated-packages.nix {
+      inherit self stdenv fetchurl toLuaModule requiredLuaModules;
+    };
+
+    self = _self;
+
+
+  /* list of packages
+   *
+   */
+  _self = with self; generatedPackages //  rec {
+    inherit lua;
+    inherit requiredLuaModules;
+    inherit toLuaModule;
+    inherit generatedPackages;
+    inherit (stdenv.lib) maintainers;
+
+  wrapLua = callPackage ../development/interpreters/lua-5/wrap-lua.nix {
+    inherit lua; inherit (pkgs) makeSetupHook makeWrapper;
+  };
 
   #define build lua package function
-  buildLuaPackage = callPackage ../development/lua-modules/generic lua;
+  buildLuaPackage = with pkgs.lib; makeOverridable( callPackage ../development/interpreters/lua-5/build-lua-package.nix {
+    inherit lua;
+    inherit wrapLua;
+    inherit toLuaModule;
+  });
+
+  buildLuaApplication = args: buildLuaPackage ({namePrefix="";} // args );
 
   luarocks = callPackage ../development/tools/misc/luarocks {
     inherit lua;
+    inherit toLuaModule;
+  };
+
+  luarocks-nix = luarocks.overrideAttrs(old: {
+    src = fetchFromGitHub {
+      owner="teto";
+      repo="luarocks";
+      rev="a0a90e19d6989981a6a58c2faaf2bbcfb90e3b00";
+      sha256 = "0vpji9a7ab6g3k30hqc4pz8yr51zn455pyfppq9ywqkllmjq0ypw";
+    };
+    # src=/home/teto/luarocks;
+    propagatedBuildInputs=old.propagatedBuildInputs ++ [  ];
+  });
+
+  cjson = callPackage ../development/lua-modules/cjson {
+    inherit lua;
+    inherit buildLuaPackage;
   };
 
   luabitop = buildLuaPackage rec {
     version = "1.0.2";
-    name = "bitop-${version}";
+    pname = "bitop";
 
     src = fetchurl {
-      url = "http://bitop.luajit.org/download/LuaBitOp-${version}.tar.gz";
-      sha256 = "16fffbrgfcw40kskh2bn9q7m3gajffwd2f35rafynlnd7llwj1qj";
+      url = "https://luarocks.org/manifests/luarocks/luabitop-1.0.2-1.src.rock";
+      sha256 = "0vpji9a7ab6g3k30hqc4pz8yr51zn455pyfppq9ywqkllmjq0ypw";
     };
 
     buildFlags = stdenv.lib.optionalString stdenv.isDarwin "macosx";
 
     postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
       substituteInPlace Makefile --replace 10.4 10.5
-    '';
-
-    preBuild = ''
-      makeFlagsArray=(
-        ${stdenv.lib.optionalString stdenv.cc.isClang "CC=$CC"}
-        INCLUDES="-I${lua}/include"
-        LUA="${lua}/bin/lua");
-    '';
-
-    installPhase = ''
-      mkdir -p $out/lib/lua/${lua.luaversion}
-      install -p bit.so $out/lib/lua/${lua.luaversion}
     '';
 
     meta = with stdenv.lib; {
@@ -233,36 +281,6 @@ let
     meta = with stdenv.lib; {
       homepage = "https://code.google.com/archive/p/luadbi/";
       platforms = stdenv.lib.platforms.unix;
-    };
-  };
-
-  luafilesystem = buildLuaPackage rec {
-    version = "1.6.3";
-    name = "filesystem-${version}";
-
-    src = fetchFromGitHub {
-      owner = "keplerproject";
-      repo = "luafilesystem";
-      rev = "v${stdenv.lib.replaceChars ["."] ["_"] version}";
-      sha256 = "1hxcnqj53540ysyw8fzax7f09pl98b8f55s712gsglcdxp2g2pri";
-    };
-
-    preConfigure = ''
-      substituteInPlace config --replace "CC= gcc" "";
-    ''
-    + stdenv.lib.optionalString stdenv.isDarwin ''
-      substituteInPlace config \
-      --replace 'LIB_OPTION= -shared' '###' \
-      --replace '#LIB_OPTION= -bundle' 'LIB_OPTION= -bundle'
-      substituteInPlace Makefile --replace '10.3' '10.5'
-    '';
-
-    meta = with stdenv.lib; {
-      description = "Lua library complementing filesystem-related functions";
-      homepage = "https://github.com/keplerproject/luafilesystem";
-      license = licenses.mit;
-      maintainers = with maintainers; [ flosse ];
-      platforms = platforms.unix;
     };
   };
 
@@ -591,25 +609,16 @@ let
   };
 
   lpeg = buildLuaPackage rec {
-    name = "lpeg-${version}";
+    pname = "lpeg";
     version = "0.12";
 
+
+
     src = fetchurl {
-      url = "http://www.inf.puc-rio.br/~roberto/lpeg/${name}.tar.gz";
-      sha256 = "0xlbfw1w7l65a5qhnx5sfw327hkq1zcj8xmg4glfw6fj9ha4b9gg";
+      url="https://luarocks.org/manifests/gvvaughan/lpeg-1.0.1-1.src.rock";
+      sha256= "17ganb7sd4cd6l1zy00dr9717pcqngcn8wpafx7nki2m04gf76ql";
     };
-
-    preBuild = ''
-      makeFlagsArray=(CC=$CC);
-    '';
-
-    buildFlags = platformString;
-
-    installPhase = ''
-      mkdir -p $out/lib/lua/${lua.luaversion}
-      install -p lpeg.so $out/lib/lua/${lua.luaversion}
-      install -p re.lua $out/lib/lua/${lua.luaversion}
-    '';
+    buildInputs = [ unzip ];
 
     meta = with stdenv.lib; {
       description = "Parsing Expression Grammars For Lua";
@@ -620,36 +629,6 @@ let
     };
   };
 
-  cjson = buildLuaPackage rec {
-    name = "cjson-${version}";
-    version = "2.1.0";
-
-    src = fetchurl {
-      url = "http://www.kyne.com.au/~mark/software/download/lua-${name}.tar.gz";
-      sha256 = "0y67yqlsivbhshg8ma535llz90r4zag9xqza5jx0q7lkap6nkg2i";
-    };
-
-    preBuild = ''
-      sed -i "s|/usr/local|$out|" Makefile
-    '';
-
-    makeFlags = [ "LUA_VERSION=${lua.luaversion}" ];
-
-    postInstall = ''
-      rm -rf $out/share/lua/${lua.luaversion}/cjson/tests
-    '';
-
-    installTargets = "install install-extra";
-
-    disabled = isLuaJIT;
-
-    meta = with stdenv.lib; {
-      description = "Lua C extension module for JSON support";
-      homepage = "https://www.kyne.com.au/~mark/software/lua-cjson.php";
-      license = licenses.mit;
-      maintainers = with maintainers; [ vyp ];
-    };
-  };
 
   lgi = stdenv.mkDerivation rec {
     name = "lgi-${version}";
@@ -680,41 +659,25 @@ let
     };
   };
 
-  mpack = buildLuaPackage rec {
-    name = "mpack-${version}";
-    version = "1.0.7";
+coxpcall = buildLuaPackage rec {
+src= fetchurl {
 
-    src = fetchFromGitHub {
-      owner = "libmpack";
-      repo = "libmpack-lua";
-      rev = version;
-      sha256 = "1nydi6xbmxwl1fmi32v5v8n74msnmzblzqaqnb102w6vkinampsb";
-    };
+# url=http://luarocks.org/manifests/teto/coxpcall-scm-1.src.rock;
+# sha256="0cz1m32kxi5zx6s69vxdldaafmzqj5wwr69i93abmlz15nx2bqpf";
 
-    nativeBuildInputs = [ pkgconfig ];
-    buildInputs = [ libmpack ];
-    dontBuild = true;
-
-    postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
-      substituteInPlace Makefile \
-        --replace '-shared' '-bundle -undefined dynamic_lookup -all_load'
-    '';
-
-    installFlags = [
-      "USE_SYSTEM_LUA=yes"
-      "USE_SYSTEM_MPACK=yes"
-      "MPACK_LUA_VERSION=${lua.version}"
-      "LUA_CMOD_INSTALLDIR=$(out)/lib/lua/${lua.luaversion}"
-    ];
-
-    meta = with stdenv.lib; {
-      description = "Lua bindings for libmpack";
-      homepage = "https://github.com/libmpack/libmpack-lua";
-      license = licenses.mit;
-      maintainers = with maintainers; [ vyp ];
-      platforms = with platforms; linux ++ darwin;
-    };
-  };
+url=https://luarocks.org/manifests/hisham/coxpcall-1.15.0-1.src.rock;
+sha256="0x8hzly5vjmj8xbhg6l2hxhj57ysgrz7afb7wss4pmkc187d74zz";
+}
+;
+version="1.15.0-1";
+pname="coxpcall";
+propagatedBuildInputs=[];
+meta={
+license=stdenv.lib.licenses.mit;
+description="Coroutine safe xpcall and pcall";
+homepage=http://keplerproject.github.io/coxpcall; }
+; }
+;
 
   vicious = stdenv.mkDerivation rec {
     name = "vicious-${version}";

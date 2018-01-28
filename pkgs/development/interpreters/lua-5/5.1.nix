@@ -9,8 +9,10 @@ let
 in
 stdenv.mkDerivation rec {
   name = "lua-${version}";
+  pname="lua";
   version = "5.1.5";
   luaversion = "5.1";
+  majorVersion = "5.1";
 
   src = fetchurl {
     url = "http://www.lua.org/ftp/${name}.tar.gz";
