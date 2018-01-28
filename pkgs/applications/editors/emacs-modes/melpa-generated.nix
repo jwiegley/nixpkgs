@@ -17351,12 +17351,13 @@
     elfeed = callPackage ({ emacs, fetchFromGitHub, fetchurl, lib, melpaBuild }:
     melpaBuild {
         pname = "elfeed";
-        version = "20180109.1604";
+        version = "20180127.1742";
         src = fetchFromGitHub {
           owner = "skeeto";
           repo = "elfeed";
-          rev = "e99f232fb3400545f096a19688a5030d0ed3afa6";
-          sha256 = "0gga3nbpl1n5rbm87p030sidp38yq3hm9pwr0vavz75m1bcdbv3r";
+          rev = "e2b0e255fc3a3cb3e9d69c05df3b8e9d7ca70e86";
+          sha256 = "1sq2w40ac8nc6pvifl0r5ri255jcd237x5rxfliwd2wdwqhk9izd";
+          # date = 2018-01-27T17:42:53-05:00;
         };
         recipeFile = fetchurl {
           url = "https://raw.githubusercontent.com/milkypostman/melpa/407ae027fcec444622c2a822074b95996df9e6af/recipes/elfeed";
