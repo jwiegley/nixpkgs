@@ -12371,6 +12371,8 @@ with pkgs;
 
   sensu = callPackage ../servers/monitoring/sensu { };
 
+  sensu-check-wmiplus = callPackage ../servers/monitoring/sensu/checks/wmiplus.nix { };
+
   uchiwa = callPackage ../servers/monitoring/uchiwa { };
 
   shishi = callPackage ../servers/shishi {
@@ -20252,6 +20254,11 @@ with pkgs;
   yandex-disk = callPackage ../tools/filesystems/yandex-disk { };
 
   yara = callPackage ../tools/security/yara { };
+
+  wmi = callPackage ../tools/networking/wmi {
+    # it doesn't compile with gcc >= 4.8 due to a change in how functions are inlined
+    stdenv = overrideCC stdenv gcc45;
+  };
 
   zap = callPackage ../tools/networking/zap { };
 
