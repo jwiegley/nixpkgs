@@ -1,21 +1,36 @@
 { stdenv
-, fetchurl, pkgconfig
-, gtk2, glib, pango, libglade
+, desktop_file_utils
+, fetchurl
+, gettext
+, glib
+, gtk3
+, itstool
+, libglade
+, meson, ninja
+, pango
+, pkgconfig
+, polkit
+, shared_mime_info
+, systemd
 }:
-
-stdenv.mkDerivation rec {
-  name = "sysprof-1.2.0";
+let
+  major = "3.26";
+  version = "${major}.1";
+  pname = "sysprof";
+in stdenv.mkDerivation rec {
+  name = "${pname}-${version}";
 
   src = fetchurl {
-    url = "http://www.sysprof.com/sysprof-1.2.0.tar.gz";
-    sha256 = "1wb4d844rsy8qjg3z5m6rnfm72da4xwzrrkkb1q5r10sq1pkrw5s";
+    url = "mirror://gnome/sources/${pname}/${major}/${pname}-${version}.tar.xz";
+    sha256 = "049vbbrz3ihjam6v32s76fyly0bwvhqjfcbafyiy95k64k1dbffq";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ gtk2 glib pango libglade ];
+  mesonFlags = "-D systemdunitdir=lib/systemd/system";
+  nativeBuildInputs = [ desktop_file_utils gettext itstool meson ninja pkgconfig shared_mime_info ];
+  buildInputs = [ glib gtk3 libglade pango polkit systemd.dev systemd.lib ];
 
   meta = {
-    homepage = http://sysprof.com/;
+    homepage = https://wiki.gnome.org/Apps/Sysprof;
     description = "System-wide profiler for Linux";
     license = stdenv.lib.licenses.gpl2Plus;
 

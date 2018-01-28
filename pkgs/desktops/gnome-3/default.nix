@@ -322,6 +322,8 @@ let
 
   nemiver = callPackage ./devtools/nemiver { };
 
+  gnome-builder = callPackage ./devtools/gnome-builder { };
+
 #### Games
 
   aisleriot = callPackage ./games/aisleriot { };
@@ -371,6 +373,12 @@ let
   gitg = callPackage ./misc/gitg { };
 
   gspell = callPackage ./misc/gspell { };
+
+  libdazzle = callPackage ./misc/libdazzle { };
+
+  template_glib = callPackage ./misc/template-glib { };
+
+  jsonrpc_glib = callPackage ./misc/jsonrpc-glib { };
 
   libgames-support = callPackage ./misc/libgames-support { };
 
