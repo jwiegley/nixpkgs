@@ -1,15 +1,15 @@
 { stdenv, buildPackages, hostPlatform, fetchgit, perl, buildLinux, ... } @ args:
 
 import ./generic.nix (args // rec {
-  version = "4.11.2017.08.23";
-  modDirVersion = "4.11.0";
+  version = "4.13.2018.01.03";
+  modDirVersion = "4.13.0";
   extraMeta.branch = "master";
   extraMeta.maintainers = [ stdenv.lib.maintainers.davidak ];
 
   src = fetchgit {
     url = "https://evilpiepirate.org/git/bcachefs.git";
-    rev = "fb8082a13d49397346a04ce4d3904569b0287738";
-    sha256 = "18csg2zb4lnhid27h5w95j3g8np29m8y3zfpfgjl1jr2jks64kid";
+    rev = "01d52ab2c12118fffb89efca2213ec3379191414";
+    sha256 = "0yw0n9h66nza5871r70pq8g9x7ad11bs35wvbfx3vflc5a895278";
   };
 
   extraConfig = ''
@@ -20,4 +20,3 @@ import ./generic.nix (args // rec {
   extraMeta.hydraPlatforms = [];
 
 } // (args.argsOverride or {}))
-

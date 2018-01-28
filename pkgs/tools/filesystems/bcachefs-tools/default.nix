@@ -1,12 +1,12 @@
 { stdenv, pkgs, fetchgit, pkgconfig, attr, libuuid, libscrypt, libsodium, keyutils, liburcu, zlib, libaio }:
 
 stdenv.mkDerivation rec {
-  name = "bcachefs-tools-unstable-2017-08-28";
+  name = "bcachefs-tools-unstable-2017-12-30";
 
   src = fetchgit {
     url = "https://evilpiepirate.org/git/bcachefs-tools.git";
-    rev = "b1814f2dd0c6b61a12a2ebb67a13d406d126b227";
-    sha256 = "05ba1h09rrqj6vjr3q37ybca3nbrmnifmffdyk83622l28fpv350";
+    rev = "f8cbede6d18e81c804e62fd7d576310b420dcaac";
+    sha256 = "1va6rh4pk4ky8wcddjcfqijhizs1bs8ib98i2v5d9yiwk1fildk6";
   };
 
   nativeBuildInputs = [ pkgconfig ];
@@ -26,4 +26,3 @@ stdenv.mkDerivation rec {
     platforms = platforms.linux;
   };
 }
-
