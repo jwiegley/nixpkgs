@@ -1,0 +1,40 @@
+--- Theano-rel-0.9.0-src/theano/configdefaults.py.orig	1980-01-02 00:00:00.000000000 -0500
++++ Theano-rel-0.9.0-src/theano/configdefaults.py	2017-06-20 21:53:30.000000000 -0400
+@@ -181,19 +181,6 @@
+     BoolParam(True, allow_override=False),
+     in_c_key=False)
+ 
+-
+-def default_cuda_root():
+-    v = os.getenv('CUDA_ROOT', "")
+-    if v:
+-        return v
+-    s = os.getenv("PATH")
+-    if not s:
+-        return ''
+-    for dir in s.split(os.path.pathsep):
+-        if os.path.exists(os.path.join(dir, "nvcc")):
+-            return os.path.dirname(os.path.abspath(dir))
+-    return ''
+-
+ AddConfigVar(
+     'cuda.root',
+     """directory with bin/, lib/, include/ for cuda utilities.
+@@ -204,7 +191,7 @@
+        linker directives.  Default: environment variable "CUDA_ROOT"
+        or else "AUTO".
+        """,
+-    StrParam(default_cuda_root),
++    StrParam('@cuda_root@'),
+     in_c_key=False)
+ 
+ AddConfigVar(
+@@ -236,7 +223,7 @@
+ AddConfigVar('nvcc.compiler_bindir',
+              "If defined, nvcc compiler driver will seek g++ and gcc"
+              " in this directory",
+-             StrParam(""),
++             StrParam('@nvcc_gcc@'),
+              in_c_key=False)
+ 
+ AddConfigVar('nvcc.fastmath',

@@ -16288,15 +16288,17 @@ in {
 
   Theano = callPackage ../development/python-modules/Theano rec {
     cudaSupport = pkgs.config.cudaSupport or false;
+    cudatoolkit = pkgs.cudatoolkit75;
     cudnnSupport = cudaSupport;
+    cudnn = pkgs.cudnn5_cudatoolkit75;
   };
 
-  TheanoWithoutCuda = self.Theano.override {
+  TheanoWithCuda = self.Theano.override {
     cudaSupport = true;
     cudnnSupport = true;
   };
 
-  TheanoWithCuda = self.Theano.override {
+  TheanoWithoutCuda = self.Theano.override {
     cudaSupport = false;
     cudnnSupport = false;
   };

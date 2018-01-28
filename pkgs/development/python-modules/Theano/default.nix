@@ -1,4 +1,5 @@
 { stdenv
+, runCommandCC
 , lib
 , fetchPypi
 , gcc
@@ -12,25 +13,33 @@
 , pydot_ng
 , scipy
 , six
+, future
 , libgpuarray
-, cudaSupport ? false, cudatoolkit
+, cudaSupport ? false, cudatoolkit, gcc49
 , cudnnSupport ? false, cudnn
 }:
 
 assert cudnnSupport -> cudaSupport;
 
 let
-  extraFlags =
-    lib.optionals cudaSupport [ "-I ${cudatoolkit}/include" "-L ${cudatoolkit}/lib" ]
-    ++ lib.optionals cudnnSupport [ "-I ${cudnn}/include" "-L ${cudnn}/lib" ];
+  wrapped = command: buildTop: buildInputs:
+    runCommandCC "${command}-wrapped" { inherit buildInputs; } ''
+      type -P '${command}' || { echo '${command}: not found'; exit 1; }
+      cat > "$out" <<EOF
+      #!$(type -P bash)
+      $(declare -xp | sed -e '/^[^=]\+="\('"''${NIX_STORE//\//\\/}"'\|[^\/]\)/!d')
+      declare -x NIX_BUILD_TOP="${buildTop}"
+      $(type -P '${command}') "\$@"
+      EOF
+      chmod +x "$out"
+    '';
 
-  gcc_ = writeScriptBin "g++" ''
-    #!${stdenv.shell}
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE ${toString extraFlags}"
-    exec ${gcc}/bin/g++ "$@"
-  '';
+  # Theano spews warnings and disabled flags if the compiler isn't named g++
+  cxx_compiler = wrapped "g++" "\\$HOME/.theano"
+    (    stdenv.lib.optional cudaSupport libgpuarray
+      ++ stdenv.lib.optional cudnnSupport cudnn );
 
-  libgpuarray_ = libgpuarray.override { inherit cudaSupport; };
+  libgpuarray_ = libgpuarray.override { inherit cudaSupport cudatoolkit; };
 
 in buildPythonPackage rec {
   name = "${pname}-${version}";
@@ -44,13 +53,25 @@ in buildPythonPackage rec {
     sha256 = "88d8aba1fe2b6b75eacf455d01bc7e31e838c5a0fb8c13dde2d9472495ff4662";
   };
 
+  patches = [
+    ./paths.patch
+  ] ++ stdenv.lib.optionals cudaSupport [
+    ./paths-cuda.patch
+    ./memcpy.patch
+  ];
   postPatch = ''
-    sed -i 's,g++,${gcc_}/bin/g++,g' theano/configdefaults.py
-  '' + lib.optionalString cudnnSupport ''
-    sed -i \
-      -e "s,ctypes.util.find_library('cudnn'),'${cudnn}/lib/libcudnn.so',g" \
-      -e "s/= _dnn_check_compile()/= (True, None)/g" \
-      theano/gpuarray/dnn.py
+    substituteInPlace theano/configdefaults.py \
+      --subst-var-by cxx_compiler '${cxx_compiler}'
+  '' + stdenv.lib.optionalString cudaSupport ''
+    substituteInPlace theano/configdefaults.py \
+      --subst-var-by nvcc_gcc '${gcc49}/bin' \
+      --subst-var-by cuda_root '${cudatoolkit}'
+    substituteInPlace theano/gpuarray/dnn.py \
+      --subst-var-by cudnn_lib '${cudnn}/lib/libcudnn.so'
+  '' + stdenv.lib.optionalString (pythonOlder "3.0") ''
+    sed -i -re '1a\' -e 'from builtins import bytes' theano/gpuarray/dnn.py
+    sed -i -re "s/(b'30')/int(bytes(\1))/g" theano/gpuarray/dnn.py
+    sed -i -re "s/(ctx.bin_id\[\-2:\])/int(\1)/g" theano/gpuarray/dnn.py
   '';
 
   preCheck = ''
@@ -64,7 +85,10 @@ in buildPythonPackage rec {
 
   # keep Nose around since running the tests by hand is possible from Python or bash
   checkInputs = [ nose ];
-  propagatedBuildInputs = [ numpy numpy.blas scipy six libgpuarray_ ];
+  propagatedBuildInputs = [ numpy numpy.blas scipy six libgpuarray_ ]
+    ++ stdenv.lib.optional (pythonOlder "3.0") future;
+
+  passthru = { inherit cudaSupport; };
 
   meta = with stdenv.lib; {
     homepage = http://deeplearning.net/software/theano/;

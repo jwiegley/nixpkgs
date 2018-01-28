@@ -1705,7 +1705,9 @@ with pkgs;
 
   inherit (callPackages ../development/libraries/science/math/cudnn { })
     cudnn_cudatoolkit7
+    cudnn5_cudatoolkit75
     cudnn_cudatoolkit75
+    cudnn5_cudatoolkit8
     cudnn6_cudatoolkit8
     cudnn_cudatoolkit8
     cudnn_cudatoolkit9;

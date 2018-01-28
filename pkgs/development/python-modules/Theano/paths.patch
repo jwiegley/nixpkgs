@@ -1,0 +1,115 @@
+--- Theano-rel-0.9.0-src/theano/configdefaults.py.orig	1980-01-02 00:00:00.000000000 -0500
++++ Theano-rel-0.9.0-src/theano/configdefaults.py	2017-06-20 21:53:30.000000000 -0400
+@@ -441,53 +428,6 @@
+             'FAST_COMPILE', 'DEBUG_MODE'),
+     in_c_key=False)
+ 
+-param = "g++"
+-
+-# Test whether or not g++ is present: disable C code if it is not.
+-try:
+-    rc = call_subprocess_Popen(['g++', '-v'])
+-except OSError:
+-    rc = 1
+-
+-# Anaconda on Windows has mingw-w64 packages including GCC, but it may not be on PATH.
+-if rc != 0:
+-    if sys.platform == "win32":
+-        mingw_w64_gcc = os.path.join(os.path.dirname(sys.executable), "Library", "mingw-w64", "bin", "g++")
+-        try:
+-            rc = call_subprocess_Popen([mingw_w64_gcc, '-v'])
+-            if rc == 0:
+-                maybe_add_to_os_environ_pathlist('PATH', os.path.dirname(mingw_w64_gcc))
+-        except OSError:
+-            rc = 1
+-        if rc != 0:
+-            _logger.warning("g++ not available, if using conda: `conda install m2w64-toolchain`")
+-
+-if rc != 0:
+-    param = ""
+-
+-# On Mac we test for 'clang++' and use it by default
+-if sys.platform == 'darwin':
+-    try:
+-        rc = call_subprocess_Popen(['clang++', '-v'])
+-        if rc == 0:
+-            param = "clang++"
+-    except OSError:
+-        pass
+-
+-# Try to find the full compiler path from the name
+-if param != "":
+-    import distutils.spawn
+-    newp = distutils.spawn.find_executable(param)
+-    if newp is not None:
+-        param = newp
+-    del newp
+-    del distutils
+-
+-# to support path that includes spaces, we need to wrap it with double quotes on Windows
+-if param and os.name == 'nt':
+-    param = '"%s"' % param
+-
+-
+ def warn_cxx(val):
+     """We only support clang++ as otherwise we hit strange g++/OSX bugs."""
+     if sys.platform == 'darwin' and 'clang++' not in val:
+@@ -500,32 +440,15 @@
+              " supported, but supporting additional compilers should not be "
+              "too difficult. "
+              "If it is empty, no C++ code is compiled.",
+-             StrParam(param, is_valid=warn_cxx),
++             StrParam('@cxx_compiler@', is_valid=warn_cxx),
+              in_c_key=False)
+-del param
+ 
+-if rc == 0 and config.cxx != "":
+-    # Keep the default linker the same as the one for the mode FAST_RUN
+-    AddConfigVar('linker',
+-                 "Default linker used if the theano flags mode is Mode",
+-                 EnumStr('cvm', 'c|py', 'py', 'c', 'c|py_nogc',
+-                         'vm', 'vm_nogc', 'cvm_nogc'),
+-                 in_c_key=False)
+-else:
+-    # g++ is not present or the user disabled it,
+-    # linker should default to python only.
+-    AddConfigVar('linker',
+-                 "Default linker used if the theano flags mode is Mode",
+-                 EnumStr('vm', 'py', 'vm_nogc'),
+-                 in_c_key=False)
+-    if type(config).cxx.is_default:
+-        # If the user provided an empty value for cxx, do not warn.
+-        _logger.warning(
+-            'g++ not detected ! Theano will be unable to execute '
+-            'optimized C-implementations (for both CPU and GPU) and will '
+-            'default to Python implementations. Performance will be severely '
+-            'degraded. To remove this warning, set Theano flags cxx to an '
+-            'empty string.')
++# Keep the default linker the same as the one for the mode FAST_RUN
++AddConfigVar('linker',
++             "Default linker used if the theano flags mode is Mode",
++             EnumStr('cvm', 'c|py', 'py', 'c', 'c|py_nogc',
++                     'vm', 'vm_nogc', 'cvm_nogc'),
++             in_c_key=False)
+ 
+ 
+ # Keep the default value the same as the one for the mode FAST_RUN
+--- Theano-rel-0.9.0-src/theano/gpuarray/dnn.py.orig	2017-06-20 21:49:20.000000000 -0400
++++ Theano-rel-0.9.0-src/theano/gpuarray/dnn.py	2017-06-20 21:56:53.000000000 -0400
+@@ -56,15 +56,7 @@
+     if _dnn_lib.handle is None:
+         import ctypes.util
+ 
+-        lib_name = ctypes.util.find_library('cudnn')
+-        if lib_name is None and sys.platform == 'win32':
+-            # Update these names when new versions of cudnn are supported.
+-            for name in ['cudnn64_5.dll']:
+-                lib_name = ctypes.util.find_library(name)
+-                if lib_name:
+-                    break
+-        if lib_name is None:
+-            raise RuntimeError('Could not find cudnn library (looked for v5[.1])')
++        lib_name = '@cudnn_lib@'
+         _dnn_lib.handle = ctypes.cdll.LoadLibrary(lib_name)
+         cudnn = _dnn_lib.handle
+         cudnn.cudnnCreate.argtypes = [ctypes.POINTER(ctypes.c_void_p)]
