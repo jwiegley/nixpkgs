@@ -12986,10 +12986,12 @@ with pkgs;
      for a specific kernel.  This function can then be called for
      whatever kernel you're using. */
 
-  linuxPackagesFor = kernel: lib.makeExtensible (self: with self; {
+  linuxPackagesFor = kernel: let stdenvKernelCc = overrideCC stdenv kernel.buildCc;
+    in lib.makeExtensible (self: with self; {
     callPackage = newScope self;
 
     inherit kernel;
+    stdenv = stdenvKernelCc;
 
     acpi_call = callPackage ../os-specific/linux/acpi-call {};
 
@@ -13175,7 +13177,10 @@ with pkgs;
 
   # A function to build a manually-configured kernel
   linuxManualConfig = pkgs.buildLinux;
-  buildLinux = makeOverridable (callPackage ../os-specific/linux/kernel/manual-config.nix {});
+  buildLinux = makeOverridable (callPackage ../os-specific/linux/kernel/manual-config.nix {
+    # Build kernel with gcc 7.3.0 (or later) to have a retpoline enabled compiler.
+    buildPackages = buildPackages // { stdenv = overrideCC buildPackages.stdenv gcc7; };
+  });
 
   keyutils = callPackage ../os-specific/linux/keyutils { };
 
