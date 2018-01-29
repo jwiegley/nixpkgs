@@ -1,7 +1,7 @@
 { stdenv, substituteAll, fetchurl
 , zlib ? null, zlibSupport ? true, bzip2, pkgconfig, libffi
 , sqlite, openssl, ncurses, python, expat, tcl, tk, tix, xlibsWrapper, libX11
-, makeWrapper, callPackage, self, gdbm, db
+, makeWrapper, callPackage, self, gdbm, db, lzma
 , python-setup-hook
 # For the Python package set
 , pkgs, packageOverrides ? (self: super: {})
@@ -11,9 +11,9 @@ assert zlibSupport -> zlib != null;
 
 let
   majorVersion = "5.10";
-  minorVersion = "0";
+  minorVersion = "1";
   minorVersionSuffix = "";
-  pythonVersion = "2.7";
+  pythonVersion = "3.5";
   version = "${majorVersion}.${minorVersion}${minorVersionSuffix}";
   libPrefix = "pypy${pythonVersion}";
   sitePackages = "site-packages";
@@ -21,17 +21,17 @@ let
   pythonForPypy = python.withPackages (ppkgs: [ ppkgs.pycparser ]);
 
 in stdenv.mkDerivation rec {
-  name = "pypy-${version}";
+  name = "pypy3-${version}";
   inherit majorVersion version pythonVersion;
 
   src = fetchurl {
     url = "https://bitbucket.org/pypy/pypy/get/release-pypy${pythonVersion}-v${version}.tar.bz2";
-    sha256 = "10j1s6r6iv80nvpi6gv8w05v505h2ndj9xx31yz7d50ab04dfg23";
+    sha256 = "16093nfs80v3cysddr872pp1v8ahq7wmz6rlcy9bh7c3mfsy4inl";
   };
 
   nativeBuildInputs = [ pkgconfig makeWrapper ];
   buildInputs = [
-    bzip2 openssl pythonForPypy libffi ncurses expat sqlite tk tcl xlibsWrapper libX11 gdbm db
+    bzip2 openssl pythonForPypy libffi ncurses expat sqlite tk tcl xlibsWrapper libX11 gdbm db lzma
   ] ++ stdenv.lib.optional (stdenv ? cc && stdenv.cc.libc != null) stdenv.cc.libc
     ++ stdenv.lib.optional zlibSupport zlib;
 
@@ -53,7 +53,7 @@ in stdenv.mkDerivation rec {
   ];
 
   postPatch = ''
-    substituteInPlace "lib-python/2.7/lib-tk/Tix.py" --replace "os.environ.get('TIX_LIBRARY')" "os.environ.get('TIX_LIBRARY') or '${tix}/lib'"
+    substituteInPlace "lib-python/3/tkinter/tix.py" --replace "os.environ.get('TIX_LIBRARY')" "os.environ.get('TIX_LIBRARY') or '${tix}/lib'"
 
     # hint pypy to find nix ncurses
     substituteInPlace pypy/module/_minimal_curses/fficurses.py \
@@ -79,35 +79,37 @@ in stdenv.mkDerivation rec {
     export TERMINFO="${ncurses.out}/share/terminfo/";
     export TERM="xterm";
     export HOME="$TMPDIR";
+    # disable asyncio due to https://github.com/NixOS/nix/issues/1238
+    # disable multiprocessing because it passes unreliably
+    # disable pathlib due to https://bitbucket.org/pypy/pypy/pull-requests/594
     # disable shutils because it assumes gid 0 exists
     # disable socket because it has two actual network tests that fail
-    # disable test_urllib2net, test_urllib2_localnet, and test_urllibnet because they require networking (example.com)
-    ./pypy-c ./pypy/test_all.py --pypy=./pypy-c -k 'not ( test_urllib2net or test_urllibnet or test_urllib2_localnet or test_socket or test_shutil )' lib-python
+    # disable tarfile because it assumes gid 0 exists
+    ${pythonForPypy.interpreter} ./pypy/test_all.py --pypy=./pypy3-c -k 'not ( test_asyncio or test_multiprocessing or test_pathlib or test_shutil or test_socket or test_tarfile )' lib-python
   '';
 
   installPhase = ''
-    mkdir -p $out/{bin,include,lib,pypy-c}
+    mkdir -p $out/{bin,include,lib,pypy3-c}
 
-    cp -R {include,lib_pypy,lib-python,pypy-c} $out/pypy-c
-    cp libpypy-c.so $out/lib/
-    ln -s $out/pypy-c/pypy-c $out/bin/pypy
-    chmod +x $out/bin/pypy
+    cp -R {include,lib_pypy,lib-python,pypy3-c} $out/pypy3-c
+    cp libpypy3-c.so $out/lib/
+    ln -s $out/pypy3-c/pypy3-c $out/bin/pypy3
 
     # other packages expect to find stuff according to libPrefix
-    ln -s $out/pypy-c/include $out/include/${libPrefix}
-    ln -s $out/pypy-c/lib-python/${pythonVersion} $out/lib/${libPrefix}
+    ln -s $out/pypy3-c/include $out/include/${libPrefix}
+    ln -s $out/pypy3-c/lib-python/3 $out/lib/${libPrefix}
 
     # We must wrap the original, not the symlink.
     # PyPy uses argv[0] to find its standard library, and while it knows
     # how to follow symlinks, it doesn't know about wrappers. So, it
     # will think the wrapper is the original. As long as the wrapper has
     # the same path as the original, this is OK.
-    wrapProgram "$out/pypy-c/pypy-c" \
+    wrapProgram "$out/pypy3-c/pypy3-c" \
       --set LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:$out/lib" \
       --set LIBRARY_PATH "${LIBRARY_PATH}:$out/lib"
 
     # verify cffi modules
-    $out/bin/pypy -c "import Tkinter;import sqlite3;import curses"
+    $out/bin/pypy3 -c "import tkinter;import sqlite3;import curses;import lzma"
 
     # Python on Nix is not manylinux1 compatible. https://github.com/NixOS/nixpkgs/issues/18484
     echo "manylinux1_compatible=False" >> $out/lib/${libPrefix}/_manylinux.py
@@ -117,10 +119,10 @@ in stdenv.mkDerivation rec {
     pythonPackages = callPackage ../../../../../top-level/python-packages.nix {python=self; overrides=packageOverrides;};
   in rec {
     inherit zlibSupport libPrefix sitePackages;
-    executable = "pypy";
+    executable = "pypy3";
     isPypy = true;
-    isPy2 = true;
-    isPy27 = true;
+    isPy3 = true;
+    isPy35 = true;
     buildEnv = callPackage ../../wrapper.nix { python = self; inherit (pythonPackages) requiredPythonModules; };
     interpreter = "${self}/bin/${executable}";
     withPackages = import ../../with-packages.nix { inherit buildEnv pythonPackages;};
@@ -131,9 +133,9 @@ in stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     homepage = http://pypy.org/;
-    description = "Fast, compliant alternative implementation of the Python language (2.7.13)";
+    description = "Fast, compliant alternative implementation of the Python language (3.5.3)";
     license = licenses.mit;
-    platforms = [ "i686-linux" "x86_64-linux" ];
-    maintainers = with maintainers; [ ];
+    platforms = platforms.linux;
+    maintainers = with maintainers; [ andersk ];
   };
 }

@@ -6905,7 +6905,8 @@ with pkgs;
   python = python2;
   python2 = python27;
   python3 = python36;
-  pypy = pypy27;
+  pypy = pypy2;
+  pypy2 = pypy27;
 
   # Python interpreter that is build with all modules, including tkinter.
   # These are for compatibility and should not be used inside Nixpkgs.
@@ -6944,6 +6945,11 @@ with pkgs;
     python = python27.override{x11Support=true;};
     db = db.override { dbmSupport = true; };
   };
+  pypy3 = callPackage ../development/interpreters/python/pypy/3 {
+    self = pypy3;
+    python = python27;
+    db = db.override { dbmSupport = true; };
+  };
 
   # Python package sets.
   python27Packages = lib.hiPrioSet (recurseIntoAttrs python27.pkgs);
@@ -6951,6 +6957,9 @@ with pkgs;
   python35Packages = python35.pkgs;
   python36Packages = recurseIntoAttrs python36.pkgs;
   pypyPackages = pypy.pkgs;
+  pypy2Packages = pypy2.pkgs;
+  pypy27Packages = pypy27.pkgs;
+  pypy3Packages = pypy3.pkgs;
 
   # Should eventually be moved inside Python interpreters.
   python-setup-hook = callPackage ../development/interpreters/python/setup-hook.nix { };

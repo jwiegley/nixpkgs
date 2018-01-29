@@ -485,9 +485,12 @@ and in this case the `python35` interpreter is automatically used.
 ### Interpreters
 
 Versions 2.7, 3.3, 3.4, 3.5 and 3.6 of the CPython interpreter are available as
-respectively `python27`, `python34`, `python35` and `python36`. The PyPy interpreter
-is available as `pypy`. The aliases `python2` and `python3` correspond to respectively `python27` and
-`python35`. The default interpreter, `python`, maps to `python2`.
+respectively `python27`, `python34`, `python35` and `python36`. The
+aliases `python2` and `python3` correspond to respectively `python27`
+and `python35`. The default interpreter, `python`, maps to
+`python2`. The PyPy interpreters compatible with Python 2.7 and 3 are
+available as `pypy27` and `pypy3`, with aliases `pypy2` mapping to
+`pypy27`, and `pypy` mapping to `pypy2`.
 The Nix expressions for the interpreters can be found in
 `pkgs/development/interpreters/python`.
 

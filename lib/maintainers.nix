@@ -42,6 +42,7 @@
   amiddelk = "Arie Middelkoop <amiddelk@gmail.com>";
   amiloradovsky = "Andrew Miloradovsky <miloradovsky@gmail.com>";
   amorsillo = "Andrew Morsillo <andrew.morsillo@gmail.com>";
+  andersk = "Anders Kaseorg <andersk@mit.edu>";
   AndersonTorres = "Anderson Torres <torres.anderson.85@gmail.com>";
   anderspapitto = "Anders Papitto <anderspapitto@gmail.com>";
   andir = "Andreas Rammhold <andreas@rammhold.de>";
