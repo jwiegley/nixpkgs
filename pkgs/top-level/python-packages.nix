@@ -1708,7 +1708,7 @@ in {
 
   blaze = callPackage ../development/python-modules/blaze { };
 
-  # Needed for bleach 1.5.0
+  # Needed for bleach 1.5.0 and isso 0.10.6
   html5lib_0_9999999 = self.html5lib.overridePythonAttrs rec {
     name = "html5lib-${version}";
     disabled = isPy3k && pythonAtLeast "3.6";
@@ -5280,6 +5280,25 @@ in {
     };
   };
 
+  isso = buildPythonPackage rec {
+    name = "isso-${version}";
+    version = "0.10.6";
+
+    src = pkgs.fetchurl {
+      url = "mirror://pypi/i/isso/${name}.tar.gz";
+      sha256 = "0b53zjq0aabyhbgan3fvvshbbinfx6mcmwa179mj1n9n0840hdyz";
+    };
+
+    propagatedBuildInputs = with self; [ misaka_1 werkzeug ipaddr configparser html5lib_0_9999999 ];
+
+    meta = {
+      description = "A commenting server similar to Disqus";
+      homepage = "https://posativ.org/isso/";
+      license = licenses.mit;
+      maintainers = with maintainers; [ fgaz ];
+    };
+  };
+
   itsdangerous = buildPythonPackage rec {
     name = "itsdangerous-0.24";
 
@@ -5649,6 +5668,24 @@ in {
       description = "Python bindings for Mapnik";
       homepage = http://mapnik.org;
       license  = licenses.lgpl21;
+    };
+  };
+
+  # needed for isso 0.10.6
+  misaka_1 = buildPythonPackage rec {
+    name = "misaka-${version}";
+    version = "1.0.2";
+
+    src = pkgs.fetchurl {
+      url = "mirror://pypi/m/misaka/${name}.tar.gz";
+      sha256 = "05rmjxlfhghj90m1kc55lx3z8igabw5y8wmly66p3hphdy4f95v1";
+    };
+
+    meta = {
+      description = "A CFFI binding for Hoedown, a markdown parsing library";
+      homepage = "http://misaka.61924.nl/";
+      license = licenses.mit;
+      maintainers = with maintainers; [ fgaz ];
     };
   };
 
