@@ -10,7 +10,7 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "gnif";
     repo = "LookingGlass";
-    rev = "a10";
+    rev = "${version}";
     sha256 = "10jxnkrvskjzkg86iz3hnb5v91ykzx6pvcnpy1v4436g5f2d62wn";
   };
 
