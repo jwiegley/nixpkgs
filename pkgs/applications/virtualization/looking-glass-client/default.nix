@@ -14,7 +14,9 @@ stdenv.mkDerivation rec {
     sha256 = "10jxnkrvskjzkg86iz3hnb5v91ykzx6pvcnpy1v4436g5f2d62wn";
   };
 
-  buildInputs = [ pkgconfig SDL SDL2 SDL2_ttf openssl spice_protocol fontconfig
+  nativeBuildInputs = [ pkgconfig ];
+
+  buildInputs = [ SDL SDL2 SDL2_ttf openssl spice_protocol fontconfig
     libX11 freefont_ttf ];
 
   enableParallelBuilding = true;
