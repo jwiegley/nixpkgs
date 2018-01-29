@@ -41,6 +41,8 @@ perlPackages.buildPerlPackage rec {
     mv wwwroot "$out/wwwroot"
     rm -r "$out/wwwroot/classes/src/"
 
+    mv tools "$out/tools"
+
     mkdir -p "$bin/bin"
     ln -s "$out/wwwroot/cgi-bin/awstats.pl" "$bin/bin/awstats"
 
