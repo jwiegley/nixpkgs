@@ -223,6 +223,8 @@ in {
 
   diff-match-patch = callPackage ../development/python-modules/diff-match-patch { };
 
+  doitlive = callPackage ../development/python-modules/doitlive { };
+
   gssapi = callPackage ../development/python-modules/gssapi { };
 
   h5py = callPackage ../development/python-modules/h5py {
