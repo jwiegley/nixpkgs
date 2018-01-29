@@ -11992,6 +11992,8 @@ with pkgs;
 
   lighttpd = callPackage ../servers/http/lighttpd { };
 
+  lwan = callPackage ../servers/http/lwan { };
+
   mailman = callPackage ../servers/mail/mailman { };
 
   mattermost = callPackage ../servers/mattermost { };
