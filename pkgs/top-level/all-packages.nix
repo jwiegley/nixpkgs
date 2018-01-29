@@ -12970,10 +12970,12 @@ with pkgs;
      for a specific kernel.  This function can then be called for
      whatever kernel you're using. */
 
-  linuxPackagesFor = kernel: lib.makeExtensible (self: with self; {
+  linuxPackagesFor = kernel: let stdenvKernelCc = overrideCC stdenv kernel.buildCc;
+    in lib.makeExtensible (self: with self; {
     callPackage = newScope self;
 
     inherit kernel;
+    stdenv = stdenvKernelCc;
 
     acpi_call = callPackage ../os-specific/linux/acpi-call {};
 
