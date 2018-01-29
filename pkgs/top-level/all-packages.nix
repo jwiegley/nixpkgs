@@ -8308,6 +8308,7 @@ with pkgs;
   cxxtest = callPackage ../development/libraries/cxxtest { };
 
   cyrus_sasl = callPackage ../development/libraries/cyrus-sasl {
+    openssl = openssl_1_0_2;
     kerberos = if stdenv.isFreeBSD then libheimdal else kerberos;
   };
 
