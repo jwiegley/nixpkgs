@@ -165,6 +165,8 @@ in {
 
   asn1crypto = callPackage ../development/python-modules/asn1crypto { };
 
+  astral = callPackage ../development/python-modules/astral { };
+
   astropy = callPackage ../development/python-modules/astropy {  };
 
   augeas = callPackage ../development/python-modules/augeas {
@@ -3215,6 +3217,8 @@ in {
 
   pytest-asyncio = callPackage ../development/python-modules/pytest-asyncio { };
 
+  pytest-aiohttp = callPackage ../development/python-modules/pytest-aiohttp { };
+
   pytestcache = buildPythonPackage rec {
     name = "pytest-cache-1.0";
     src = pkgs.fetchurl {
@@ -5150,6 +5154,8 @@ in {
       maintainers = with maintainers; [ goibhniu ];
     };
   };
+
+  home-assistant = callPackage ../development/python-modules/home-assistant { };
 
   hsaudiotag = buildPythonPackage (rec {
     name = "hsaudiotag-1.1.1";

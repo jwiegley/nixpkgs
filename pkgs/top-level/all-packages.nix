@@ -11972,6 +11972,8 @@ with pkgs;
 
   hiawatha = callPackage ../servers/http/hiawatha {};
 
+  home-assistant = python3Packages.home-assistant;
+
   ircdHybrid = callPackage ../servers/irc/ircd-hybrid { };
 
   jboss = callPackage ../servers/http/jboss { };
