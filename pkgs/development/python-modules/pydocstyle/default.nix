@@ -1,5 +1,5 @@
 { stdenv, buildPythonPackage, fetchPypi, snowballstemmer, configparser,
-  pytest, pytestpep8, mock, pathlib }:
+  pytest, pytestpep8, mock, pathlib, pythonOlder }:
 
 buildPythonPackage rec {
   pname = "pydocstyle";
@@ -12,7 +12,7 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [ snowballstemmer configparser ];
 
-  checkInputs = [ pytest pytestpep8 mock pathlib ];
+  checkInputs = [ pytest pytestpep8 mock ] ++ stdenv.lib.optional (pythonOlder "3.4") pathlib;
 
   meta = with stdenv.lib; {
     description = "Python docstring style checker";
