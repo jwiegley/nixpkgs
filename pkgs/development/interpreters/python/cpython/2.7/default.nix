@@ -194,6 +194,12 @@ in stdenv.mkDerivation {
         find $out -name "*.py" | $out/bin/python -m compileall -q -f -x "lib2to3" -i -
         find $out -name "*.py" | $out/bin/python -O -m compileall -q -f -x "lib2to3" -i -
         find $out -name "*.py" | $out/bin/python -OO -m compileall -q -f -x "lib2to3" -i -
+
+        # Include a sitecustomize.py file
+        # We do not compile because somehow it claims not having permission.
+        # Only happens with 2.7.
+        cp ${../../sitecustomize.py} $out/${sitePackages}/sitecustomize.py
+
       '' + optionalString hostPlatform.isCygwin ''
         cp libpython2.7.dll.a $out/lib
       '';
