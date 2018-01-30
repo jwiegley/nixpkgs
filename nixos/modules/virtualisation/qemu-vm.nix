@@ -96,9 +96,8 @@ let
             -drive index=1,id=drive2,file=$TMPDIR/disk.img,media=disk \
             ${if cfg.useEFIBoot then ''
               -pflash $TMPDIR/bios.bin \
-            '' else ''
-            ''}
-          '' else ''
+            '' else ''\''}
+          '' else ''\
             -drive index=0,id=drive1,file=$NIX_DISK_IMAGE,if=${cfg.qemu.diskInterface},cache=writeback,werror=report \
             -kernel ${config.system.build.toplevel}/kernel \
             -initrd ${config.system.build.toplevel}/initrd \
@@ -329,8 +328,8 @@ in
       networkingOptions =
         mkOption {
           default = [
-            "-net nic,vlan=0,model=virtio"
-            "-net user,vlan=0\${QEMU_NET_OPTS:+,$QEMU_NET_OPTS}"
+            "-device virtio-net,netdev=n0"
+            "-netdev user,id=n0\${QEMU_NET_OPTS:+,$QEMU_NET_OPTS}"
           ];
           type = types.listOf types.str;
           description = ''
@@ -489,7 +488,7 @@ in
           };
       } // optionalAttrs cfg.useBootLoader
       { "/boot" =
-          { device = "/dev/vdb2";
+          { device = "/dev/sda2";
             fsType = "vfat";
             options = [ "ro" ];
             noCheck = true; # fsck fails on a r/o filesystem
