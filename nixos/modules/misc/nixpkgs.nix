@@ -3,6 +3,8 @@
 with lib;
 
 let
+  cfg = config.nixpkgs;
+
   isConfig = x:
     builtins.isAttrs x || builtins.isFunction x;
 
@@ -42,12 +44,45 @@ let
     merge = lib.mergeOneOption;
   };
 
-  _pkgs = import ../../.. config.nixpkgs;
+  pkgsType = mkOptionType {
+    name = "nixpkgs";
+    description = "An evaluation of Nixpkgs; the top level attribute set of packages";
+    check = builtins.isAttrs;
+  };
 
 in
 
 {
   options.nixpkgs = {
+
+    pkgs = mkOption {
+      defaultText = literalExample ''
+        Situation-dependent; plain NixOS sets the option default to
+        import nixpkgs { inherit config overlays system; },
+        where nixpkgs is the copy of Nixpkgs that this distribution of
+        NixOS comes from; it is part of the same directory tree.
+        The arguments are taken from the configuration options in
+        config.nixpkgs.
+        '';
+      default = import ../../.. { inherit (cfg) config overlays system; };
+      type = pkgsType;
+      example = literalExample ''import <nixpkgs> {}'';
+      description = ''
+        This is the evaluation of Nixpkgs that will be provided to
+        all NixOS modules. Defining this option has the effect of
+        ignoring the other options that would otherwise be used to
+        evaluate Nixpkgs.
+
+        This can be used by applications like NixOps to increase the
+        performance of evaluation, or by packages that depend on a
+        container that should be built with the exact same evaluation
+        of Nixpkgs, for example. Applications like this should set
+        their default value using <code>lib.mkDefault</code>, so
+        user-provided configuration can override it without using
+        <code>lib</code>.
+      '';
+    };
+
     config = mkOption {
       default = {};
       example = literalExample
@@ -59,6 +94,8 @@ in
         The configuration of the Nix Packages collection.  (For
         details, see the Nixpkgs documentation.)  It allows you to set
         package configuration options.
+
+        Ignored when <code>nixpkgs.pkgs</code> is set.
       '';
     };
 
@@ -83,6 +120,8 @@ in
         takes as an argument the <emphasis>original</emphasis> Nixpkgs.
         The first argument should be used for finding dependencies, and
         the second should be used for overriding recipes.
+
+        Ignored when <code>nixpkgs.pkgs</code> is set.
       '';
     };
 
@@ -94,14 +133,16 @@ in
         If unset, it defaults to the platform type of your host system.
         Specifying this option is useful when doing distributed
         multi-platform deployment, or when building virtual machines.
+
+        Ignored when <code>nixpkgs.pkgs</code> is set.
       '';
     };
   };
 
   config = {
     _module.args = {
-      pkgs = _pkgs;
-      pkgs_i686 = _pkgs.pkgsi686Linux;
+      pkgs = cfg.pkgs;
+      pkgs_i686 = cfg.pkgs.pkgsi686Linux;
     };
   };
 }
