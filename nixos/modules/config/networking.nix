@@ -14,6 +14,26 @@ let
   resolvconfOptions = cfg.resolvconfOptions
     ++ optional cfg.dnsSingleRequest "single-request"
     ++ optional cfg.dnsExtensionMechanism "edns0";
+
+  hostSubmodule.options = {
+    canonical = mkOption {
+      type = types.str;
+      example = "example.org";
+      description = ''
+        The canonical hostname to use for a given IP address.
+      '';
+    };
+
+    aliases = mkOption {
+      type = types.listOf types.str;
+      default = [];
+      example = [ "foo.example.org" "bar.example.org" ];
+      description = ''
+        A list of aliases for the <option>canonical</option> hostname.
+      '';
+    };
+  };
+
 in
 
 {
@@ -21,16 +41,30 @@ in
   options = {
 
     networking.hosts = lib.mkOption {
-      type = types.attrsOf ( types.listOf types.str );
+      type = let
+        coerceHost = hosts: if hosts == [] then {} else {
+          canonical = head hosts;
+          aliases = tail hosts;
+        };
+        coercedType = types.listOf types.str;
+        finalType = types.submodule hostSubmodule;
+        hostType = types.coercedTo coercedType coerceHost finalType;
+      in types.attrsOf hostType;
       default = {};
       example = literalExample ''
         {
-          "127.0.0.1" = [ "foo.bar.baz" ];
-          "192.168.0.2" = [ "fileserver.local" "nameserver.local" ];
-        };
+          "127.0.0.1".canonical = "foo.bar.baz";
+          "192.168.0.2".canonical = "fileserver.local";
+          "192.168.0.2".aliases = [ "nameserver.local" ];
+        }
       '';
       description = ''
         Locally defined maps of hostnames to IP addresses.
+
+        The values can be either a list in which case the first item will be
+        the canonical hostname and the following items are aliases or it can be
+        an attribute set that directly passes <option>canonical</option> and a
+        list of <option>aliases</options>.
       '';
     };
 
@@ -190,6 +224,13 @@ in
 
   config = {
 
+    networking.hosts = {
+      "127.0.0.1".canonical = "localhost";
+    } // optionalAttrs cfg.enableIPv6 {
+      "::1".canonical = "localhost";
+    };
+
+
     environment.etc =
       { # /etc/services: TCP/UDP port assignments.
         "services".source = pkgs.iana-etc + "/etc/services";
@@ -201,25 +242,14 @@ in
         "rpc".source = pkgs.glibc.out + "/etc/rpc";
 
         # /etc/hosts: Hostname-to-IP mappings.
-        "hosts".text =
-          let oneToString = set : ip : ip + " " + concatStringsSep " " ( getAttr ip set );
-              allToString = set : concatMapStringsSep "\n" ( oneToString set ) ( attrNames set );
-              userLocalHosts = optionalString
-                ( builtins.hasAttr "127.0.0.1" cfg.hosts )
-                ( concatStringsSep " " ( remove "localhost" cfg.hosts."127.0.0.1" ));
-              userLocalHosts6 = optionalString
-                ( builtins.hasAttr "::1" cfg.hosts )
-                ( concatStringsSep " " ( remove "localhost" cfg.hosts."::1" ));
-              otherHosts = allToString ( removeAttrs cfg.hosts [ "127.0.0.1" "::1" ]);
-          in
-          ''
-            127.0.0.1 ${userLocalHosts} localhost
-            ${optionalString cfg.enableIPv6 ''
-              ::1 ${userLocalHosts6} localhost
-            ''}
-            ${otherHosts}
-            ${cfg.extraHosts}
-          '';
+        "hosts".text = let
+          mkEntry = ip: attrs: let
+            entry = [ ip attrs.canonical ] ++ attrs.aliases;
+          in concatStringsSep " " entry;
+        in ''
+          ${concatStringsSep "\n" (mapAttrsToList mkEntry cfg.hosts)}
+          ${cfg.extraHosts}
+        '';
 
         # /etc/host.conf: resolver configuration file
         "host.conf".text = cfg.hostConf;
