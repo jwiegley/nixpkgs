@@ -220,5 +220,8 @@ with lib;
     (mkRenamedOptionModule [ "programs" "zsh" "oh-my-zsh" "theme" ] [ "programs" "zsh" "ohMyZsh" "theme" ])
     (mkRenamedOptionModule [ "programs" "zsh" "oh-my-zsh" "custom" ] [ "programs" "zsh" "ohMyZsh" "custom" ])
     (mkRenamedOptionModule [ "programs" "zsh" "oh-my-zsh" "plugins" ] [ "programs" "zsh" "ohMyZsh" "plugins" ])
+
+    # Fontconfig
+    (mkRemovedOptionModule [ "fonts" "fontconfig" "dpi" ] "Use display server-specific options")
   ];
 }
