@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, cmake }:
+{ stdenv, fetchFromGitHub, cmake, sharedLibrary ? false }:
 
 stdenv.mkDerivation rec {
   name = "snappy-${version}";
