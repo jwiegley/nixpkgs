@@ -3885,13 +3885,13 @@ with pkgs;
     inherit (darwin.apple_sdk.frameworks) Carbon;
   };
 
-  openssh =
-    callPackage ../tools/networking/openssh {
-      hpnSupport = false;
-      withKerberos = stdenv.isDarwin;
-      etcDir = "/etc/ssh";
-      pam = if stdenv.isLinux then pam else null;
-    };
+  openssh = callPackage ../tools/networking/openssh {
+    hpnSupport = false;
+    withKerberos = stdenv.isDarwin;
+    etcDir = "/etc/ssh";
+    pam = if stdenv.isLinux then pam else null;
+    openssl = openssl_1_0_2;
+  };
 
   openssh_hpn = pkgs.appendToName "with-hpn" (openssh.override { hpnSupport = true; });
 
@@ -5229,7 +5229,7 @@ with pkgs;
 
   unrar = callPackage ../tools/archivers/unrar { };
 
-  xar = callPackage ../tools/compression/xar { };
+  xar = callPackage ../tools/compression/xar { openssl = openssl_1_0_2; };
 
   xarchive = callPackage ../tools/archivers/xarchive { };
 
@@ -8310,6 +8310,7 @@ with pkgs;
   cxxtest = callPackage ../development/libraries/cxxtest { };
 
   cyrus_sasl = callPackage ../development/libraries/cyrus-sasl {
+    openssl = openssl_1_0_2;
     kerberos = if stdenv.isFreeBSD then libheimdal else kerberos;
   };
 
@@ -10448,7 +10449,7 @@ with pkgs;
 
   wolfssl = callPackage ../development/libraries/wolfssl { };
 
-  openssl = openssl_1_0_2;
+  openssl = openssl_1_1_0;
 
   inherit (callPackages ../development/libraries/openssl {
       fetchurl = fetchurlBoot;
