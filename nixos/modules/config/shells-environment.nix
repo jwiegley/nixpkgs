@@ -172,6 +172,13 @@ in
          export PATH="$HOME/bin:$PATH"
        '';
 
+    # The set-environment.sh script is exposed here for use by shells in
+    # loading the essential Nix environment variables. It is loaded automatically
+    # by Nixpkgs' fish package, but it can by used by other shells in and
+    # outside of Nixpkgs. This is meant to be a path which can be used in common
+    # among different Nix module systems, for example NixOS and nix-darwin.
+    environment.etc."nix/support/set-environment.sh".source = "${system.build.setEnvironment}";
+
     system.activationScripts.binsh = stringAfter [ "stdio" ]
       ''
         # Create the required /bin/sh symlink; otherwise lots of things
