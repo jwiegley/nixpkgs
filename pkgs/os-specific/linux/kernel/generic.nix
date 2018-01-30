@@ -38,7 +38,7 @@
 
 # easy overrides to hostPlatform.platform members
 , autoModules ? hostPlatform.platform.kernelAutoModules
-, preferBuiltin ? if (hostPlatform.platform ? kernelPreferBuiltin) then hostPlatform.platform.kernelPreferBuiltin else false
+, preferBuiltin ? hostPlatform.platform.kernelPreferBuiltin or false
 
 , ...
 } @ args:
@@ -107,9 +107,9 @@ let
 
       # Create the config file.
       echo "generating kernel configuration..."
-      echo "$kernelConfig" > $buildRoot/kernel-config
+      echo "$kernelConfig" > "$buildRoot/kernel-config"
       DEBUG=1 ARCH=$arch KERNEL_CONFIG="$buildRoot/kernel-config" AUTO_MODULES=$autoModules \
-           PREFER_BUILTIN=$preferBuiltin BUILD_FOLDER="$buildRoot" SRC=. perl -w $generateConfig
+           PREFER_BUILTIN=$preferBuiltin BUILD_ROOT="$buildRoot" SRC=. perl -w $generateConfig
     '';
 
     installPhase = "mv $buildRoot/.config $out";

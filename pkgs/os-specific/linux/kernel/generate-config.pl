@@ -18,7 +18,7 @@ my $debug = $ENV{'DEBUG'};
 my $autoModules = $ENV{'AUTO_MODULES'};
 my $preferBuiltin = $ENV{'PREFER_BUILTIN'};
 my $ignoreConfigErrors = $ENV{'ignoreConfigErrors'};
-my $buildFolder=$ENV{'BUILD_FOLDER'};
+my $buildRoot = $ENV{'BUILD_ROOT'};
 $SIG{PIPE} = 'IGNORE';
 
 # Read the answers.
@@ -40,7 +40,7 @@ close ANSWERS;
 sub runConfig {
 
     # Run `make config'.
-    my $pid = open2(\*IN, \*OUT, "make -C $ENV{SRC} O=$buildFolder config SHELL=bash ARCH=$ENV{ARCH}");
+    my $pid = open2(\*IN, \*OUT, "make -C $ENV{SRC} O=$buildRoot config SHELL=bash ARCH=$ENV{ARCH}");
 
     # Parse the output, look for questions and then send an
     # appropriate answer.
@@ -122,7 +122,7 @@ runConfig;
 # there.  `make config' often overrides answers if later questions
 # cause options to be selected.
 my %config;
-open CONFIG, "<$buildFolder/.config" or die "Could not read .config";
+open CONFIG, "<$buildRoot/.config" or die "Could not read .config";
 while (<CONFIG>) {
     chomp;
     if (/^CONFIG_([A-Za-z0-9_]+)="(.*)"$/) {
