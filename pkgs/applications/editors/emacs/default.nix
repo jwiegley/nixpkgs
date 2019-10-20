@@ -38,6 +38,7 @@ let
 
 in stdenv.mkDerivation {
   inherit name version;
+  appName = "Emacs";            # used by Darwin systems in emacs/wrapper.nix
 
   src = fetchurl {
     url = "mirror://gnu/emacs/${name}.tar.xz";
