@@ -48,6 +48,7 @@ let emacs = stdenv.mkDerivation (lib.optionalAttrs nativeComp {
   CFLAGS = "-DMAC_OS_X_VERSION_MAX_ALLOWED=101200";
 } // {
   inherit pname version patches;
+  appName = "Emacs";            # used by Darwin systems in emacs/wrapper.nix
 
   src = fetchurl {
     url = "mirror://gnu/emacs/${name}.tar.xz";
