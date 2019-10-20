@@ -51,6 +51,8 @@ let
     if lib.isFunction packagesFun
       then packagesFun self
     else packagesFun;
+
+  appName = emacs.appName or "Emacs";
 in
 
 runCommand
@@ -190,21 +192,21 @@ runCommand
     # Wrap MacOS app
     # this has to pick up resources and metadata
     # to recognize it as an "app"
-    if [ -d "$emacs/Applications/Emacs.app" ]; then
-      mkdir -p $out/Applications/Emacs.app/Contents/MacOS
-      cp -r $emacs/Applications/Emacs.app/Contents/Info.plist \
-            $emacs/Applications/Emacs.app/Contents/PkgInfo \
-            $emacs/Applications/Emacs.app/Contents/Resources \
-            $out/Applications/Emacs.app/Contents
+    if [ -d "$emacs/Applications/${appName}.app" ]; then
+      mkdir -p $out/Applications/${appName}.app/Contents/MacOS
+      cp -r $emacs/Applications/${appName}.app/Contents/Info.plist \
+            $emacs/Applications/${appName}.app/Contents/PkgInfo \
+            $emacs/Applications/${appName}.app/Contents/Resources \
+            $out/Applications/${appName}.app/Contents
 
 
-      substitute ${./wrapper.sh} $out/Applications/Emacs.app/Contents/MacOS/Emacs \
+      substitute ${./wrapper.sh} $out/Applications/${appName}.app/Contents/MacOS/${appName} \
         --subst-var-by bash ${emacs.stdenv.shell} \
         --subst-var-by wrapperSiteLisp "$deps/share/emacs/site-lisp" \
-        --subst-var-by prog "$emacs/Applications/Emacs.app/Contents/MacOS/Emacs"
-      chmod +x $out/Applications/Emacs.app/Contents/MacOS/Emacs
+        --subst-var-by prog "$emacs/Applications/${appName}.app/Contents/MacOS/${appName}"
+      chmod +x $out/Applications/${appName}.app/Contents/MacOS/${appName}
 
-      makeWrapper $emacs/Applications/Emacs.app/Contents/MacOS/Emacs $out/Applications/Emacs.app/Contents/MacOS/Emacs \
+      makeWrapper $emacs/Applications/${appName}.app/Contents/MacOS/${appName} $out/Applications/${appName}.app/Contents/MacOS/${appName} \
         --suffix EMACSLOADPATH ":" "$deps/share/emacs/site-lisp:" \
         --suffix EMACSNATIVELOADPATH ":" "$deps/share/emacs/native-lisp:"
     fi
