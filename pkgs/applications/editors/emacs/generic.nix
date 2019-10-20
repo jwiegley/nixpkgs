@@ -51,6 +51,8 @@ let emacs = stdenv.mkDerivation (lib.optionalAttrs nativeComp {
 
   patches = patches fetchpatch;
 
+  appName = "Emacs";            # used by Darwin systems in emacs/wrapper.nix
+
   src = fetchurl {
     url = "mirror://gnu/emacs/${name}.tar.xz";
     inherit sha256;
