@@ -39,9 +39,9 @@ let
     };
 
     "8.12" = {
-      version = "1.2.2";
-      rev = "v1.2.2-8.12";
-      sha256 = "0fkz78i2gn9x9scfa7n8fl2sq7czppsicy7w5mq919qqfp0w1aj0";
+      version = "1.2.3";
+      rev = "v1.2.3-8.12";
+      sha256 = "1y0jkvzyz5ssv5vby41p1i8zs7nsdc8g3pzyq73ih9jz8h252643";
     };
   };
   param = params.${coq.coq-version};
@@ -59,7 +59,7 @@ stdenv.mkDerivation rec {
     sha256 = param.sha256;
   };
 
-  buildInputs = with coq.ocamlPackages; [ ocaml camlp5 findlib coq ];
+  buildInputs = with coq.ocamlPackages; [ ocaml camlp5 findlib num coq ];
 
   preBuild = "coq_makefile -f _CoqProject -o Makefile";
 
